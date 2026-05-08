@@ -6,7 +6,34 @@
 </head>
 <body>
     <div>
-        <h1>这是测试</h1>
+        <h1>打开FastGPT调用页码</h1>
+        <a href="/fastgpt">使用</a>
     </div>
+    <div>
+        <span id="time">时间暂无</span>
+    </div>
+    <script>
+         async function getTime() {
+            try {
+                // 调用后端接口 /api/time
+                const response = await fetch('/api/time');
+
+                // 如果接口返回错误
+                if (!response.ok) {
+                    throw new Error('接口请求失败');
+                }
+
+                // 假设后端返回 JSON，例如：{"time": "2026-05-08 20:30:00"}
+                const data = await response.json();
+
+                // 把接口返回的时间写到页面上
+                document.getElementById('timeText').innerText = data.time;
+
+            } catch (error) {
+                document.getElementById('timeText').innerText = '获取失败';
+                console.error(error);
+            }
+        }
+    </script>
 </body>
 </html>

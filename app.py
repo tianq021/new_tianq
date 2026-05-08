@@ -1,22 +1,21 @@
-from flask import Flask, render_template, request, jsonify
-
-app = Flask(__name__)
-
-
-@app.route("/")
-def index():
-    return render_template("index.html")
+from flask import Flask
+from routes.page_routes import page_bp
+from routes.api_routes import api_bp
 
 
-@app.route("/api/send", methods=["POST"])
-def receive_data():
-    data = request.get_json()
-    user_text = data.get("text", "")
+def create_app():
+    app = Flask(__name__)
 
-    return jsonify({
-        "success": True,
-        "answer": f"Python后端已经收到：{user_text}"
-    })
+    # 注册页面路由
+    app.register_blueprint(page_bp)
+
+    # 注册 API 路由
+    app.register_blueprint(api_bp)
+
+    return app
+
+
+app = create_app()
 
 
 if __name__ == "__main__":
