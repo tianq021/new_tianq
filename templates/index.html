@@ -1,39 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <title>测试V1</title>
 </head>
 <body>
     <div>
-        <h1>打开FastGPT调用页码</h1>
+        <h1>打开 FastGPT 调用页面</h1>
         <a href="/fastgpt">使用</a>
     </div>
+
     <div>
-        <span id="time">时间暂无</span>
+        <h2>本地时间显示</h2>
+        <p>当前时间：<span id="timeText">加载中...</span></p>
     </div>
+
     <script>
-         async function getTime() {
-            try {
-                // 调用后端接口 /api/time
-                const response = await fetch('/api/time');
+        function showLocalTime() {
+            const now = new Date();
 
-                // 如果接口返回错误
-                if (!response.ok) {
-                    throw new Error('接口请求失败');
-                }
+            const timeText = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0') + ' ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
 
-                // 假设后端返回 JSON，例如：{"time": "2026-05-08 20:30:00"}
-                const data = await response.json();
-
-                // 把接口返回的时间写到页面上
-                document.getElementById('timeText').innerText = data.time;
-
-            } catch (error) {
-                document.getElementById('timeText').innerText = '获取失败';
-                console.error(error);
-            }
+            document.getElementById('timeText').innerText = timeText;
         }
+
+        // 页面打开立刻显示一次
+        showLocalTime();
+
+        // 每秒刷新一次
+        setInterval(showLocalTime, 1000);
     </script>
 </body>
 </html>
