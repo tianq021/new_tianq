@@ -1,0 +1,3610 @@
+# FastGPT 工作流 JSON 生成与测试全过程总结【纠错增补版】
+
+记录时间：2026-05-10
+修订目的：把旧总结中容易误导下一个对话的内容全部修正，尤其是 AI 节点、模型 401、readFiles 变量格式、旧导出版结构、不能写死的字段、当前真正目标。
+
+重要提醒：
+本文件应优先于旧版 `FastGPT_workflow_JSON_experiment_summary_2026-05-10.txt` 使用。旧版里面有些结论是当时阶段性推测，现在已经被后续测试修正。下一个对话不要只看旧版，否则容易继续往错误方向生成 JSON。
+
+======================================================================
+一、最终目标【已修正】
+======================================================================
+
+真正目标不是单纯验证 readFiles、CSV 直读、文件后缀分流，也不是做一个固定小 demo。
+
+真正目标是：
+
+> 做一个 FastGPT 工作流生成器：用户只输入一句话，FastGPT 内部的 AI 节点理解需求，然后生成可导入的 FastGPT 工作流 JSON，从而减少重复搭建工作流的麻烦。
+
+目标链路应该是：
+
+用户一句话需求
+↓
+AI 对话节点理解需求
+↓
+AI 生成 FastGPT 工作流 JSON
+↓
+代码节点清洗/校验 JSON
+↓
+指定回复输出 JSON
+↓
+用户复制/导入生成的新工作流
+
+因此：
+1. 这个最终目标必须包含 AI 节点。
+2. 没有 AI 节点，只靠代码节点，只能生成几个写死模板，不能真正理解“一句话需求”。
+3. v19 / v20 的非 AI 版本只能证明“代码节点可运行、指定回复可输出、JSON 结构可导入”，不能代表最终目标完成。
+4. 如果 FastGPT 平台 AI 节点模型调用本身 401，那么“一句话生成工作流 JSON”的 FastGPT 内部版就暂时无法实现。
+5. 这种情况下，可以退而求其次：在 ChatGPT 对话里生成 FastGPT JSON 文件，再手动导入 FastGPT，但这已经不是“FastGPT 内部一句话生成工作流”。
+
+======================================================================
+二、当前最关键结论【防误导版】
+======================================================================
+
+1. 当前最关键问题不是 JSON 结构，而是 FastGPT 平台模型调用报：
+
+401 Invalid token
+
+2. 这个错误已经在“手动新建普通 AI 应用”里出现，不是只发生在导入 JSON 的工作流里。
+
+截图/测试现象：
+- 手动新建应用。
+- AI 配置里选择 qwen-plus。
+- 提示词只写“你只需要回复就行”。
+- 输入“你好”。
+- 仍然弹出 401 Invalid token。
+
+结论：
+
+> 至少 qwen-plus 这个模型渠道/API Key/Token/Base URL 配置有问题。
+
+3. 不能直接说“所有 AI 节点都不能用”，除非继续测试：
+- 手动新建 AI 应用，换 qwen-vl-max 是否能跑；
+- 手动新建 AI 应用，换其他模型是否能跑；
+- 老工作流里的 AI 节点是否也 401；
+- 其他账号/其他同学是否也 401。
+
+4. 目前更准确说法：
+
+> qwen-plus 已确认不可用或配置异常；qwen-vl-max 是否可用需要单独手动测试；如果所有模型手动测试都 401，才说明整个平台 AI 模型调用配置整体异常。
+
+5. 如果手动新建 AI 节点都 401，那么后面无论 JSON 写得多正确，只要包含 AI 节点都会失败。
+
+======================================================================
+三、旧总结里需要纠正的误导点
+======================================================================
+
+【误导点 1】把 readFiles 当成当前主线。
+
+旧总结中 v10/v11 大量围绕 readFiles 输出空继续排查，这在当时没错，但现在主线已经变了。
+
+修正：
+当前主线不是“让 CSV/readFiles 成功解析”，而是“做一句话生成工作流 JSON 的 AI 生成器”。readFiles 只是未来生成文件处理类工作流时可能用到的节点，不是当前最核心问题。
+
+----------------------------------------------------------------------
+
+【误导点 2】把 v11 的 readFiles 直接引用当成正确方向。
+
+旧版写过：
+
+value: ["workflowStartNodeId", "userFiles"]
+
+并把它作为 v11 尝试方向。
+
+修正：
+从用户自己导出的多个真实工作流看，readFiles 和 AI 节点接收 userFiles 时更稳定、更应该优先参考旧式嵌套格式：
+
+"value": [
+  [
+    "448745",
+    "userFiles"
+  ]
+]
+
+真实来源：
+- 票据识别小助手V3.json 的 readFiles 使用这个格式。
+- 数据清理小助手_去重导出.json 的 readFiles 使用这个格式。
+- 票据识别小助手V3.json 的图片 AI 节点 fileUrlList 也使用这个格式。
+- 1 (1).json 的 qwen-vl-max AI 节点 fileUrlList 也使用这个格式。
+
+因此后面生成旧版 FastGPT JSON 时，文件上传引用优先用：
+
+[["448745", "userFiles"]]
+
+不要优先用：
+
+["448745", "userFiles"]
+
+除非是明确测试直接引用格式。
+
+----------------------------------------------------------------------
+
+【误导点 3】readFiles 输出 key 写错/不统一。
+
+旧版 v10/v11 中曾写：
+
+outputs: text / rawResponse / error
+
+修正：
+用户真实导出的 readFiles 节点输出是：
+
+system_text
+system_rawResponse
+system_error_text
+
+例如真实结构：
+
+{
+  "id": "system_text",
+  "key": "system_text",
+  "valueType": "string",
+  "type": "static"
+}
+
+{
+  "id": "system_rawResponse",
+  "key": "system_rawResponse",
+  "valueType": "arrayObject",
+  "type": "static"
+}
+
+{
+  "id": "system_error_text",
+  "key": "system_error_text",
+  "valueType": "string",
+  "type": "error"
+}
+
+所以下游引用 readFiles 文本时应使用：
+
+{{$readFilesNodeId.system_text$}}
+
+或者输入 value 引用：
+
+["readFilesNodeId", "system_text"]
+
+不要再默认写 text/rawResponse/error。
+
+----------------------------------------------------------------------
+
+【误导点 4】以为 AI 节点结构完全错误。
+
+修正：
+后续上传的 1.json、1 (1).json、2.json 已经证明 AI 节点结构是存在且可导入的，真实 AI 节点类型是：
+
+flowNodeType: "chatNode"
+version: "4.9.7"
+avatar: "core/workflow/template/aiChat"
+
+AI 节点报 401，不等于 AI 节点 JSON 结构错。401 是模型授权/Token/API Key/Base URL/渠道配置问题。
+
+----------------------------------------------------------------------
+
+【误导点 5】以为 v18 不写模型就能绕过 401。
+
+修正：
+即使不写或清空 model，FastGPT 仍可能使用默认模型/残留模型/平台默认配置，仍可能触发 401。
+
+所以“模型名不写死”不等于“不调用 token”。
+
+AI 节点只要运行，就一定会调用模型渠道；模型渠道配置坏了就会 401。
+
+----------------------------------------------------------------------
+
+【误导点 6】以为 qwen-vl-max 一定能用。
+
+修正：
+qwen-plus 已经手动测试 401。
+qwen-vl-max 只是因为某些导出文件里存在，且没有先经过 qwen-plus，所以“可能能用”。
+但必须手动新建 AI 应用选择 qwen-vl-max 测试后才能确认。
+
+不能在总结里写死“qwen-vl-max 能用”。
+只能写：
+
+> qwen-vl-max 可能能用，但未最终确认；需要手动测试。
+
+----------------------------------------------------------------------
+
+【误导点 7】把 2.json 直接当可用母版。
+
+修正：
+2.json 的 AI 节点都是 qwen-vl-max，表面看更适合当 AI 母版。
+但它有一个问题：AI 节点里 fileUrlList 引用了 userFiles：
+
+[["448745", "userFiles"]]
+
+可是 2.json 的 workflowStart.outputs 里只有 userChatInput，没有 userFiles。
+
+这说明 2.json 不能直接照抄，需要补 workflowStart 的 userFiles 输出，或者如果不测文件上传，就把 AI 节点的 fileUrlList 留空。
+
+----------------------------------------------------------------------
+
+【误导点 8】把 answerNode 的变量引用只理解成 value 数组。
+
+修正：
+指定回复 answerNode 有两种常见写法。
+
+方式 A：整个输入引用某个上游输出：
+
+"value": ["text_file_result", "system_text"]
+
+方式 B：在文本内容里插变量：
+
+"value": "结果：{{$codeNodeId.result$}}"
+
+用户真实导出的工作流里，大量使用方式 B：
+
+{{$r2WolLufOUO6oLwc.qLUQfhG0ILRX$}}
+{{$gX18NQYSYef5t7yZ.result$}}
+
+因此后面不能只使用一种写法。简单输出上游完整结果时可用方式 A；需要混排 Markdown/文字/多个变量时用方式 B。
+
+----------------------------------------------------------------------
+
+【误导点 9】把 chatConfig.fileSelectConfig 当成总是必须。
+
+修正：
+如果工作流需要上传文件，chatConfig 里最好有 fileSelectConfig，并且 workflowStart.outputs 必须有 userFiles。
+
+如果只是纯文本 AI 对话，不一定必须有 fileSelectConfig。
+
+但如果 AI 节点或 readFiles 引用了 userFiles，而 workflowStart 没有 userFiles 输出，那就是错误引用。
+
+----------------------------------------------------------------------
+
+【误导点 10】把 v15/v16/v17/v18/v19/v20 都当作有效推进。
+
+修正：
+这些版本有些只是排查实验，不应该被下个对话当成正确最终方向。
+
+- v16/v17/v18：包含 AI 生成 JSON 思路，但因为模型 401，无法验证真正运行。
+- v19/v20：没有 AI 节点，只能生成写死模板，不能实现最终目标。
+- v13/v14/v15：试图绕开 readFiles 直读 CSV，方向后来确认偏离最终目标。
+
+真正可靠母版仍然是用户自己导出的旧工作流结构，尤其：
+- 票据识别小助手V3.json：分支、AI、readFiles、代码、指定回复、数据库流程参考。
+- 数据清理小助手_去重导出.json：readFiles + Python + 指定回复的干净参考。
+- 薪资计算助手_加强版.json：一句话 → AI 提取 JSON → 代码处理 → 输出的逻辑参考。
+- 2.json：qwen-vl-max AI 节点结构参考，但不能直接照抄 userFiles 引用。
+
+======================================================================
+四、已验证事实库【以后按这个判断】
+======================================================================
+
+1. 用户环境版本记录：
+
+历史记录里有“学校部署的 FastGPT V4.14.6”。
+因此后续生成 JSON 应优先参考用户自己导出的旧版结构，不要按 GitHub 仓库最新结构硬套。
+
+2. 顶层结构：
+
+用户真实导出的工作流顶层通常是：
+
+{
+  "nodes": [],
+  "edges": [],
+  "chatConfig": {}
+}
+
+不要乱加 metadata、schemaVersion 等未知字段。
+
+3. 系统配置节点：
+
+nodeId: "userGuide"
+flowNodeType: "userGuide"
+avatar: "core/workflow/template/systemConfig"
+version: "481"
+
+4. 流程开始节点：
+
+nodeId 常见是 "448745"
+flowNodeType: "workflowStart"
+version: "481"
+
+纯文本工作流至少有：
+- userChatInput
+
+文件上传工作流必须额外有：
+- userFiles
+
+5. 代码节点：
+
+flowNodeType: "code"
+avatar: "core/workflow/template/codeRun"
+codeType: "js" 或 "py"
+
+代码 return 的字段必须在 outputs 中声明，否则下游变量引用可能找不到或为空。
+
+6. 指定回复节点：
+
+flowNodeType: "answerNode"
+avatar: "core/workflow/template/reply"
+输入 key 必须是：text
+
+不要用 answerText 当指定回复输入 key。
+
+7. AI 节点：
+
+flowNodeType: "chatNode"
+avatar: "core/workflow/template/aiChat"
+version: "4.9.7"
+
+关键输入：
+- model
+- isResponseAnswerText
+- systemPrompt
+- history
+- quoteQA
+- fileUrlList
+- userChatInput
+
+关键输出：
+- history
+- answerText
+- reasoningText
+- system_error_text
+
+8. AI 节点中间处理时：
+
+如果 AI 节点只是用于生成 JSON 给后续代码清洗，不应该直接把 AI 回复输出给用户，应设置：
+
+"isResponseAnswerText": false
+
+如果只是最小 AI 对话测试，可设置：
+
+"isResponseAnswerText": true
+
+9. AI 节点引用文件：
+
+优先参考用户真实导出格式：
+
+"fileUrlList": {
+  "value": [
+    ["448745", "userFiles"]
+  ]
+}
+
+如果不测试文件，fileUrlList 可为空数组：
+
+"value": []
+
+10. readFiles 节点：
+
+flowNodeType: "readFiles"
+version: "4.9.2"  是用户真实导出常见版本。
+输入 key：fileUrlList
+输入 value：[["448745", "userFiles"]]
+输出 key：system_text / system_rawResponse / system_error_text
+
+11. 判断器：
+
+flowNodeType: "ifElseNode"
+条件列表放在 inputs 的 ifElseList。
+分支连线 sourceHandle 常见：
+- nodeId-source-IF
+- nodeId-source-ELSE
+
+12. HTTP 节点：
+
+用户真实导出里 HTTP 节点类型是：
+
+flowNodeType: "httpRequest468"
+
+不要随便写 httpRequest。
+
+13. 数据库/工具节点：
+
+用户票据流程里有 tool 节点用于调用数据库/存储过程。
+这些节点高度依赖平台内部工具 ID、数据库连接、参数配置，不能在新 JSON 里凭空写死。
+
+======================================================================
+五、AI 节点 401 的正确判断流程
+======================================================================
+
+现在遇到 401 Invalid token 时，不要再优先怀疑 JSON 结构。
+
+正确排查顺序：
+
+1. 手动新建空应用。
+2. 手动拖或使用默认 AI 对话节点。
+3. 手动选择 qwen-plus。
+4. 输入“你好”。
+5. 如果 401，说明 qwen-plus 平台配置坏。
+6. 手动换 qwen-vl-max。
+7. 输入“你好”。
+8. 如果 qwen-vl-max 能跑，则只避开 qwen-plus。
+9. 如果 qwen-vl-max 也 401，再换其他模型。
+10. 如果所有模型都 401，说明整个平台模型渠道/API Key/Base URL/Token/余额/权限大概率异常。
+11. 如果手动能跑，但导入 JSON 不能跑，才回头检查 JSON 的 model 字段和节点结构。
+
+401 常见原因：
+- API Key 错误。
+- API Key 过期。
+- API Key 被删除。
+- API Key 无权限访问该模型。
+- Base URL 填错。
+- 模型渠道配置错。
+- 模型名和渠道不匹配。
+- 账号欠费或额度用完。
+- 平台共享 token 失效。
+- 学校部署环境统一模型配置异常。
+
+一句话：
+
+> 401 是模型授权错误，不是工作流 JSON 语法错误。
+
+======================================================================
+六、不能写死清单【非常重要】
+======================================================================
+
+以下内容后续生成 JSON 时不能写死，或者必须明确说明“需要导入后手动改”：
+
+1. 模型名
+
+尤其不要写死：
+- qwen-plus
+
+因为 qwen-plus 已经在手动应用中触发 401。
+
+qwen-vl-max 也不要绝对写死为“可用”，只能说“如果你平台能用 qwen-vl-max，可以暂时用它”。
+
+2. API Key / Token
+
+绝对不能写死。
+
+3. Base URL
+
+不同平台、学校部署、代理环境可能不同。
+
+4. chatConfig._id
+
+不要照抄旧文件里的 _id。
+让 FastGPT 自动生成最安全。
+
+5. datasetId / 知识库 ID
+
+不同账号/应用不一样。
+
+6. 工具 ID / tool ID / 数据库工具 ID
+
+数据库、HTTP 工具、插件工具都不能凭空写死。
+
+7. webhook 地址
+
+例如飞书、企业微信、第三方接口 webhook，不能照抄。
+
+8. 数据库连接、存储过程、表名、字段名
+
+除非用户明确要继续使用已有的 MySQL 存储过程，例如 sp_save_receipt。
+
+9. 第三方 API key
+
+例如聚合数据天气/新闻 key 不能写进新测试文件。
+
+10. 用户文件 URL
+
+上传文件 URL 是临时链接，不能写死。
+
+11. 自动生成的 nodeId 可复制但要保证唯一
+
+nodeId 可以人工指定，但同一工作流内必须唯一。不要复制造成重复。
+
+12. 变量引用不能指向不存在的输出
+
+例如：
+AI 节点 fileUrlList 引用了 ["448745", "userFiles"]，则 workflowStart.outputs 必须真的包含 userFiles。
+
+13. readFiles 输出 key 不要自己改成 text/rawResponse/error
+
+旧版真实输出应优先用 system_text / system_rawResponse / system_error_text。
+
+======================================================================
+七、当前推荐母版选择
+======================================================================
+
+按任务类型选择母版：
+
+1. 最小文件上传/后缀识别母版
+
+参考：v9 成功版思路。
+
+用途：
+- 验证 workflowStart.userFiles。
+- 验证 code 节点。
+- 验证 ifElseNode。
+- 验证 answerNode。
+- 不依赖 AI。
+
+注意：
+这是结构测试母版，不是最终 AI 生成器。
+
+2. 文件解析 + Python 清洗母版
+
+参考：数据清理小助手_去重导出.json
+
+结构：
+
+workflowStart(userFiles)
+↓
+readFiles
+↓
+code(py)
+↓
+answerNode
+
+优点：结构清晰，节点少，适合参考 readFiles、Python、指定回复变量格式。
+
+3. 图片/文档分流 + 票据流程母版
+
+参考：票据识别小助手V3.json
+
+用途：
+- 复杂分支。
+- 后缀判断。
+- 图片走 AI 视觉。
+- 文档走 readFiles。
+- AI 输出 JSON。
+- 代码校验。
+- 数据库工具调用。
+
+注意：复杂，不适合作为第一次测试生成器母版。
+
+4. 一句话 → AI 结构化 JSON 母版
+
+参考：薪资计算助手_加强版.json
+
+用途：
+- 用户自然语言输入。
+- AI 提取结构化 JSON。
+- 代码节点处理。
+- 最终输出。
+
+这和“一句话生成工作流 JSON”的逻辑最像。
+
+5. 单 AI 节点母版
+
+参考：1.json、1 (1).json、2.json
+
+用途：
+- 测 AI 节点是否能调用模型。
+- 测模型 401 是否和 JSON 无关。
+
+注意：
+1.json 使用 qwen-plus，当前容易 401。
+2.json 使用 qwen-vl-max，但 workflowStart 缺 userFiles，却被 AI 节点引用了，需要修。
+
+======================================================================
+八、当前建议的下一步测试顺序
+======================================================================
+
+不要继续一口气生成大流程。
+
+正确顺序：
+
+第一步：平台模型可用性测试
+
+手动新建应用：
+
+开始 → AI 对话
+
+分别测试：
+- qwen-plus
+- qwen-vl-max
+- 其他平台已有模型
+
+目标：确认到底哪些模型可用。
+
+第二步：单 AI 节点 JSON 测试
+
+如果某个模型手动可用，再用导出的 AI 节点结构生成单 AI 节点 JSON。
+
+结构：
+
+workflowStart
+↓
+chatNode(isResponseAnswerText=true)
+
+目标：确认导入 JSON 后 AI 节点也能跑。
+
+第三步：AI 生成 JSON + 直接回复测试
+
+结构：
+
+workflowStart
+↓
+chatNode(isResponseAnswerText=true)
+
+提示词让 AI 只输出一个极简 JSON，例如：
+
+{"ok": true, "message": "hello"}
+
+目标：确认 AI 能稳定输出 JSON 文本。
+
+第四步：AI + 代码清洗 + 指定回复
+
+结构：
+
+workflowStart
+↓
+chatNode(isResponseAnswerText=false)
+↓
+code(js 清洗 JSON)
+↓
+answerNode(text 引用 code.result)
+
+目标：这才是最终工作流生成器的核心结构。
+
+第五步：再让 AI 生成 FastGPT 工作流 JSON
+
+先限制只能生成最简单结构：
+
+userGuide
+workflowStart
+code
+answerNode
+edges
+chatConfig
+
+不要一开始就让 AI 生成 readFiles、HTTP、数据库、知识库、工具调用。
+
+第六步：逐步扩展节点库
+
+按顺序加入：
+- answerNode
+- code
+- ifElseNode
+- textEditor
+- readFiles
+- chatNode
+- httpRequest468
+- datasetSearchNode
+- tool
+
+======================================================================
+九、下一个对话必须知道的核心规则
+======================================================================
+
+1. 当前真正目标：做 FastGPT 内部“一句话生成工作流 JSON”的生成器。
+2. 这个目标必须依赖 AI 节点。
+3. 现在最大阻塞：FastGPT AI 模型调用 401 Invalid token。
+4. 手动新建 qwen-plus 也 401，所以不是 JSON 导入问题。
+5. 不能继续靠非 AI 代码模板冒充生成器。
+6. 不能写死 qwen-plus。
+7. qwen-vl-max 只能作为待测模型，不能断言一定可用。
+8. 用户环境历史记录显示 FastGPT V4.14.6，应优先参考用户自己导出的旧 JSON。
+9. 顶层结构只用 nodes / edges / chatConfig。
+10. 系统配置节点是 userGuide，不是 systemConfig。
+11. 指定回复 answerNode 输入 key 是 text，不是 answerText。
+12. 代码节点 flowNodeType 是 code。
+13. AI 节点 flowNodeType 是 chatNode。
+14. readFiles 输出优先用 system_text/system_rawResponse/system_error_text。
+15. 文件上传引用优先用 [["448745","userFiles"]] 旧式嵌套格式。
+16. 如果引用 userFiles，workflowStart.outputs 必须声明 userFiles。
+17. chatConfig._id 不要照抄。
+18. datasetId、toolId、webhook、数据库连接都不能写死。
+
+======================================================================
+十、修正后的“一句话生成工作流 JSON”目标结构
+======================================================================
+
+最终推荐结构应该是：
+
+userGuide
+  不连线
+
+workflowStart
+  输入：userChatInput
+  输出：userChatInput
+  可选输出：userFiles
+  ↓
+
+chatNode：AI 生成 FastGPT 工作流 JSON
+  model：不要写死 qwen-plus；导入后选择可用模型，或使用已确认可用模型
+  isResponseAnswerText：false
+  systemPrompt：严格要求只输出 JSON，不要 Markdown
+  userChatInput ← workflowStart.userChatInput
+  ↓
+
+code：清洗/校验 JSON
+  输入：ai_text ← chatNode.answerText
+  功能：去掉 markdown 代码块、提取最外层 JSON、JSON.parse 校验、检查 nodes/edges/chatConfig
+  输出：result
+  ↓
+
+answerNode：输出 JSON
+  text：{{$codeNode.result$}}
+
+注意：
+如果 AI 节点设置 isResponseAnswerText=true，AI 会提前把内容直接回复到聊天窗口，不利于后续代码清洗。
+
+======================================================================
+十一、AI 生成器的提示词方向
+======================================================================
+
+提示词必须限制 AI，不允许它自由发挥。
+
+核心约束：
+
+1. 只输出合法 JSON。
+2. 不要输出 Markdown 代码块。
+3. 顶层只能有 nodes、edges、chatConfig。
+4. 不要写 chatConfig._id。
+5. 系统配置节点必须用 userGuide。
+6. 指定回复节点必须用 answerNode，输入 key 必须是 text。
+7. 代码节点必须用 flowNodeType=code。
+8. AI 节点必须用 flowNodeType=chatNode。
+9. HTTP 节点如需使用，必须用 httpRequest468。
+10. 不允许生成不存在的变量引用。
+11. 引用某个输出前，必须在上游 outputs 声明。
+12. 如果需要文件上传，workflowStart.outputs 必须包含 userFiles。
+13. 如果需要 readFiles，fileUrlList 优先使用 [["448745","userFiles"]]。
+14. readFiles 输出用 system_text/system_rawResponse/system_error_text。
+15. 不能写 API Key、Token、Base URL、datasetId、toolId、webhook、数据库连接。
+16. 复杂需求先生成最小可运行版本，不要一次性生成数据库/HTTP/知识库大流程。
+
+======================================================================
+十二、版本记录修正版
+======================================================================
+
+v9：基础母版成功
+
+意义：
+- 无 AI。
+- 验证 userGuide、workflowStart、code、ifElseNode、textEditor/answerNode、文件后缀识别。
+- 可作为结构测试参考。
+
+不要误解：
+- v9 不是最终目标，因为没有 AI 生成 JSON。
+
+----------------------------------------------------------------------
+
+v10/v11：readFiles 排查版
+
+意义：
+- 尝试加入文档解析。
+
+修正：
+- 后续真实导出工作流显示 readFiles 应优先参考 version=4.9.2 和输出 system_text/system_rawResponse/system_error_text。
+- fileUrlList 优先参考 [["448745","userFiles"]]，不要把 v11 的直接引用当最终正确结论。
+
+----------------------------------------------------------------------
+
+v12：后缀分流 + readFiles 防护
+
+意义：
+- 图片不走 readFiles。
+- 文档/表格才走 readFiles。
+
+不要误解：
+- 这仍然是文件解析方向，不是最终“一句话生成工作流 JSON”方向。
+
+----------------------------------------------------------------------
+
+v13/v14/v15：CSV 直读尝试
+
+意义：
+- 测试代码节点是否能通过 httpRequest/fetch 读取上传文件链接。
+
+结论：
+- SystemHelper.httpRequest 不可用。
+- 这个方向偏离最终目标。
+- 不建议继续作为主线。
+
+----------------------------------------------------------------------
+
+v16/v17/v18：AI 生成 JSON 尝试
+
+意义：
+- 回到“一句话生成工作流 JSON”的真正目标。
+
+问题：
+- AI 节点触发 401 Invalid token。
+- v17 写死 qwen-plus，导致 401。
+- v18 即使手动模型/不写死模型，仍可能走默认模型配置，继续 401。
+
+修正：
+- 不能把失败归因于 JSON 结构，必须先验证平台模型是否可用。
+
+----------------------------------------------------------------------
+
+v19/v20：非 AI 模板生成测试
+
+意义：
+- 证明代码节点能生成 JSON 文本。
+- 证明 answerNode 能输出。
+- 证明无 AI 时不会触发 401。
+
+不要误解：
+- 它不是最终目标。
+- 它不能理解一句话需求。
+- 它只能按关键词生成写死模板。
+
+----------------------------------------------------------------------
+
+单 AI 节点 qwen-vl-max 测试文件
+
+意义：
+- 用最小 JSON 测 qwen-vl-max 是否能跑。
+
+注意：
+- 如果手动平台 qwen-vl-max 也 401，这个文件也一定失败。
+- 先测手动模型，再测 JSON 文件。
+
+======================================================================
+十三、下个对话推荐开场提示词【直接复制】
+======================================================================
+
+如果下一个对话要继续，请复制下面这段：
+
+我们在做 FastGPT 工作流 JSON 自动生成实验。请不要按旧总结误导。当前真正目标是做一个 FastGPT 内部“一句话生成工作流 JSON”的生成器：workflowStart → AI(chatNode) → 代码清洗 JSON → answerNode 输出 JSON。这个目标必须依赖 AI 节点；非 AI 代码模板只能证明结构能跑，不能实现最终目标。
+
+当前最大阻塞不是 JSON 结构，而是 FastGPT 平台 AI 模型调用报 401 Invalid token。手动新建普通 AI 应用选择 qwen-plus 输入“你好”也 401，所以至少 qwen-plus 模型渠道/API Key/Token/Base URL 配置异常。不能继续写死 qwen-plus。qwen-vl-max 只是待测模型，不能断言一定可用；必须先手动测试 qwen-vl-max 或其他模型是否能跑。如果所有模型手动都 401，任何带 AI 节点的 JSON 都跑不起来。
+
+用户环境历史记录显示 FastGPT V4.14.6，后续生成 JSON 必须优先参考用户自己导出的旧工作流结构，不要按仓库新结构硬造。顶层只用 nodes/edges/chatConfig；系统配置节点用 nodeId=userGuide、flowNodeType=userGuide；流程开始 workflowStart 常见 nodeId=448745；代码节点 flowNodeType=code；AI 节点 flowNodeType=chatNode、version=4.9.7；指定回复 answerNode 输入 key 必须是 text，不是 answerText；HTTP 节点如需使用是 httpRequest468；readFiles 输出优先是 system_text/system_rawResponse/system_error_text；文件上传引用优先用 [["448745","userFiles"]] 旧式嵌套格式。如果引用 userFiles，workflowStart.outputs 必须声明 userFiles。chatConfig._id、API Key、Base URL、datasetId、toolId、webhook、数据库连接都不能写死。
+
+请先帮助我确认平台 AI 模型是否可用；只有确认某个模型可用后，再生成单 AI 节点测试 JSON；单 AI 节点能跑后，再做 AI 生成 JSON + 代码清洗 + 指定回复的最小生成器。
+
+======================================================================
+十四、最短结论
+======================================================================
+
+一句话总结：
+
+> 旧总结里 readFiles/CSV 排查不是当前主线；当前主线是“一句话 → AI 节点 → 生成 FastGPT 工作流 JSON”。但 FastGPT 平台 AI 节点现在至少 qwen-plus 手动测试 401，所以必须先修/确认模型配置。JSON 生成应严格参考用户导出的旧版结构，尤其 chatNode、answerNode.text、readFiles.system_text、[[448745,userFiles]]，并且不要写死模型名、token、_id、datasetId、toolId、webhook、数据库连接。
+
+
+
+
+======================================================================
+十五、2026-05-10 后续实测追加总结【云版 4.15.0：一句话生成工作流 JSON 真正跑通阶段】
+======================================================================
+
+追加时间：2026-05-10
+追加目的：
+本追加内容记录在旧总结之后继续在 FastGPT 云版 4.15.0 上完成的所有关键测试、错误、修正、最终稳定方案，以及后续“知识库模板检索库”设计。该追加内容应优先于旧总结中关于“AI 节点是否可用”“代码节点是否能生成”“result 输出引用方式”等阶段性推测。
+
+一句话最新结论：
+
+> 云版 4.15.0 上，“一句话生成 FastGPT 工作流 JSON”的核心链路已经成立：
+> 用户一句话 → AI 生成 plan → 代码节点根据模板生成真实 FastGPT JSON → 指定回复输出 JSON → 用户复制导入 → 新工作流可运行。
+>
+> 已验证成功的模板：
+> 1. simple_reply：流程开始 → 指定回复。
+> 2. ai_chat：流程开始 → AI 对话。
+> 3. code_task：流程开始 → 代码运行 → 指定回复，其中随机数模板已成功运行。
+>
+> 关键修正：
+> 代码节点 result 输出被 answerNode 引用时，不能引用 key=result，而必须引用该 output 的 id。
+> 成功导出的引用格式是：
+> answerNode.inputs[0].value = ["代码节点nodeId", "代码节点result输出id"]
+
+======================================================================
+十六、模型状态最新结论：云版 AI 节点已可用
+======================================================================
+
+旧总结里曾记录 qwen-plus 手动测试 401 Invalid token，因此当时判断“至少 qwen-plus 模型渠道异常，qwen-vl-max 待测”。
+
+后续云版 4.15.0 实测已经更新：
+
+1. 单 AI 节点测试 02 成功。
+   用户截图显示：
+   - 流程开始 → 单 AI 节点测试。
+   - 输入：1。
+   - AI 成功返回：
+     {"ok":true,"test":"single_ai_node","message":"AI节点已成功调用","user_input":"1"}
+   - 没有 401。
+   - 耗时约 0.49s。
+
+2. 单 AI 节点 qwen-vl-max 候选测试 02b 成功。
+   用户截图显示：
+   - 输入：随机数。
+   - AI 成功返回：
+     {"ok":true,"test":"single_ai_node","message":"AI节点已成功调用","user_input":"用一句话概括用户输入"}
+   - 没有 401。
+   - 耗时约 0.66s。
+   - 实际运行记录中模型可能显示 qwen3.5-flash 或 Qwen-flash，说明云版会自动/手动选择可用模型。
+
+3. 3C 直接输出调试成功。
+   文件 3C.txt 记录：
+   - 应用：AI生成工作流JSON_直接输出调试_qwen-vl-max。
+   - 完成原因：正常完成。
+   - 模型：qwen3.5-flash。
+   - LLM tokens：Input/Output = 441/4883。
+   - 用户输入：做一个输入一句话后返回 hello 的工作流。
+   - AI 输出了一整段工作流 JSON。
+
+最新结论：
+
+> 云版 4.15.0 上 AI 节点可用，至少 Qwen-flash / qwen3.5-flash 这类云版模型能跑。
+> 现在继续失败时，不应优先怀疑模型 401，而应检查：
+> - AI 是否直接回复导致 plan 混进最终输出；
+> - 代码节点输入/输出是否注册；
+> - answerNode 引用的是 output id 还是 key；
+> - 生成出来的 JSON 是否混入了两个 JSON；
+> - 导入时是否只复制了真正的工作流 JSON。
+
+======================================================================
+十七、3C 直接让 AI 生成完整 JSON 的问题
+======================================================================
+
+3C 证明 AI 能输出 JSON，但也暴露了关键问题：
+
+AI 直接生成完整 FastGPT 工作流 JSON 时，会自己猜结构。例如 3C 生成的 edges 是：
+
+{
+  "sourceNodeId": "448745",
+  "targetNodeId": "code_node_1",
+  "sourceHandleId": "userChatInput",
+  "targetHandleId": "userChatInput"
+}
+
+但用户云版真实导出结构更接近：
+
+{
+  "source": "448745",
+  "target": "answer_result",
+  "sourceHandle": "448745-source-right",
+  "targetHandle": "answer_result-target-left"
+}
+
+因此：
+
+1. AI 直接生成 nodes/edges 不稳定。
+2. AI 会使用 sourceNodeId/targetNodeId/sourceHandleId/targetHandleId 这种未验证字段。
+3. 云版 4.15.0 可导入和可运行的边结构已确认优先使用 source/target/sourceHandle/targetHandle。
+4. 所以不能让 AI 自由生成完整工作流 JSON。
+5. 正确路线是：AI 只生成 plan，代码节点使用已验证模板拼 JSON。
+
+最终固定原则：
+
+> AI 不生成完整 nodes/edges。
+> AI 只负责理解需求，输出 plan JSON。
+> 代码节点根据 plan.workflow_type 调用模板函数生成工作流 JSON。
+
+======================================================================
+十八、D1 / D2 测试结果：AI → 代码节点 → 指定回复链路已打通
+======================================================================
+
+D1 测试目标：
+确认 AI 节点 answerText 能不能传给代码节点。
+
+手动流程：
+
+流程开始
+↓
+AI 对话
+↓
+代码运行
+↓
+指定回复
+
+D1 代码节点输入：
+ai_text = AI 节点 answerText
+
+D1 代码：
+
+function main(params) {
+  const ai_text = params && params.ai_text !== undefined ? params.ai_text : '';
+
+  return {
+    result: JSON.stringify({
+      ok: true,
+      test: 'D1_AI_to_code',
+      ai_text_type: typeof ai_text,
+      ai_text_length: String(ai_text).length,
+      ai_text: ai_text
+    }, null, 2)
+  };
+}
+
+用户实测结果：
+
+输入：测试
+
+返回：
+
+{
+  "ok": true,
+  "test": "D1_AI_to_code",
+  "ai_text_type": "string",
+  "ai_text_length": 33,
+  "ai_text": "{"ok":true,"msg":"hello_from_ai"}"
+}
+
+结论：
+AI → 代码节点变量传递成功。
+
+----------------------------------------------------------------------
+
+D2 测试目标：
+确认 AI 只输出 plan，代码节点能 JSON.parse 并生成模板结果。
+
+用户输入：124345678456
+
+返回：
+
+{
+  "ok": true,
+  "test": "D2_plan_to_template",
+  "plan": {
+    "workflow_type": "simple_reply",
+    "reply_text": "124345678456"
+  },
+  "workflow": {
+    "nodes": [],
+    "edges": [],
+    "chatConfig": {},
+    "note": "这里先不生成真正可导入结构，只测试 AI plan -> code template 是否打通",
+    "generated_from_plan": {
+      "workflow_type": "simple_reply",
+      "reply_text": "124345678456"
+    },
+    "expected_reply_text": "124345678456"
+  }
+}
+
+结论：
+AI 输出 plan → 代码节点 parse → 代码节点生成结果 → 指定回复输出，全链路成功。
+
+最新判断：
+
+> “一句话生成器”不再卡在模型，也不再卡在变量传递。
+> 核心问题转移为：模板 JSON 是否是云版 4.15.0 真正认可的导出结构。
+
+======================================================================
+十九、hello simple_reply 模板成功
+======================================================================
+
+用户用生成器生成：
+
+需求：
+做一个输入一句话后回复 hello 的工作流
+
+生成结果：
+流程开始 → 指定回复
+
+导入后 UI 显示：
+- 系统配置
+- 流程开始
+- 输出固定回复
+
+answerNode 内容：
+hello 或用户指定的固定内容。
+
+结论：
+
+> simple_reply 模板成功。
+> 这是第一个真正可导入、可运行的模板。
+
+simple_reply 的稳定结构：
+
+nodes:
+1. userGuide
+2. workflowStart
+3. answerNode
+
+edges:
+1. workflowStart → answerNode
+
+answerNode.inputs[0]:
+{
+  key: "text",
+  renderTypeList: ["textarea","reference"],
+  valueType: "any",
+  required: true,
+  value: "hello",
+  selectedTypeIndex: 0
+}
+
+注意：
+固定回复类工作流不需要代码节点，不要为了“统一结构”强行加代码节点。能直接 answerNode 就直接 answerNode，最稳。
+
+======================================================================
+二十、ai_chat 模板成功
+======================================================================
+
+用户让生成器生成：
+
+需求：
+做一个可以回答用户问题的 AI 助手
+
+生成结果：
+流程开始 → AI 对话节点
+
+截图中 AI 节点显示：
+- 节点名：AI 对话节点_导入后检查模型
+- 模型：Qwen-flash
+- 提示词：你是一个友好、简洁的 AI 助手。
+- 聊天记录：6
+- 用户问题：流程开始 → 用户问题
+- 知识库引用：可选
+- 文件链接：可选
+- 输出：新的上下文、AI 回复内容
+
+结论：
+
+> ai_chat 模板成功。
+> 这是第二个真正可用模板。
+> 用户导入后需要检查模型是否保持可用，如果模型为空或不可用，手动选择云版可用模型，例如 Qwen-flash。
+
+ai_chat 结构：
+
+流程开始
+↓
+AI 对话
+
+关键配置：
+1. AI 节点 flowNodeType = "chatNode"
+2. avatar = "core/workflow/template/aiChat"
+3. model.value 可以写 Qwen-flash 或空字符串让用户导入后选；本次云版实际 Qwen-flash 可用。
+4. isResponseAnswerText = true，因为这个是最终工作流，不是中间生成器。
+5. userChatInput 引用流程开始：
+   value = ["448745", "userChatInput"]
+6. fileUrlList 暂时空数组：
+   value = []
+
+注意：
+生成器自己的 AI 节点必须关闭“直接回复用户”，因为它只是生成 plan。
+但生成出来的 ai_chat 工作流里的 AI 节点应该开启直接回复用户。
+
+======================================================================
+二十一、随机数 code_task 模板最终成功
+======================================================================
+
+最初生成随机数时报错 Data validation error，后续定位并修复。
+
+用户需求：
+生成一个随机数
+
+正确目标结构：
+
+流程开始
+↓
+代码运行
+↓
+指定回复
+
+随机数代码：
+
+function main(params) {
+  const n = Math.floor(Math.random() * 1000000);
+  return { result: String(n) };
+}
+
+最初失败表现：
+- 导入后节点出现。
+- 代码节点里有代码。
+- 指定回复引用“生成随机数 → result”。
+- 运行时报 Data validation error。
+- 代码节点输出区域只显示：
+  - 完整响应数据 Object
+  - 错误信息 String
+- 没有显示 result String。
+
+第一次错误判断：
+以为代码节点 outputs 里添加了：
+{
+  id: "result",
+  key: "result",
+  valueType: "string"
+}
+就可以被引用。
+
+后续真实导出成功工作流后发现：
+云版 4.15.0 代码节点动态输出有一个独立随机 id，例如：
+
+{
+  "id": "qLUQfhG0ILRX",
+  "type": "dynamic",
+  "key": "result",
+  "valueType": "string",
+  "label": "result"
+}
+
+而 answerNode 引用的是：
+
+"value": [
+  "x2SKHIaS2Ra6SHGq",
+  "qLUQfhG0ILRX"
+]
+
+也就是说：
+
+> answerNode 引用的是 output.id，不是 output.key。
+
+这就是最关键修正点。
+
+----------------------------------------------------------------------
+
+失败写法：
+
+代码节点 nodeId:
+code_task_node
+
+代码节点输出：
+{
+  id: "result",
+  key: "result"
+}
+
+answerNode 引用：
+value: ["code_task_node", "result"]
+
+这个可能导入后不稳定，云版没有正确注册自定义输出，或引用错误。
+
+----------------------------------------------------------------------
+
+成功写法：
+
+代码节点 nodeId:
+code_task_node
+
+代码节点输出：
+{
+  id: "code_result_output",
+  type: "dynamic",
+  key: "result",
+  valueType: "string",
+  label: "result"
+}
+
+answerNode 引用：
+value: ["code_task_node", "code_result_output"]
+
+关键原则：
+
+> answerNode 的 value 第二项必须引用目标输出的 id。
+> key 只是变量名，给代码 return 对象对应使用；引用时不一定用 key。
+> 自定义输出必须同时有 id 和 key。
+> id 可以人工固定，只要同一工作流内唯一即可。
+> 生成器里可以统一固定 id = "code_result_output"。
+
+----------------------------------------------------------------------
+
+用户最终截图证明成功：
+- 代码节点输出区域显示自定义输出：
+  result String
+- 指定回复引用：
+  代码运行 → result
+- 运行输出随机数：
+  480617
+  370993
+  后续又输出：
+  449484
+  388715
+- 每次运行数字不同。
+
+最终结论：
+
+> code_task 随机数模板成功。
+> 这是第三个真正可用模板。
+> 之前 Data validation error 的根本原因不是代码本身，而是 answerNode 引用了 output key，而云版需要引用 output id。
+
+======================================================================
+二十二、生成器当前能力状态
+======================================================================
+
+已成功：
+
+1. simple_reply
+   结构：
+   流程开始 → 指定回复
+   示例：
+   - 回复 hello
+   - 返回 123
+   - 固定输出 你好
+
+2. ai_chat
+   结构：
+   流程开始 → AI 对话
+   示例：
+   - 做一个 AI 助手
+   - 做一个聊天机器人
+   - 做一个可以回答用户问题的助手
+
+3. code_task 无输入类
+   结构：
+   流程开始 → 代码运行 → 指定回复
+   示例：
+   - 生成随机数
+   - 生成验证码
+   - 获取当前时间
+   - 计算固定表达式
+   - 生成 UUID
+   - 生成简单密码
+
+暂未完全验证：
+
+1. code_task 带用户输入类
+   示例：
+   - 统计用户输入文本长度
+   - 把用户输入转大写
+   - 判断用户输入是不是数字
+   - 根据用户输入计算表达式
+   原因：
+   需要代码节点自定义输入 user_input 正确引用 workflowStart.userChatInput。
+   之前失败时，用户输入位置显示：
+   ["448745","userChatInput"]
+   并被当成手动文本，不是引用变量。
+   后续需要手动搭一个带输入变量的代码节点并导出母版。
+
+2. ifElse 判断器模板
+   示例：
+   - 如果包含 hello 回复你好，否则回复没听懂。
+   原因：
+   需要云版 4.15.0 判断器 ifElseList 母版。
+
+3. readFiles 文件解析模板
+   示例：
+   - 上传文件后读取内容。
+   - 解析 txt/docx/pdf/csv。
+   原因：
+   需要确认云版 4.15.0 的 userFiles、fileSelectConfig、readFiles 输出和引用格式。
+   旧总结记录 readFiles 输出应优先使用：
+   system_text
+   system_rawResponse
+   system_error_text
+
+4. 图片识别模板
+   示例：
+   - 上传图片后识别内容。
+   原因：
+   需要云版 4.15.0 视觉模型 fileUrlList 母版。
+
+5. HTTP / 数据库 / 工具 / 知识库搜索模板
+   原因：
+   涉及 datasetId、toolId、API Key、Base URL、数据库连接、工具参数，不能写死。
+   只能做半自动模板，导入后手动配置，或者在生成器应用里固定配置。
+
+======================================================================
+二十三、当前生成器架构：不要再回退成 AI 直接生成 JSON
+======================================================================
+
+最终稳定架构：
+
+用户一句话
+↓
+AI 需求理解器
+↓
+输出 plan JSON
+↓
+代码模板生成器
+↓
+根据 plan.workflow_type 调用模板函数
+↓
+输出完整 FastGPT JSON
+↓
+指定回复显示 JSON
+↓
+用户复制导入
+
+AI 节点提示词必须强调：
+1. 只输出 JSON。
+2. 不要 Markdown。
+3. 不要解释。
+4. 不要生成 nodes。
+5. 不要生成 edges。
+6. 不要生成 chatConfig。
+7. 只生成 plan。
+8. workflow_type 从白名单选择。
+9. code_task 的 js_code 必须是完整 function main(params)。
+10. js_code 必须 return { result: String(...) }。
+
+推荐 workflow_type：
+
+1. simple_reply
+2. ai_chat
+3. code_task
+4. file_task
+5. unsupported
+
+推荐 plan 例子：
+
+simple_reply:
+{
+  "workflow_type": "simple_reply",
+  "reply_text": "hello"
+}
+
+ai_chat:
+{
+  "workflow_type": "ai_chat",
+  "system_prompt": "你是一个友好、简洁的 AI 助手。",
+  "model": "Qwen-flash"
+}
+
+code_task:
+{
+  "workflow_type": "code_task",
+  "task": "random_number",
+  "name": "生成随机数",
+  "js_code": "function main(params) {\n  const n = Math.floor(Math.random() * 1000000);\n  return { result: String(n) };\n}"
+}
+
+file_task:
+{
+  "workflow_type": "file_task",
+  "reason": "该需求需要文件上传/readFiles/AI视觉节点，当前版本暂不自动生成。"
+}
+
+unsupported:
+{
+  "workflow_type": "unsupported",
+  "reason": "该需求需要数据库、HTTP、知识库或工具调用等外部配置，不能直接写死。"
+}
+
+======================================================================
+二十四、AI 需求理解器最新推荐提示词
+======================================================================
+
+你是 FastGPT 工作流计划生成器。
+
+你只输出 JSON，不要 Markdown，不要解释。
+你不要生成 nodes。
+你不要生成 edges。
+你不要生成 chatConfig。
+你只负责把用户一句话转换成 plan JSON。
+
+当前支持 workflow_type：
+
+1. simple_reply
+用于固定回复类工作流。
+例子：
+- 回复 hello
+- 返回 你好
+- 输入任意内容后固定输出 123
+
+输出：
+{
+  "workflow_type": "simple_reply",
+  "reply_text": "hello"
+}
+
+2. ai_chat
+用于 AI 对话助手。
+例子：
+- 做一个可以回答用户问题的 AI 助手
+- 做一个聊天机器人
+- 做一个学习助手
+
+输出：
+{
+  "workflow_type": "ai_chat",
+  "system_prompt": "你是一个友好、简洁的 AI 助手。",
+  "model": "Qwen-flash"
+}
+
+3. code_task
+用于需要代码节点的任务。
+例子：
+- 生成随机数
+- 计算 1+1
+- 获取当前时间
+- 生成验证码
+- 生成 UUID
+- 生成简单密码
+
+输出：
+{
+  "workflow_type": "code_task",
+  "task": "random_number",
+  "name": "生成随机数",
+  "js_code": "function main(params) {\\n  const n = Math.floor(Math.random() * 1000000);\\n  return { result: String(n) };\\n}"
+}
+
+js_code 规则：
+- 必须是完整 JavaScript 函数：function main(params) { ... }
+- 必须 return 一个对象。
+- 必须 return { result: String(...) }。
+- 不要使用 fetch。
+- 不要使用 require。
+- 不要访问外部网络。
+- 不要写 API Key。
+- 不要写数据库连接。
+- 暂时不要生成需要用户输入变量的代码，除非模板已经支持。
+
+4. file_task
+用于上传文件、解析文件、图片识别、表格解析。
+输出：
+{
+  "workflow_type": "file_task",
+  "reason": "该需求需要文件上传/readFiles/AI视觉节点，当前版本暂不自动生成。"
+}
+
+5. unsupported
+用于数据库、HTTP、知识库、工具调用、票据入库等复杂流程。
+输出：
+{
+  "workflow_type": "unsupported",
+  "reason": "该需求需要专用工具ID、数据库连接或外部配置，不能直接写死。"
+}
+
+判断规则：
+- “回复/返回/固定输出 xxx” → simple_reply
+- “AI助手/聊天机器人/回答用户问题” → ai_chat
+- “随机数/验证码/UUID/密码/当前时间/固定计算” → code_task
+- “上传文件/解析文档/读取表格/识别图片” → file_task
+- “数据库/HTTP接口/知识库/工具调用/票据入库” → unsupported
+
+只输出一个 JSON 对象。
+
+======================================================================
+二十五、最新代码模板生成器 JS【已修正 code_task result 输出 id 引用】
+======================================================================
+
+以下是当前最新可用核心代码。重点修正：
+1. code_task 的输出 id 固定为 code_result_output。
+2. answerNode 引用 ["code_task_node", "code_result_output"]。
+3. 代码节点 outputs 中包含 system_rawResponse、code_result_output、error。
+4. 代码节点 outputs 的 system_addOutputParam 使用 customFieldConfig。
+5. chatConfig 包含 variables 与 scheduledTriggerConfig，但不要复制旧文件中的 _id。
+6. 代码节点不再强行添加 user_input 输入，避免引用格式错误导致 Data validation error。
+
+【完整 JS 见本追加总结文件末尾“附录A”。】
+
+======================================================================
+二十六、知识库模板检索库设计
+======================================================================
+
+用户提出：
+“做一个知识库？能不能让他从知识库搜索，需要哪个就返回哪个模板。”
+
+结论：
+可以，而且很适合下一阶段。但知识库不是直接存巨大 JSON 让 AI 粘贴，而是存“模板卡片”。
+
+推荐架构：
+
+流程开始
+↓
+AI：把用户一句话转成检索 query / 初步需求
+↓
+知识库搜索：从“FastGPT 工作流模板库”找匹配模板卡片
+↓
+AI：根据搜索结果选择 template_id，并补全 params
+↓
+代码节点：根据 template_id 调用固定模板函数
+↓
+指定回复：输出 JSON
+
+知识库职责：
+1. 存模板说明。
+2. 存适用场景。
+3. 存关键词。
+4. 存示例 plan。
+5. 存是否已验证。
+6. 帮 AI 选择 template_id。
+
+代码节点职责：
+1. 根据 template_id 调用白名单模板函数。
+2. 生成真正可导入的 nodes/edges/chatConfig。
+3. 修正 output id 引用。
+4. 遇到未支持模板，返回提示型工作流，不乱造。
+
+不要让知识库返回完整巨大 JSON 的原因：
+1. 知识库切片可能把 JSON 切断。
+2. 检索可能只返回一半。
+3. AI 可能拼错。
+4. JSON 结构变动后不好维护。
+5. 已验证模板应由代码节点固定生成。
+
+----------------------------------------------------------------------
+
+模板卡片推荐格式：
+
+TEMPLATE_ID:
+WORKFLOW_TYPE:
+STATUS:
+KEYWORDS:
+WHEN_TO_USE:
+WHEN_NOT_TO_USE:
+STRUCTURE:
+REQUIRED_PARAMS:
+OUTPUT_RULES:
+FASTGPT_VERSION:
+EXAMPLE_USER_REQUEST:
+EXAMPLE_PLAN:
+NOTES:
+
+----------------------------------------------------------------------
+
+已验证模板卡片 1：
+
+TEMPLATE_ID: simple_reply.basic.v1
+WORKFLOW_TYPE: simple_reply
+STATUS: tested_cloud_4.15.0
+KEYWORDS: 回复, 返回, 固定输出, hello, 你好, 文本回复
+WHEN_TO_USE: 用户要求输入任意内容后固定回复一段文本。
+WHEN_NOT_TO_USE: 用户要求动态计算、随机数、AI回答、文件解析时不要使用。
+STRUCTURE: workflowStart -> answerNode
+REQUIRED_PARAMS:
+- reply_text: 固定回复文本
+OUTPUT_RULES:
+- answerNode.inputs[0].key 必须是 text
+- answerNode.inputs[0].value 直接写字符串
+- selectedTypeIndex = 0
+FASTGPT_VERSION: cloud 4.15.0
+EXAMPLE_USER_REQUEST: 做一个输入一句话后回复 hello 的工作流
+EXAMPLE_PLAN:
+{
+  "template_id": "simple_reply.basic.v1",
+  "workflow_type": "simple_reply",
+  "reply_text": "hello"
+}
+NOTES:
+该模板已实测成功，是最稳定模板。
+
+----------------------------------------------------------------------
+
+已验证模板卡片 2：
+
+TEMPLATE_ID: ai_chat.basic.v1
+WORKFLOW_TYPE: ai_chat
+STATUS: tested_cloud_4.15.0
+KEYWORDS: AI助手, 聊天机器人, 回答问题, 问答助手, 智能助手
+WHEN_TO_USE: 用户要求做一个根据用户输入回答问题的 AI 对话助手。
+WHEN_NOT_TO_USE: 用户只要求固定回复时不要使用；用户要求文件解析、数据库入库时不要使用。
+STRUCTURE: workflowStart -> chatNode
+REQUIRED_PARAMS:
+- system_prompt: AI 系统提示词
+- model: 云版可用模型，可默认 Qwen-flash
+OUTPUT_RULES:
+- chatNode.isResponseAnswerText = true
+- chatNode.userChatInput 引用 workflowStart.userChatInput
+- fileUrlList 暂时为空数组
+FASTGPT_VERSION: cloud 4.15.0
+EXAMPLE_USER_REQUEST: 做一个可以回答用户问题的 AI 助手
+EXAMPLE_PLAN:
+{
+  "template_id": "ai_chat.basic.v1",
+  "workflow_type": "ai_chat",
+  "system_prompt": "你是一个友好、简洁的 AI 助手。",
+  "model": "Qwen-flash"
+}
+NOTES:
+导入后需要检查模型是否可用。云版实测 Qwen-flash 可用。
+
+----------------------------------------------------------------------
+
+已验证模板卡片 3：
+
+TEMPLATE_ID: code_task.random_number.v1
+WORKFLOW_TYPE: code_task
+STATUS: tested_cloud_4.15.0
+KEYWORDS: 随机数, random, number, 随机整数, 随机生成, 验证码
+WHEN_TO_USE: 用户要求生成随机数、随机整数、随机验证码等。
+WHEN_NOT_TO_USE: 用户要求使用外部接口、数据库、文件时不要使用。
+STRUCTURE: workflowStart -> code -> answerNode
+REQUIRED_PARAMS:
+- name: 代码节点名称
+- js_code: JavaScript 代码
+OUTPUT_RULES:
+- js_code 必须 function main(params)
+- 必须 return { result: String(...) }
+- code 节点 outputs 必须包含：
+  id: code_result_output
+  key: result
+  valueType: string
+- answerNode 必须引用：
+  value: ["code_task_node", "code_result_output"]
+FASTGPT_VERSION: cloud 4.15.0
+EXAMPLE_USER_REQUEST: 生成一个随机数
+EXAMPLE_PLAN:
+{
+  "template_id": "code_task.random_number.v1",
+  "workflow_type": "code_task",
+  "task": "random_number",
+  "name": "生成随机数",
+  "js_code": "function main(params) {\\n  const n = Math.floor(Math.random() * 1000000);\\n  return { result: String(n) };\\n}"
+}
+NOTES:
+该模板一开始因 answerNode 引用 key=result 报 Data validation error，后修正为引用 output.id 后成功。
+
+----------------------------------------------------------------------
+
+知识库搜索方式：
+
+1. 用户输入一句话。
+2. 第一个 AI 节点输出检索 JSON：
+{
+  "query": "随机数 code_task 代码节点",
+  "need": "生成随机数工作流",
+  "expected_type": "code_task"
+}
+
+3. 知识库搜索命中 code_task.random_number.v1。
+4. 第二个 AI 节点输出：
+{
+  "template_id": "code_task.random_number.v1",
+  "workflow_type": "code_task",
+  "params": {
+    "name": "生成随机数",
+    "js_code": "function main(params) { const n = Math.floor(Math.random() * 1000000); return { result: String(n) }; }"
+  }
+}
+
+5. 代码节点只认白名单 template_id：
+if template_id === "simple_reply.basic.v1" ...
+if template_id === "ai_chat.basic.v1" ...
+if template_id === "code_task.random_number.v1" ...
+
+注意：
+知识库搜索节点的 datasetId 不能写死。生成器应用里要手动配置模板知识库。
+总结旧版也已强调 datasetId / toolId / API Key / 数据库连接不能写死。
+
+======================================================================
+二十七、后续扩展路线
+======================================================================
+
+当前阶段：
+1. simple_reply ✅
+2. ai_chat ✅
+3. code_task.random_number ✅
+
+下一步建议：
+
+第一优先级：继续扩展无输入 code_task
+这些不需要新母版：
+- 当前时间
+- 6 位验证码
+- UUID
+- 简单密码
+- 固定表达式计算
+
+第二优先级：带用户输入 code_task 母版
+需要手动搭成功并导出：
+- user_input = workflowStart.userChatInput
+- 统计输入长度
+- 转大写/转小写
+- 判断数字
+- 动态表达式计算
+
+第三优先级：判断器 ifElse 母版
+需要手动搭成功并导出：
+- 流程开始 → 判断器 → 回复A / 回复B
+- 确认 ifElseList 结构
+- 确认 sourceHandle IF/ELSE 格式
+
+第四优先级：文件 readFiles 母版
+需要手动搭成功并导出：
+- workflowStart 开启 userFiles
+- chatConfig.fileSelectConfig
+- readFiles.fileUrlList 引用
+- readFiles 输出 system_text/system_rawResponse/system_error_text
+
+第五优先级：图片 AI 视觉母版
+需要手动搭成功并导出：
+- workflowStart.userFiles
+- chatNode.fileUrlList
+- qwen-vl-max 或云版视觉模型
+- 输出 answerText
+
+第六优先级：知识库模板检索库
+先建“FastGPT工作流模板库”，放模板卡片。
+生成器里增加 datasetSearchNode。
+datasetId 不写进通用模板，生成器应用里手动配置。
+
+第七优先级：HTTP/数据库/工具
+只能做半自动模板。
+不写死 toolId、数据库连接、API Key、Base URL。
+导入后手动配置。
+
+======================================================================
+二十八、常见错误与最终修正
+======================================================================
+
+错误 1：
+AI 节点 401 Invalid token。
+
+旧判断：
+可能平台 AI 节点不能用。
+
+最新修正：
+云版 4.15.0 后续测试 AI 可用。若再出现 401，优先检查具体模型配置，不要直接否定整个生成器。
+
+----------------------------------------------------------------------
+
+错误 2：
+AI 直接生成完整 JSON。
+
+问题：
+容易生成 sourceNodeId/targetNodeId 这种不匹配真实导出的结构。
+
+修正：
+AI 只生成 plan，代码节点生成 JSON。
+
+----------------------------------------------------------------------
+
+错误 3：
+测试 A/B 报 Data validation error。
+
+问题：
+AI → 代码清洗 → 指定回复链路设计不稳；AI 输出结构和校验代码不匹配；后续又发现代码节点输出引用 key/id 问题。
+
+修正：
+先 D1/D2 验证 AI→代码，再使用固定模板。
+
+----------------------------------------------------------------------
+
+错误 4：
+随机数生成器生成了“流程开始 → 指定回复：该需求需要代码节点”。
+
+原因：
+V2 为了避免代码节点错误，先把随机数识别为 need_code 并拦截。
+
+修正：
+V3 加入 code_task 模板。
+
+----------------------------------------------------------------------
+
+错误 5：
+代码节点 user_input 输入框显示 ["448745","userChatInput"]，并且左边显示手动输入。
+
+原因：
+自定义输入变量引用格式不对，被当成普通字符串。
+
+修正：
+无输入 code_task 先删除 user_input。
+带输入 code_task 以后单独导出母版再加。
+
+----------------------------------------------------------------------
+
+错误 6：
+代码节点 outputs 里写了 result，但 UI 没显示 result。
+
+原因：
+自动生成结构不完全符合云版 4.15.0，特别是输出 id/key 和 answerNode 引用关系。
+
+修正：
+用真实导出母版后确认：answerNode 要引用 output.id。
+
+----------------------------------------------------------------------
+
+错误 7：
+最终输出中同时出现 plan JSON 和 workflow JSON。
+
+原因：
+生成器里的 AI 需求理解器开启了“直接回复用户”。
+
+修正：
+生成器里的 AI 节点必须关闭直接回复用户。
+最终指定回复只引用代码模板生成器.result。
+
+----------------------------------------------------------------------
+
+错误 8：
+导入时报错，可能是复制了两个 JSON。
+
+原因：
+用户把 plan JSON 和 workflow JSON 一起复制导入。
+
+修正：
+导入时只能复制第二段：
+{
+  "nodes": [...],
+  "edges": [...],
+  "chatConfig": {...}
+}
+
+======================================================================
+二十九、最短给下一个对话的提醒
+======================================================================
+
+如果下一个对话继续做这个项目，先看这里：
+
+我们在 FastGPT 云版 4.15.0 做“一句话生成工作流 JSON”的生成器。现在不是旧阶段了，AI 节点已经能用，simple_reply、ai_chat、code_task.random_number 都已经实测成功。真正稳定架构是：workflowStart → AI 需求理解器 → 代码模板生成器 → answerNode 输出 JSON。AI 只生成 plan，不直接生成 nodes/edges。代码节点根据 plan.workflow_type 调用模板函数生成 JSON。
+
+最关键修正：代码节点 result 输出被 answerNode 引用时，引用的是 output.id，不是 key。成功导出的代码节点 outputs 里 result 是：
+{id:"qLUQfhG0ILRX", key:"result", valueType:"string"}
+answerNode 引用：
+["x2SKHIaS2Ra6SHGq","qLUQfhG0ILRX"]
+所以生成器里固定用：
+代码节点输出 id = "code_result_output"
+key = "result"
+answerNode.value = ["code_task_node","code_result_output"]
+
+不要再写 ["code_task_node","result"]，那会导致 Data validation error。
+
+当前已成功模板：
+1. simple_reply.basic.v1：流程开始 → 指定回复。
+2. ai_chat.basic.v1：流程开始 → AI 对话。
+3. code_task.random_number.v1：流程开始 → 代码运行 → 指定回复。
+
+下一步如果要扩展，要么添加无输入 code_task（时间、验证码、UUID、密码、固定计算），要么先手动搭一个“带 user_input 输入变量的代码节点母版”并导出，再支持文本处理/动态计算。文件、判断器、知识库、HTTP、数据库都要先导出母版，不能让 AI 直接乱写。
+
+======================================================================
+附录A：最新代码模板生成器 JS【当前推荐版本】
+======================================================================
+
+function main(params) {
+  const ai_text = params && params.ai_text !== undefined ? String(params.ai_text) : '';
+
+  function cleanJsonText(text) {
+    let clean = String(text || '').trim();
+
+    clean = clean
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/```$/i, '')
+      .trim();
+
+    const start = clean.indexOf('{');
+    const end = clean.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      clean = clean.slice(start, end + 1);
+    }
+
+    return clean;
+  }
+
+  function safeText(value, fallback) {
+    const text = value === undefined || value === null ? '' : String(value);
+    return text.trim() ? text : fallback;
+  }
+
+  function makeChatConfig() {
+    return {
+      variables: [],
+      scheduledTriggerConfig: {
+        cronString: '',
+        timezone: 'Etc/GMT-8',
+        defaultPrompt: ''
+      }
+    };
+  }
+
+  function makeUserGuide(welcomeText) {
+    return {
+      nodeId: 'userGuide',
+      name: '系统配置',
+      intro: '可以配置应用的系统参数',
+      avatar: 'core/workflow/template/systemConfig',
+      flowNodeType: 'userGuide',
+      position: { x: -1000, y: 200 },
+      version: '481',
+      inputs: [
+        {
+          key: 'welcomeText',
+          renderTypeList: ['hidden'],
+          valueType: 'string',
+          label: 'core.app.Welcome Text',
+          value: welcomeText || '这是由一句话生成器生成的工作流。'
+        },
+        {
+          key: 'variables',
+          renderTypeList: ['hidden'],
+          valueType: 'any',
+          label: 'core.app.Chat Variable',
+          value: []
+        },
+        {
+          key: 'questionGuide',
+          renderTypeList: ['hidden'],
+          valueType: 'boolean',
+          label: 'core.app.Question Guide',
+          value: false
+        },
+        {
+          key: 'tts',
+          renderTypeList: ['hidden'],
+          valueType: 'any',
+          label: '',
+          value: { type: 'web' }
+        },
+        {
+          key: 'whisper',
+          renderTypeList: ['hidden'],
+          valueType: 'any',
+          label: '',
+          value: {
+            open: false,
+            autoSend: false,
+            autoTTSResponse: false
+          }
+        },
+        {
+          key: 'scheduleTrigger',
+          renderTypeList: ['hidden'],
+          valueType: 'any',
+          label: ''
+        }
+      ],
+      outputs: []
+    };
+  }
+
+  function makeWorkflowStart() {
+    return {
+      nodeId: '448745',
+      name: '流程开始',
+      intro: '',
+      avatar: 'core/workflow/template/workflowStart',
+      flowNodeType: 'workflowStart',
+      position: { x: -1000, y: 650 },
+      version: '481',
+      inputs: [
+        {
+          key: 'userChatInput',
+          renderTypeList: ['reference', 'textarea'],
+          valueType: 'string',
+          label: 'workflow:user_question',
+          required: true,
+          toolDescription: '用户问题',
+          debugLabel: ''
+        }
+      ],
+      outputs: [
+        {
+          id: 'userChatInput',
+          key: 'userChatInput',
+          label: 'common:core.module.input.label.user question',
+          type: 'static',
+          valueType: 'string',
+          description: ''
+        }
+      ]
+    };
+  }
+
+  function makeAnswerStatic(replyText) {
+    return {
+      nodeId: 'answer_result',
+      name: '输出固定回复',
+      intro: '该模块可以直接回复一段指定的内容。',
+      avatar: 'core/workflow/template/reply',
+      flowNodeType: 'answerNode',
+      position: { x: -400, y: 650 },
+      version: '481',
+      inputs: [
+        {
+          key: 'text',
+          renderTypeList: ['textarea', 'reference'],
+          valueType: 'any',
+          required: true,
+          label: 'common:core.module.input.label.Response content',
+          description: 'common:core.module.input.description.Response content',
+          placeholder: 'common:core.module.input.description.Response content',
+          value: String(replyText || 'hello'),
+          selectedTypeIndex: 0,
+          isRichText: false,
+          maxLength: 100000,
+          debugLabel: '',
+          toolDescription: ''
+        }
+      ],
+      outputs: []
+    };
+  }
+
+  function makeAnswerFromCode() {
+    return {
+      nodeId: 'answer_result',
+      name: '输出代码结果',
+      intro: '该模块可以直接回复代码节点的 result 输出。',
+      avatar: 'core/workflow/template/reply',
+      flowNodeType: 'answerNode',
+      position: { x: 200, y: 650 },
+      version: '481',
+      inputs: [
+        {
+          key: 'text',
+          renderTypeList: ['textarea', 'reference'],
+          valueType: 'any',
+          required: true,
+          label: 'common:core.module.input.label.Response content',
+          description: 'common:core.module.input.description.Response content',
+          placeholder: 'common:core.module.input.description.Response content',
+          value: ['code_task_node', 'code_result_output'],
+          selectedTypeIndex: 1,
+          connected: true,
+          isRichText: false,
+          maxLength: 100000,
+          debugLabel: '',
+          toolDescription: ''
+        }
+      ],
+      outputs: []
+    };
+  }
+
+  function makeCodeNode(jsCode, nodeName) {
+    const code = safeText(jsCode, [
+      'function main(params) {',
+      '  const n = Math.floor(Math.random() * 1000000);',
+      '  return { result: String(n) };',
+      '}'
+    ].join('\n'));
+
+    return {
+      nodeId: 'code_task_node',
+      name: nodeName || '代码运行',
+      intro: '在沙盒里执行一段脚本代码，可用于进行复杂的数据处理，语法和可用依赖会受到限制。',
+      avatar: 'core/workflow/template/codeRun',
+      flowNodeType: 'code',
+      showStatus: true,
+      position: { x: -400, y: 650 },
+      inputs: [
+        {
+          key: 'system_addInputParam',
+          renderTypeList: ['addInputParam'],
+          valueType: 'dynamic',
+          label: '',
+          required: false,
+          description: '这些变量会作为代码的运行的输入参数',
+          customInputConfig: {
+            selectValueTypeList: [
+              'string',
+              'number',
+              'boolean',
+              'object',
+              'arrayString',
+              'arrayNumber',
+              'arrayBoolean',
+              'arrayObject',
+              'arrayAny',
+              'any',
+              'chatHistory',
+              'datasetQuote',
+              'dynamic',
+              'selectDataset',
+              'selectApp'
+            ],
+            showDescription: false,
+            showDefaultValue: true
+          }
+        },
+        {
+          key: 'codeType',
+          renderTypeList: ['hidden'],
+          label: '',
+          valueType: 'string',
+          value: 'js'
+        },
+        {
+          key: 'code',
+          renderTypeList: ['custom'],
+          label: '',
+          valueType: 'string',
+          value: code
+        }
+      ],
+      outputs: [
+        {
+          id: 'system_addOutputParam',
+          key: 'system_addOutputParam',
+          type: 'dynamic',
+          valueType: 'dynamic',
+          label: '',
+          customFieldConfig: {
+            selectValueTypeList: [
+              'string',
+              'number',
+              'boolean',
+              'object',
+              'arrayString',
+              'arrayNumber',
+              'arrayBoolean',
+              'arrayObject',
+              'arrayAny',
+              'any',
+              'chatHistory',
+              'datasetQuote',
+              'dynamic',
+              'selectDataset',
+              'selectApp'
+            ],
+            showDescription: false,
+            showDefaultValue: false
+          },
+          description: '将代码中 return 的对象作为输出，传递给后续的节点。变量名需要对应 return 的 key',
+          valueDesc: ''
+        },
+        {
+          id: 'system_rawResponse',
+          key: 'system_rawResponse',
+          label: '完整响应数据',
+          valueType: 'object',
+          type: 'static',
+          valueDesc: '',
+          description: ''
+        },
+        {
+          id: 'code_result_output',
+          type: 'dynamic',
+          key: 'result',
+          valueType: 'string',
+          label: 'result',
+          valueDesc: '',
+          description: ''
+        },
+        {
+          id: 'error',
+          key: 'error',
+          label: '错误信息',
+          valueType: 'string',
+          type: 'error',
+          valueDesc: '',
+          description: ''
+        }
+      ],
+      catchError: false
+    };
+  }
+
+  function makeAiChatNode(systemPrompt, modelName) {
+    return {
+      nodeId: 'ai_chat_node',
+      name: 'AI 对话节点_导入后检查模型',
+      intro: 'AI 大模型对话。导入后如果模型不可用，请手动选择云版可用模型。',
+      avatar: 'core/workflow/template/aiChat',
+      flowNodeType: 'chatNode',
+      showStatus: true,
+      position: { x: -400, y: 650 },
+      version: '481',
+      inputs: [
+        {
+          key: 'model',
+          renderTypeList: ['settingLLMModel', 'reference'],
+          label: 'core.module.input.label.aiModel',
+          valueType: 'string',
+          selectedTypeIndex: 0,
+          value: modelName || 'Qwen-flash'
+        },
+        {
+          key: 'temperature',
+          renderTypeList: ['hidden'],
+          label: '',
+          value: 0,
+          valueType: 'number',
+          min: 0,
+          max: 10,
+          step: 1
+        },
+        {
+          key: 'maxToken',
+          renderTypeList: ['hidden'],
+          label: '',
+          value: 2000,
+          valueType: 'number',
+          min: 100,
+          max: 16000,
+          step: 50
+        },
+        {
+          key: 'isResponseAnswerText',
+          renderTypeList: ['hidden'],
+          label: '',
+          value: true,
+          valueType: 'boolean'
+        },
+        {
+          key: 'quoteTemplate',
+          renderTypeList: ['hidden'],
+          label: '',
+          valueType: 'string'
+        },
+        {
+          key: 'quotePrompt',
+          renderTypeList: ['hidden'],
+          label: '',
+          valueType: 'string'
+        },
+        {
+          key: 'systemPrompt',
+          renderTypeList: ['textarea', 'reference'],
+          max: 30000,
+          valueType: 'string',
+          label: 'core.ai.Prompt',
+          description: 'core.app.tip.chatNodeSystemPromptTip',
+          placeholder: 'core.app.tip.chatNodeSystemPromptTip',
+          value: safeText(systemPrompt, '你是一个友好、简洁的 AI 助手。请根据用户问题直接回答。')
+        },
+        {
+          key: 'history',
+          renderTypeList: ['numberInput', 'reference'],
+          valueType: 'chatHistory',
+          label: 'core.module.input.label.chat history',
+          description: '最多携带多少轮对话记录',
+          required: true,
+          min: 0,
+          max: 50,
+          value: 6
+        },
+        {
+          key: 'userChatInput',
+          renderTypeList: ['reference', 'textarea'],
+          valueType: 'string',
+          label: '用户问题',
+          required: true,
+          toolDescription: '用户问题',
+          value: ['448745', 'userChatInput'],
+          connected: true,
+          selectedTypeIndex: 1
+        },
+        {
+          key: 'quoteQA',
+          renderTypeList: ['settingDatasetQuotePrompt'],
+          label: '',
+          debugLabel: '知识库引用',
+          description: '',
+          valueType: 'datasetQuote'
+        },
+        {
+          key: 'fileUrlList',
+          renderTypeList: ['hidden'],
+          label: '',
+          valueType: 'arrayObject',
+          value: []
+        }
+      ],
+      outputs: [
+        {
+          id: 'history',
+          key: 'history',
+          required: true,
+          label: 'core.module.output.label.New context',
+          description: 'core.module.output.description.New context',
+          valueType: 'chatHistory',
+          type: 'static'
+        },
+        {
+          id: 'answerText',
+          key: 'answerText',
+          required: true,
+          label: 'core.module.output.label.Ai response content',
+          description: 'core.module.output.description.Ai response content',
+          valueType: 'string',
+          type: 'static'
+        },
+        {
+          id: 'reasoningText',
+          key: 'reasoningText',
+          required: false,
+          label: 'reasoningText',
+          description: 'reasoningText',
+          valueType: 'string',
+          type: 'static'
+        },
+        {
+          id: 'system_error_text',
+          key: 'system_error_text',
+          required: false,
+          label: 'system_error_text',
+          description: 'system_error_text',
+          valueType: 'string',
+          type: 'error'
+        }
+      ]
+    };
+  }
+
+  function makeSimpleReplyWorkflow(replyText) {
+    return {
+      nodes: [
+        makeUserGuide('这是由一句话生成器生成的固定回复工作流。'),
+        makeWorkflowStart(),
+        makeAnswerStatic(replyText)
+      ],
+      edges: [
+        {
+          source: '448745',
+          target: 'answer_result',
+          sourceHandle: '448745-source-right',
+          targetHandle: 'answer_result-target-left'
+        }
+      ],
+      chatConfig: makeChatConfig()
+    };
+  }
+
+  function makeAiChatWorkflow(systemPrompt, modelName) {
+    return {
+      nodes: [
+        makeUserGuide('这是由一句话生成器生成的 AI 对话工作流。导入后请检查 AI 节点模型。'),
+        makeWorkflowStart(),
+        makeAiChatNode(systemPrompt, modelName)
+      ],
+      edges: [
+        {
+          source: '448745',
+          target: 'ai_chat_node',
+          sourceHandle: '448745-source-right',
+          targetHandle: 'ai_chat_node-target-left'
+        }
+      ],
+      chatConfig: makeChatConfig()
+    };
+  }
+
+  function makeCodeWorkflow(jsCode, nodeName) {
+    return {
+      nodes: [
+        makeUserGuide('这是由一句话生成器生成的代码任务工作流。'),
+        makeWorkflowStart(),
+        makeCodeNode(jsCode, nodeName),
+        makeAnswerFromCode()
+      ],
+      edges: [
+        {
+          source: '448745',
+          target: 'code_task_node',
+          sourceHandle: '448745-source-right',
+          targetHandle: 'code_task_node-target-left'
+        },
+        {
+          source: 'code_task_node',
+          target: 'answer_result',
+          sourceHandle: 'code_task_node-source-right',
+          targetHandle: 'answer_result-target-left'
+        }
+      ],
+      chatConfig: makeChatConfig()
+    };
+  }
+
+  function normalizeType(type) {
+    const t = String(type || '').trim().toLowerCase();
+
+    if (t === 'reply' || t === 'fixed_reply') return 'simple_reply';
+    if (t === 'chat' || t === 'assistant' || t === 'llm_chat' || t === 'ai') return 'ai_chat';
+
+    if (
+      t === 'random_number' ||
+      t === 'random' ||
+      t === 'calculate' ||
+      t === 'calculator' ||
+      t === 'text_process' ||
+      t === 'current_time'
+    ) {
+      return 'code_task';
+    }
+
+    if (t === 'file_parse' || t === 'readfiles' || t === 'image_ocr') return 'file_task';
+
+    return t;
+  }
+
+  function defaultCodeByTask(task, expression) {
+    const t = String(task || '').toLowerCase();
+
+    if (t === 'random_number' || t === 'random') {
+      return [
+        'function main(params) {',
+        '  const n = Math.floor(Math.random() * 1000000);',
+        '  return { result: String(n) };',
+        '}'
+      ].join('\n');
+    }
+
+    if (t === 'current_time' || t === 'time') {
+      return [
+        'function main(params) {',
+        '  const now = new Date();',
+        '  return { result: now.toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" }) };',
+        '}'
+      ].join('\n');
+    }
+
+    if (t === 'calculator' || t === 'calculate') {
+      const expr = String(expression || '1+1').replace(/[^0-9+\-*/().%\s]/g, '');
+      return [
+        'function main(params) {',
+        '  const expression = ' + JSON.stringify(expr) + ';',
+        '  let value;',
+        '  try {',
+        '    value = Function("return (" + expression + ")")();',
+        '  } catch (err) {',
+        '    value = "计算失败";',
+        '  }',
+        '  return { result: String(value) };',
+        '}'
+      ].join('\n');
+    }
+
+    if (t === 'text_length') {
+      return [
+        'function main(params) {',
+        '  const input = String(params.user_input || "");',
+        '  return { result: String(input.length) };',
+        '}'
+      ].join('\n');
+    }
+
+    return [
+      'function main(params) {',
+      '  return { result: "代码任务已运行" };',
+      '}'
+    ].join('\n');
+  }
+
+  function ensureSafeJsCode(code, plan) {
+    let js = String(code || '').trim();
+
+    if (!js || js.indexOf('function main') === -1) {
+      js = defaultCodeByTask(plan.task, plan.expression);
+    }
+
+    if (js.indexOf('return') === -1 || js.indexOf('result') === -1) {
+      js = defaultCodeByTask(plan.task, plan.expression);
+    }
+
+    return js;
+  }
+
+  let plan = {};
+  try {
+    plan = JSON.parse(cleanJsonText(ai_text));
+  } catch (err) {
+    return {
+      result: JSON.stringify(
+        makeSimpleReplyWorkflow('AI 输出不是合法 JSON，生成失败。请检查 AI 节点是否只输出 plan JSON。'),
+        null,
+        2
+      )
+    };
+  }
+
+  const workflowType = normalizeType(plan.workflow_type || plan.type);
+  let workflow;
+
+  if (workflowType === 'simple_reply') {
+    const replyText = safeText(plan.reply_text || plan.text || plan.message, 'hello');
+    workflow = makeSimpleReplyWorkflow(replyText);
+  } else if (workflowType === 'ai_chat') {
+    const systemPrompt = safeText(
+      plan.system_prompt || plan.prompt,
+      '你是一个友好、简洁的 AI 助手。请根据用户问题直接回答。'
+    );
+    const modelName = safeText(plan.model, 'Qwen-flash');
+    workflow = makeAiChatWorkflow(systemPrompt, modelName);
+  } else if (workflowType === 'code_task') {
+    const nodeName = safeText(plan.name || plan.task_name, '代码运行');
+    const jsCode = ensureSafeJsCode(plan.js_code || plan.code, plan);
+    workflow = makeCodeWorkflow(jsCode, nodeName);
+  } else if (workflowType === 'file_task') {
+    const reason = safeText(
+      plan.reason,
+      '该需求需要文件上传、readFiles 或 AI 视觉节点。当前版本暂不自动生成文件处理流程。'
+    );
+    workflow = makeSimpleReplyWorkflow(reason);
+  } else if (workflowType === 'unsupported') {
+    const reason = safeText(
+      plan.reason,
+      '该需求需要数据库、HTTP、知识库或工具调用等外部配置，不能直接写死。'
+    );
+    workflow = makeSimpleReplyWorkflow(reason);
+  } else {
+    workflow = makeSimpleReplyWorkflow(
+      '未识别 workflow_type：' +
+      String(plan.workflow_type || plan.type || '') +
+      '。当前支持 simple_reply、ai_chat、code_task。'
+    );
+  }
+
+  return {
+    result: JSON.stringify(workflow, null, 2)
+  };
+}
+
+======================================================================
+三十、最终状态
+======================================================================
+
+当前项目已从“hello 测试”进入“模板库生成器雏形”阶段。
+
+已经成立的核心技术路线：
+
+> AI 不写完整工作流。
+> AI 只输出 plan。
+> 模板库负责真实结构。
+> 输出引用必须按云版导出的 id。
+> 每新增一种节点类型，先手动搭成功并导出母版，再加入模板库。
+
+目前已经不再是“能不能做”的问题，而是“模板库积累多少，就能生成多少类工作流”的问题。
+
+
+======================================================================
+【再次追加：目标与全部模板】
+======================================================================
+
+FastGPT 一句话生成工作流 JSON：目标与全部模板追加总结
+记录时间：2026-05-10
+适用环境：FastGPT 云版 4.15.0
+追加目的：明确下一阶段目标、模板数量、模板分层、知识库方案、每类模板需要的母版和验证规则，避免后续继续把 AI 当成直接生成 nodes/edges 的万能器。
+
+======================================================================
+一、当前已经确认的核心事实
+======================================================================
+
+1. 当前方向已经从“单个 hello 流程测试”升级为：
+   一句话生成 FastGPT 工作流 JSON 的模板库生成器。
+
+2. 已验证的主链路是：
+   用户一句话
+   ↓
+   AI 需求理解器输出 plan JSON
+   ↓
+   代码模板生成器根据 plan 选择模板并拼真实 FastGPT JSON
+   ↓
+   指定回复输出 JSON
+   ↓
+   用户复制导入 FastGPT
+   ↓
+   生成的新工作流运行
+
+3. 不能再让 AI 直接自由生成完整 nodes/edges/chatConfig。
+   原因：
+   - AI 会猜错 edges 字段，例如 sourceNodeId/targetNodeId。
+   - AI 可能引用不存在的输出。
+   - AI 可能把 key 当成输出引用，而云版 4.15.0 实际需要引用 output.id。
+   - AI 可能生成 datasetId、toolId、数据库连接、HTTP 配置等不能写死的内容。
+
+4. 正确分工：
+   - AI：理解需求，输出 plan。
+   - 知识库：检索该用哪个模板。
+   - 代码节点：按已验证母版生成真实 JSON。
+   - 校验逻辑：兜底、提示、避免乱生成。
+   - 用户：复制 JSON 导入并测试。
+
+5. 当前已经验证成功的模板：
+   - simple_reply：流程开始 → 指定回复。
+   - ai_chat：流程开始 → AI 对话。
+   - code_task.no_input：流程开始 → 代码运行 → 指定回复；随机数已成功。
+
+6. 随机数模板最关键修正：
+   answerNode 引用代码节点 result 时，不能写：
+   ["code_task_node", "result"]
+
+   必须引用代码节点 outputs 里的 id，例如：
+   ["code_task_node", "code_result_output"]
+
+   并且代码节点 outputs 必须包含：
+   {
+     "id": "code_result_output",
+     "key": "result",
+     "valueType": "string",
+     "label": "result"
+   }
+
+7. 代码节点真正成功母版导出的结构里：
+   - code 节点有 system_rawResponse。
+   - code 节点有 error。
+   - 自定义 result 输出有独立 id。
+   - 指定回复引用 output.id，而不是 key。
+   - chatConfig 里可有 variables 和 scheduledTriggerConfig，但不要写死 _id。
+
+======================================================================
+二、接下来的总目标
+======================================================================
+
+总目标不是继续做单个随机数，而是做：
+
+FastGPT 一句话生成工作流 JSON 的模板库生成器
+
+最终形态：
+
+流程开始
+↓
+AI 生成检索词或初步 plan
+↓
+知识库搜索模板卡片
+↓
+AI 选择 template_id 并补全参数
+↓
+代码模板生成器按 template_id 生成 JSON
+↓
+指定回复输出 JSON
+
+最终用户体验：
+
+用户输入：
+“做一个上传文件后读取内容并回复摘要的工作流”
+
+生成器输出：
+一个可导入的 FastGPT 工作流 JSON。
+
+导入后得到：
+流程开始(userFiles) → readFiles → AI 摘要 → 指定回复
+
+前提：
+该模板必须已经有云版 4.15.0 成功母版，否则只能生成“该模板待验证”的提示型工作流，不能硬造。
+
+======================================================================
+三、阶段目标
+======================================================================
+
+第一阶段：基础稳定版【已基本完成】
+目标：保证 3 个核心模板稳定可用。
+
+模板：
+1. simple_reply.basic.v1
+2. ai_chat.basic.v1
+3. code_task.no_input.v1
+
+成功标准：
+- 一句话生成 JSON。
+- 导入 FastGPT 不报错。
+- 新工作流运行正常。
+- 指定回复/AI/代码节点都能正常输出。
+
+当前状态：
+- simple_reply：成功。
+- ai_chat：成功。
+- code_task.no_input：随机数成功。
+
+----------------------------------------------------------------------
+
+第二阶段：实用版【下一步】
+目标：做到 8 个模板，覆盖常见基础工作流。
+
+模板：
+1. simple_reply.basic.v1
+2. ai_chat.basic.v1
+3. code_task.no_input.v1
+4. code_task.with_input.v1
+5. if_else.basic.v1
+6. ai_extract_json.basic.v1
+7. readfiles.basic.v1
+8. image_vision.basic.v1
+
+成功标准：
+- 固定回复、AI 助手、代码任务、输入处理、判断器、AI 结构化提取、文件读取、图片识别都能生成基础工作流。
+- 每个模板都必须有一次“手动搭建成功 → 导出 JSON → 生成器复刻 → 导入运行成功”的验证。
+
+----------------------------------------------------------------------
+
+第三阶段：全面版【中期目标】
+目标：15 到 25 个模板，覆盖大多数常见 FastGPT 工作流。
+
+模板类别：
+- 基础回复类
+- AI 对话类
+- 代码任务类
+- 判断器/分支类
+- 文件处理类
+- 图片识别类
+- 知识库检索类
+- HTTP/API 类
+- 数据库/工具类
+- 综合流程类
+
+成功标准：
+- 用户一句话能被分类到模板库。
+- 生成器能判断“已验证可生成”或“需要手动配置/待验证”。
+- 对于 toolId、datasetId、数据库连接等不允许写死的内容，必须生成提示型工作流或半自动配置说明。
+
+----------------------------------------------------------------------
+
+第四阶段：知识库驱动版【长期目标】
+目标：
+把模板说明放入“FastGPT工作流模板库”，通过知识库搜索返回模板卡片，然后由 AI 选择 template_id，再由代码节点生成 JSON。
+
+成功标准：
+- 模板不再全部塞进 AI 提示词。
+- 模板卡片可维护、可扩展。
+- 每新增一个成功母版，只需要新增模板卡片和代码生成函数。
+- AI 只能选择白名单 template_id，不能自己发明节点结构。
+
+======================================================================
+四、模板数量规划
+======================================================================
+
+最小版：
+3 个模板即可运行：
+1. simple_reply
+2. ai_chat
+3. code_task.no_input
+
+实用版：
+约 8 个模板：
+1. simple_reply.basic
+2. ai_chat.basic
+3. code_task.no_input
+4. code_task.with_input
+5. if_else.basic
+6. ai_extract_json.basic
+7. readfiles.basic
+8. image_vision.basic
+
+全面版：
+约 15 到 25 个模板：
+- 基础回复 2 个
+- AI 对话 2 个
+- 代码任务 4 个
+- 判断器 3 个
+- 文件处理 3 个
+- 图片处理 2 个
+- 知识库 2 个
+- HTTP/API 2 个
+- 数据库/工具 2 个
+- 综合流程 3 个
+
+平台级生成器：
+40 个以上模板。
+这时要考虑模板版本管理、知识库检索、模板启用状态、兼容 FastGPT 版本等问题。
+
+======================================================================
+五、全部模板清单【按优先级】
+======================================================================
+
+----------------------------------------------------------------------
+A. 基础回复类模板
+----------------------------------------------------------------------
+
+模板ID：simple_reply.basic.v1
+结构：
+流程开始 → 指定回复
+
+用途：
+- 回复 hello
+- 固定输出 123
+- 输入任意内容后返回一段固定文本
+- 生成提示型工作流
+
+状态：
+已验证成功。
+
+关键参数：
+- reply_text
+
+关键规则：
+- answerNode.inputs[0].key 必须是 text。
+- 静态回复 value 直接写字符串。
+- selectedTypeIndex = 0。
+
+示例 plan：
+{
+  "template_id": "simple_reply.basic.v1",
+  "workflow_type": "simple_reply",
+  "reply_text": "hello"
+}
+
+----------------------------------------------------------------------
+
+模板ID：simple_reply.rich_text.v1
+结构：
+流程开始 → 指定回复
+
+用途：
+- 输出 Markdown 说明
+- 输出多段说明
+- 输出使用指南
+
+状态：
+待验证，但基于 simple_reply.basic 可扩展。
+
+关键参数：
+- reply_text
+- isRichText
+
+注意：
+如果涉及富文本显示，需要确认云版 answerNode 的 isRichText 字段是否稳定。
+
+----------------------------------------------------------------------
+B. AI 对话类模板
+----------------------------------------------------------------------
+
+模板ID：ai_chat.basic.v1
+结构：
+流程开始 → AI 对话
+
+用途：
+- AI 助手
+- 聊天机器人
+- 学习助手
+- 问答助手
+
+状态：
+已验证成功。
+
+关键参数：
+- system_prompt
+- model
+- history
+
+关键规则：
+- AI 节点 userChatInput 引用流程开始 userChatInput。
+- isResponseAnswerText = true。
+- model 不要强依赖 qwen-plus。
+- 云版可用模型可用 Qwen-flash 或用户实际测试可用模型。
+- 导入后如模型不可用，手动选择。
+
+示例 plan：
+{
+  "template_id": "ai_chat.basic.v1",
+  "workflow_type": "ai_chat",
+  "system_prompt": "你是一个友好、简洁的 AI 助手。",
+  "model": "Qwen-flash"
+}
+
+----------------------------------------------------------------------
+
+模板ID：ai_chat.custom_prompt.v1
+结构：
+流程开始 → AI 对话
+
+用途：
+- 翻译助手
+- 文案助手
+- 编程助手
+- 学习计划助手
+- 数据分析助手
+
+状态：
+可基于 ai_chat.basic 扩展。
+
+关键参数：
+- system_prompt
+
+示例 plan：
+{
+  "template_id": "ai_chat.custom_prompt.v1",
+  "workflow_type": "ai_chat",
+  "system_prompt": "你是一个 Python 学习助手，请用通俗中文回答。"
+}
+
+----------------------------------------------------------------------
+C. 代码任务类模板
+----------------------------------------------------------------------
+
+模板ID：code_task.no_input.v1
+结构：
+流程开始 → 代码运行 → 指定回复
+
+用途：
+不需要用户运行时输入，代码自己生成结果：
+- 随机数
+- 当前时间
+- 6 位验证码
+- UUID
+- 简单密码
+- 固定表达式计算
+
+状态：
+随机数已验证成功。
+
+关键参数：
+- name
+- js_code
+
+关键规则：
+- JS 必须是 function main(params) { ... }
+- 必须 return object。
+- 必须 return { result: String(...) }。
+- 代码节点 outputs 必须有：
+  id = code_result_output
+  key = result
+  valueType = string
+- answerNode 必须引用：
+  ["code_task_node", "code_result_output"]
+- 不要引用 ["code_task_node", "result"]
+
+示例 plan：
+{
+  "template_id": "code_task.no_input.v1",
+  "workflow_type": "code_task",
+  "task": "random_number",
+  "name": "生成随机数",
+  "js_code": "function main(params) {\n  const n = Math.floor(Math.random() * 1000000);\n  return { result: String(n) };\n}"
+}
+
+----------------------------------------------------------------------
+
+模板ID：code_task.with_input.v1
+结构：
+流程开始 → 代码运行(user_input) → 指定回复
+
+用途：
+需要处理用户输入：
+- 统计用户输入长度
+- 转大写
+- 转小写
+- 判断是否为空
+- 判断是否数字
+- 判断是否手机号
+- 提取数字
+- 简单文本清洗
+
+状态：
+待验证，下一步最优先做。
+
+关键参数：
+- user_input
+- js_code
+
+需要手动母版验证：
+必须手动搭一个成功工作流：
+流程开始 → 代码运行 → 指定回复
+
+代码节点添加输入：
+user_input = 流程开始 → 用户问题
+
+代码示例：
+function main(params) {
+  const text = String(params.user_input || '');
+  return { result: String(text.length) };
+}
+
+导出后确认：
+- user_input 引用格式。
+- code 节点 inputs 里引用流程开始的 value 应该怎么写。
+- answerNode 是否仍引用 output.id。
+
+----------------------------------------------------------------------
+
+模板ID：code_task.calculator_fixed.v1
+结构：
+流程开始 → 代码运行 → 指定回复
+
+用途：
+固定表达式计算，例如：
+- 计算 123+456
+- 计算 99*88
+
+状态：
+可基于 no_input 模板实现。
+
+注意：
+表达式必须安全过滤，只允许数字和 + - * / % . ( ) 空格。
+不要直接执行用户原始输入。
+
+----------------------------------------------------------------------
+
+模板ID：code_task.calculator_user_input.v1
+结构：
+流程开始 → 代码运行(user_input) → 指定回复
+
+用途：
+用户运行时输入表达式，然后计算。
+
+状态：
+依赖 code_task.with_input 母版，待验证。
+
+风险：
+使用 Function 计算表达式有安全风险，必须严格过滤字符。
+
+----------------------------------------------------------------------
+
+模板ID：code_task.text_process.v1
+结构：
+流程开始 → 代码运行(user_input) → 指定回复
+
+用途：
+文本处理类统一模板：
+- 长度统计
+- 大小写转换
+- 删除空格
+- 提取数字
+- 手机号判断
+- 邮箱判断
+
+状态：
+依赖 code_task.with_input 母版。
+
+----------------------------------------------------------------------
+D. AI 结构化提取类模板
+----------------------------------------------------------------------
+
+模板ID：ai_extract_json.basic.v1
+结构：
+流程开始 → AI 提取 JSON → 代码清洗 JSON → 指定回复
+
+用途：
+- 从用户一句话中提取结构化字段
+- 提取姓名、手机号、金额、日期
+- 让 AI 输出严格 JSON
+- 代码节点清洗 markdown 代码块并 JSON.parse
+
+状态：
+部分链路已验证过 D1/D2：
+AI answerText → 代码节点 → 指定回复 已成功。
+但完整模板仍需要母版化。
+
+关键规则：
+- AI 节点 isResponseAnswerText = false。
+- AI 输出只允许 JSON。
+- 代码节点输入 ai_text = AI.answerText。
+- 代码节点输出 result。
+- 指定回复引用代码节点 output.id。
+
+----------------------------------------------------------------------
+
+模板ID：ai_extract_json_then_reply.v1
+结构：
+流程开始 → AI 提取 JSON → 代码格式化 → 指定回复
+
+用途：
+- 提取结果后转成自然语言回复
+- 简单表单提取
+- 信息登记
+
+状态：
+待扩展。
+
+----------------------------------------------------------------------
+E. 判断器/分支模板
+----------------------------------------------------------------------
+
+模板ID：if_else.basic.v1
+结构：
+流程开始 → 判断器 → 回复A / 回复B
+
+用途：
+- 如果用户输入包含 hello，回复你好，否则回复默认内容
+- 判断是否为空
+- 判断是否包含关键词
+
+状态：
+待验证，需要云版 4.15.0 手动导出判断器母版。
+
+关键参数：
+- condition
+- true_reply
+- false_reply
+
+需要确认：
+- ifElseNode 的 inputs.ifElseList 结构。
+- sourceHandle 的 IF/ELSE 写法。
+- 判断器条件引用 workflowStart.userChatInput 的格式。
+
+----------------------------------------------------------------------
+
+模板ID：if_else.multi_branch.v1
+结构：
+流程开始 → 判断器 → 多个回复分支
+
+用途：
+- 按关键词分类
+- 按类型分流
+- 意图识别后的分支处理
+
+状态：
+待验证。
+
+----------------------------------------------------------------------
+
+模板ID：if_else.error_fallback.v1
+结构：
+主流程 → 判断器/代码判断 → 成功回复 / 错误回复
+
+用途：
+- 空输入兜底
+- AI 输出非法 JSON 兜底
+- 文件不存在兜底
+
+状态：
+待验证。
+
+----------------------------------------------------------------------
+F. 文件处理模板
+----------------------------------------------------------------------
+
+模板ID：file.readfiles.basic.v1
+结构：
+流程开始(userFiles) → readFiles → 指定回复
+
+用途：
+- 上传 txt/docx/pdf/csv 后读取文本
+- 简单文档解析
+- 查看文件内容
+
+状态：
+待验证云版 4.15.0，但旧总结记录 readFiles 输出应优先用：
+- system_text
+- system_rawResponse
+- system_error_text
+
+关键规则：
+- workflowStart.outputs 必须包含 userFiles。
+- readFiles.fileUrlList 优先参考旧式嵌套：
+  [["448745", "userFiles"]]
+- 指定回复引用 readFiles 的 system_text，但要确认引用 id 还是 key。
+  代码节点已证明有些动态输出必须引用 id，readFiles 需要重新导出确认。
+
+----------------------------------------------------------------------
+
+模板ID：file.suffix_branch.v1
+结构：
+流程开始(userFiles) → 代码判断后缀 → 判断器 → 图片分支 / 文档分支 / 不支持回复
+
+用途：
+- 票据 V3/V4 文件后缀分流
+- 图片不走 readFiles
+- 文档/表格走 readFiles
+
+状态：
+旧项目经验成熟，但云版 4.15.0 仍需重新验证母版。
+
+----------------------------------------------------------------------
+
+模板ID：file.read_then_ai_summary.v1
+结构：
+流程开始(userFiles) → readFiles → AI 摘要 → 指定回复
+
+用途：
+- 上传文档后总结
+- 上传课程资料后概括
+- 上传文本后提炼重点
+
+状态：
+待验证。
+
+----------------------------------------------------------------------
+
+模板ID：file.csv_clean_basic.v1
+结构：
+流程开始(userFiles) → readFiles → Python/JS代码清洗 → 指定回复
+
+用途：
+- CSV 探查
+- 缺失值统计
+- 简单清洗报告
+
+状态：
+待验证，且代码沙盒限制要注意。
+
+----------------------------------------------------------------------
+G. 图片/视觉模板
+----------------------------------------------------------------------
+
+模板ID：image_vision.basic.v1
+结构：
+流程开始(userFiles) → AI 视觉节点 → 指定回复
+
+用途：
+- 图片识别
+- 截图解释
+- 票据图片识别前置
+- OCR 描述
+
+状态：
+待验证，需要云版视觉模型母版。
+qwen-vl-max 或当前云版可用视觉模型必须手动测试。
+
+关键规则：
+- workflowStart.outputs 必须有 userFiles。
+- AI 节点 fileUrlList 需要引用 userFiles。
+- 旧式引用可能是 [["448745","userFiles"]]，但需云版导出确认。
+- 模型不要写死为一定可用。
+
+----------------------------------------------------------------------
+
+模板ID：image_receipt_extract_lite.v1
+结构：
+流程开始(userFiles) → AI 视觉提取四字段 → 指定回复/代码格式化
+
+用途：
+- 票据极速识别
+- 提取 invoice_no、invoice_date、project_name、total_amount
+
+状态：
+可参考用户过去 V5 票据极速版，但需重新母版化。
+
+----------------------------------------------------------------------
+H. 知识库模板
+----------------------------------------------------------------------
+
+模板ID：dataset_search.basic.v1
+结构：
+流程开始 → 知识库搜索 → 指定回复
+
+用途：
+- 搜索知识库片段
+- 返回匹配内容
+- 模板库检索
+
+状态：
+待验证，需要用户手动配置知识库 dataset。
+datasetId 不能写死。
+
+关键规则：
+- 生成器应用里可以手动配置一次“FastGPT工作流模板库”。
+- 生成出来的 JSON 不应该写死 datasetId。
+- 如果要生成知识库节点，必须基于手动导出的 datasetSearchNode 母版。
+
+----------------------------------------------------------------------
+
+模板ID：dataset_search_then_ai.v1
+结构：
+流程开始 → 知识库搜索 → AI 根据引用回答 → 指定回复/AI直接回复
+
+用途：
+- RAG 问答
+- 模板知识库选择
+- 文档问答助手
+
+状态：
+待验证。
+
+----------------------------------------------------------------------
+I. HTTP/API 模板
+----------------------------------------------------------------------
+
+模板ID：http_get.basic.v1
+结构：
+流程开始 → HTTP GET → 指定回复/代码格式化
+
+用途：
+- 查询公开接口
+- 获取 JSON 数据
+- 调用无需鉴权的 GET API
+
+状态：
+待验证。
+旧总结记录 HTTP 节点类型可能是 httpRequest468，不要随便写 httpRequest。
+
+关键规则：
+- URL、Header、API Key 不可写死。
+- 需要生成半自动模板或导入后手动配置。
+
+----------------------------------------------------------------------
+
+模板ID：http_post.basic.v1
+结构：
+流程开始 → HTTP POST → 指定回复/代码格式化
+
+用途：
+- 提交 JSON
+- 调用业务接口
+
+状态：
+待验证。
+
+----------------------------------------------------------------------
+J. 数据库/工具模板
+----------------------------------------------------------------------
+
+模板ID：tool_call.basic.v1
+结构：
+流程开始 → 工具节点 → 指定回复
+
+用途：
+- 调用 FastGPT 工具
+- 数据库工具
+- 自定义插件
+
+状态：
+待验证，不建议早期自动生成。
+
+关键限制：
+- toolId 不能写死。
+- 工具参数结构依赖平台配置。
+- 只能基于用户自己导出的工具节点母版。
+
+----------------------------------------------------------------------
+
+模板ID：db_receipt_save.v1
+结构：
+文件/图片解析 → AI 提取 → 代码整理 → 数据库工具/存储过程 → 指定回复
+
+用途：
+- 票据入库
+- 调用 MySQL 存储过程 sp_save_receipt
+
+状态：
+用户历史项目已经做过，但这是复杂综合模板。
+不适合当前生成器早期自动生成。
+必须等文件、AI、代码、工具节点模板都稳定后再做。
+
+----------------------------------------------------------------------
+K. 综合流程模板
+----------------------------------------------------------------------
+
+模板ID：workflow.ai_to_code_to_reply.v1
+结构：
+流程开始 → AI → 代码清洗 → 指定回复
+
+用途：
+- AI 输出 JSON 后清洗
+- 需求理解器
+- 信息抽取
+
+状态：
+已部分验证，生成器自身就在用这个结构。
+
+----------------------------------------------------------------------
+
+模板ID：workflow.file_to_ai_to_code.v1
+结构：
+流程开始(userFiles) → readFiles/AI视觉 → AI提取 → 代码整理 → 指定回复
+
+用途：
+- 文件分析
+- 票据识别
+- 简历解析
+- 表格摘要
+
+状态：
+待验证。
+
+----------------------------------------------------------------------
+
+模板ID：workflow.branch_file_image_doc.v1
+结构：
+流程开始(userFiles) → 后缀判断代码 → 判断器 → 图片AI / readFiles → 合并 → 回复
+
+用途：
+- 用户票据 V3/V4/V5 的核心思路
+- 图片和文档分流
+- 提高速度
+
+状态：
+历史经验成熟，但需要云版 4.15.0 重新母版化。
+
+======================================================================
+六、知识库模板卡片格式
+======================================================================
+
+建议建立知识库名称：
+FastGPT工作流模板库
+
+每个模板一张卡片，不要直接放完整巨大 JSON。
+模板卡片格式：
+
+TEMPLATE_ID:
+WORKFLOW_TYPE:
+STATUS:
+FASTGPT_VERSION:
+STRUCTURE:
+KEYWORDS:
+WHEN_TO_USE:
+WHEN_NOT_TO_USE:
+REQUIRED_PARAMS:
+OUTPUT_RULES:
+KNOWN_PITFALLS:
+EXAMPLE_USER_REQUEST:
+EXAMPLE_PLAN:
+NOTES:
+
+示例卡片：
+
+TEMPLATE_ID: code_task.no_input.v1
+WORKFLOW_TYPE: code_task
+STATUS: tested_cloud_4.15.0
+FASTGPT_VERSION: cloud_4.15.0
+STRUCTURE: workflowStart -> code -> answerNode
+KEYWORDS: 随机数, 验证码, 当前时间, UUID, 密码, 固定表达式计算
+WHEN_TO_USE: 不需要用户运行时输入，代码自己生成结果
+WHEN_NOT_TO_USE: 需要读取用户输入、文件、图片、知识库、数据库
+REQUIRED_PARAMS: name, js_code
+OUTPUT_RULES:
+- JS 必须 function main(params)
+- return { result: String(...) }
+- code output id 必须是 code_result_output
+- answerNode 引用 ["code_task_node", "code_result_output"]
+KNOWN_PITFALLS:
+- 不要引用 ["code_task_node","result"]
+- 不要把 output key 当成引用 id
+EXAMPLE_USER_REQUEST: 生成一个随机数
+EXAMPLE_PLAN:
+{
+  "template_id": "code_task.no_input.v1",
+  "workflow_type": "code_task",
+  "task": "random_number",
+  "name": "生成随机数",
+  "js_code": "function main(params) { const n = Math.floor(Math.random() * 1000000); return { result: String(n) }; }"
+}
+
+======================================================================
+七、知识库驱动生成器目标流程
+======================================================================
+
+当前 V3：
+流程开始
+↓
+AI 需求理解器
+↓
+代码模板生成器
+↓
+指定回复输出 JSON
+
+未来 V4：
+流程开始
+↓
+AI 生成检索 query
+↓
+知识库搜索“FastGPT工作流模板库”
+↓
+AI 根据检索结果选择 template_id，并补全 params
+↓
+代码模板生成器根据 template_id 生成 JSON
+↓
+指定回复输出 JSON
+
+V4 的关键：
+1. 知识库只负责检索模板说明，不直接返回完整 JSON。
+2. AI 只能选择知识库里存在的 template_id。
+3. 代码节点只允许白名单 template_id。
+4. 未验证模板必须生成提示型工作流，不能硬生成。
+5. datasetId 不能写死，知识库节点要在生成器应用里手动配置。
+
+======================================================================
+八、每个模板必须经过的验证流程
+======================================================================
+
+任何新模板都必须按以下流程验证：
+
+1. 手动在 FastGPT 云版 4.15.0 搭建最小成功工作流。
+2. 运行成功。
+3. 导出 JSON。
+4. 找到关键节点结构。
+5. 找到关键输出 id，而不是只看 key。
+6. 找到 answerNode 的真实引用方式。
+7. 找到 edges 的 source/target/sourceHandle/targetHandle。
+8. 写成模板函数。
+9. 让一句话生成器生成同类 JSON。
+10. 新建应用导入生成 JSON。
+11. 运行成功。
+12. 加入模板知识库，状态标记 tested_cloud_4.15.0。
+
+如果没有第 1 到 3 步，不能把模板标成已验证。
+
+======================================================================
+九、下一步最优先任务
+======================================================================
+
+第一优先：
+固化当前 V3 成功版。
+保存名称建议：
+一句话生成器_V3_基础模板版
+
+第二优先：
+做 code_task.with_input 母版。
+原因：
+它能支持大量实用任务：
+- 统计输入长度
+- 转大写
+- 转小写
+- 判断是否为空
+- 提取数字
+- 判断手机号
+- 简单文本清洗
+
+第三优先：
+做 if_else.basic 母版。
+原因：
+判断器是多分支工作流的基础。
+
+第四优先：
+建 FastGPT工作流模板库。
+先放 3 张卡片：
+- simple_reply.basic.v1
+- ai_chat.basic.v1
+- code_task.no_input.v1
+
+第五优先：
+把生成器升级到知识库检索版 V4。
+
+======================================================================
+十、最短结论
+======================================================================
+
+接下来不是继续堆一个万能提示词，而是建设模板系统。
+
+目前：
+最小版 3 个模板已经成立：
+- simple_reply
+- ai_chat
+- code_task.no_input
+
+接下来：
+先做到实用版 8 个模板：
+- simple_reply.basic
+- ai_chat.basic
+- code_task.no_input
+- code_task.with_input
+- if_else.basic
+- ai_extract_json.basic
+- readfiles.basic
+- image_vision.basic
+
+最终：
+全面版需要 15 到 25 个模板。
+平台级生成器需要 40 个以上模板。
+
+核心原则：
+AI 负责理解需求；
+知识库负责找模板；
+代码节点负责生成真实 JSON；
+模板必须来自成功导出的母版；
+不能写死 datasetId、toolId、API Key、数据库连接；
+answerNode 引用动态输出时优先引用 output.id，不要只引用 key。
