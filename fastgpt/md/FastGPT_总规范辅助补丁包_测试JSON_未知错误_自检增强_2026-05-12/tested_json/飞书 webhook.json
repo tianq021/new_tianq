@@ -1,0 +1,235 @@
+﻿{
+  "nodes": [
+    {
+      "nodeId": "userGuide",
+      "name": "common:core.module.template.system_config",
+      "intro": "common:core.module.template.system_config_info",
+      "avatar": "core/workflow/template/systemConfig",
+      "flowNodeType": "userGuide",
+      "position": {
+        "x": 262.2732338817093,
+        "y": -476.00241136598146
+      },
+      "version": "481",
+      "inputs": [
+        {
+          "key": "welcomeText",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "label": "core.app.Welcome Text",
+          "value": ""
+        },
+        {
+          "key": "variables",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "core.app.Chat Variable",
+          "value": []
+        },
+        {
+          "key": "questionGuide",
+          "valueType": "any",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "core.app.Question Guide",
+          "value": {
+            "open": false
+          }
+        },
+        {
+          "key": "tts",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": {
+            "type": "web"
+          }
+        },
+        {
+          "key": "whisper",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": {
+            "open": false,
+            "autoSend": false,
+            "autoTTSResponse": false
+          }
+        },
+        {
+          "key": "scheduleTrigger",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "448745",
+      "name": "common:core.module.template.work_start",
+      "intro": "",
+      "avatar": "core/workflow/template/workflowStart",
+      "flowNodeType": "workflowStart",
+      "position": {
+        "x": 765,
+        "y": -379.00241136598146
+      },
+      "version": "481",
+      "inputs": [
+        {
+          "key": "userChatInput",
+          "renderTypeList": [
+            "reference",
+            "textarea"
+          ],
+          "valueType": "string",
+          "label": "workflow:user_question",
+          "required": true,
+          "toolDescription": "用户问题",
+          "debugLabel": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "userChatInput",
+          "key": "userChatInput",
+          "label": "common:core.module.input.label.user question",
+          "type": "static",
+          "valueType": "string",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "kO6mxDoSI0GEx2yA",
+      "name": "飞书 webhook",
+      "intro": "向飞书机器人发起 webhook 请求。",
+      "avatar": "core/app/templates/plugin-feishu",
+      "flowNodeType": "tool",
+      "showStatus": true,
+      "position": {
+        "x": 1200,
+        "y": -420
+      },
+      "version": "",
+      "inputs": [
+        {
+          "key": "content",
+          "label": "content",
+          "selectedTypeIndex": 0,
+          "renderTypeList": [
+            "input",
+            "reference"
+          ],
+          "valueType": "string",
+          "description": "需要发送的消息",
+          "required": true,
+          "toolDescription": "需要发送的消息"
+        },
+        {
+          "key": "hook_url",
+          "label": "hook_url",
+          "selectedTypeIndex": 0,
+          "renderTypeList": [
+            "input"
+          ],
+          "valueType": "string",
+          "description": "飞书机器人地址",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "result",
+          "type": "static",
+          "key": "result",
+          "valueType": "object",
+          "label": "result",
+          "valueDesc": "",
+          "description": ""
+        },
+        {
+          "id": "system_error_text",
+          "key": "system_error_text",
+          "type": "error",
+          "valueType": "string",
+          "label": "错误信息",
+          "valueDesc": "",
+          "description": ""
+        }
+      ],
+      "pluginId": "systemTool-feishu",
+      "toolConfig": {
+        "systemTool": {
+          "toolId": "systemTool-feishu"
+        }
+      },
+      "catchError": false
+    },
+    {
+      "nodeId": "hrhOlr576nXKWyXc",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 1844,
+        "y": -420
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "required": true,
+          "isRichText": false,
+          "maxLength": 100000,
+          "label": "回复的内容",
+          "description": "可以使用 \\n 来实现连续换行。\n可以通过外部模块输入实现回复，外部模块输入时会覆盖当前填写的内容。\n如传入非字符串类型数据将会自动转成字符串",
+          "placeholder": "可以使用 \\n 来实现连续换行。\n可以通过外部模块输入实现回复，外部模块输入时会覆盖当前填写的内容。\n如传入非字符串类型数据将会自动转成字符串",
+          "value": "{{$kO6mxDoSI0GEx2yA.result$}}"
+        }
+      ],
+      "outputs": []
+    }
+  ],
+  "edges": [
+    {
+      "source": "448745",
+      "target": "kO6mxDoSI0GEx2yA",
+      "sourceHandle": "448745-source-right",
+      "targetHandle": "kO6mxDoSI0GEx2yA-target-left"
+    },
+    {
+      "source": "kO6mxDoSI0GEx2yA",
+      "target": "hrhOlr576nXKWyXc",
+      "sourceHandle": "kO6mxDoSI0GEx2yA-source-right",
+      "targetHandle": "hrhOlr576nXKWyXc-target-left"
+    }
+  ],
+  "chatConfig": {
+    "variables": [],
+    "_id": "6a02a1dab180ca8df8e1af16",
+    "scheduledTriggerConfig": {
+      "cronString": "",
+      "timezone": "Etc/GMT-8",
+      "defaultPrompt": ""
+    }
+  }
+}
