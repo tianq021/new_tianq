@@ -2,38 +2,40 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>测试V1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastGPT 本地工具首页</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
+
 <body>
-    <div>
-        <h1>打开 FastGPT 调用页面</h1>
-        <a href="/fastgpt">使用</a>
-    </div>
+    <main class="page">
+        <section class="card">
+            <span class="tag">本地测试首页</span>
 
-    <div>
-        <h2>本地时间显示</h2>
-        <p>当前时间：<span id="timeText">加载中...</span></p>
-    </div>
+            <h1>FastGPT 调用页面</h1>
 
-    <script>
-        function showLocalTime() {
-            const now = new Date();
+            <p class="desc">
+                这是项目首页入口，可以从这里进入 FastGPT 调用页面，也可以用于后续添加更多测试工具、接口测试页面和数据分析页面。
+            </p>
 
-            const timeText = now.getFullYear() + '-' +
-                String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                String(now.getDate()).padStart(2, '0') + ' ' +
-                String(now.getHours()).padStart(2, '0') + ':' +
-                String(now.getMinutes()).padStart(2, '0') + ':' +
-                String(now.getSeconds()).padStart(2, '0');
+            <div class="actions">
+                <a class="action-card" href="/fastgpt">
+                    <p class="action-title">打开 FastGPT 页面</p>
+                    <p class="action-desc">进入当前项目的 FastGPT 调用与测试页面。</p>
+                </a>
+            </div>
 
-            document.getElementById('timeText').innerText = timeText;
-        }
+            <div class="time-box">
+                <p class="time-title">本地时间</p>
+                <p class="time-text">
+                    当前时间：
+                    <span id="timeText" aria-live="polite">加载中...</span>
+                </p>
+            </div>
+        </section>
+    </main>
 
-        // 页面打开立刻显示一次
-        showLocalTime();
-
-        // 每秒刷新一次
-        setInterval(showLocalTime, 1000);
-    </script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 </html>

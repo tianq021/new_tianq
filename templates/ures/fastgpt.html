@@ -2,66 +2,157 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>我的 FastGPT 网页助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastGPT 网页助手</title>
 
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, "Microsoft YaHei", sans-serif;
-            background: #f3f4f6;
-        }
-
-        .page {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            height: 60px;
-            background: #2563eb;
-            color: white;
-            display: flex;
-            align-items: center;
-            padding: 0 24px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .main {
-            flex: 1;
-            padding: 16px;
-            box-sizing: border-box;
-        }
-
-        .chat-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 12px;
-            background: white;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fastgpt.css') }}">
 </head>
 
 <body>
 <div class="page">
-    <div class="header">
-        我的 FastGPT 网页助手
-    </div>
+    <header class="top-header">
+        <div class="header-left">
+            <a class="logo" href="/">FastGPT 助手</a>
+            <span class="header-desc">本地网页调用与测试页面</span>
+        </div>
 
-    <div class="main">
-        <a class="open-btn"
-            href="https://fastgpt.nsi-soft.com/chat/share?shareId=aREw3bzltow1sF6nL4v2T64P"
-            target="_blank ">
-            打开 FastGPT 翻译官
-        </a>
+        <div class="header-right">
+            <a class="header-link" href="/">返回首页</a>
+            <a class="header-link primary-link"
+               href="https://fastgpt.nsi-soft.com/chat/share?shareId=aREw3bzltow1sF6nL4v2T64P"
+               target="_blank"
+               rel="noopener noreferrer">
+                新窗口打开
+            </a>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-title">目录</div>
+
+            <nav class="menu">
+                <a class="menu-item active" href="#fastgpt-page" data-target="fastgpt-page">
+                    FastGPT 页面
+                </a>
+                <a class="menu-item" href="#usage" data-target="usage">
+                    使用说明
+                </a>
+                <a class="menu-item" href="#tips" data-target="tips">
+                    注意事项
+                </a>
+                <a class="menu-item" href="#test-record" data-target="test-record">
+                    测试记录
+                </a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section id="fastgpt-page" class="content-section active">
+                <div class="section-header">
+                    <div>
+                        <h1>FastGPT 翻译官</h1>
+                        <p>右侧区域直接嵌入 FastGPT 分享页面，左侧目录用于切换说明内容。</p>
+                    </div>
+
+                    <a class="open-btn"
+                       href="https://fastgpt.nsi-soft.com/chat/share?shareId=aREw3bzltow1sF6nL4v2T64P"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        新窗口打开
+                    </a>
+                </div>
+
+                <div class="iframe-box">
+                    <iframe
+                        class="fastgpt-frame"
+                        src="https://fastgpt.nsi-soft.com/chat/share?shareId=aREw3bzltow1sF6nL4v2T64P"
+                        title="FastGPT 翻译官页面">
+                    </iframe>
+                </div>
+            </section>
+
+            <section id="usage" class="content-section">
+                <h1>使用说明</h1>
+
+                <div class="doc-card">
+                    <h2>1. 页面用途</h2>
+                    <p>
+                        这个页面用于在本地 Flask 项目中快速打开或嵌入 FastGPT 分享页面。
+                        左侧是目录，右侧是具体页面内容。
+                    </p>
+                </div>
+
+                <div class="doc-card">
+                    <h2>2. 推荐使用方式</h2>
+                    <p>
+                        如果 iframe 能正常显示，可以直接在右侧页面中使用。
+                        如果右侧页面空白或被浏览器拦截，请点击“新窗口打开”。
+                    </p>
+                </div>
+
+                <div class="doc-card">
+                    <h2>3. 后续扩展</h2>
+                    <p>
+                        后续可以继续加入“接口测试”“工作流说明”“调用日志”“错误排查”等页面。
+                    </p>
+                </div>
+            </section>
+
+            <section id="tips" class="content-section">
+                <h1>注意事项</h1>
+
+                <div class="doc-card warning-card">
+                    <h2>iframe 显示问题</h2>
+                    <p>
+                        有些网站会禁止被其他网页 iframe 嵌入。
+                        如果 FastGPT 页面无法显示，不一定是代码错误，可能是目标网站的安全策略限制。
+                    </p>
+                </div>
+
+                <div class="doc-card">
+                    <h2>路径问题</h2>
+                    <p>
+                        当前 Flask 路由中，访问 <code>/fastgpt</code> 会渲染
+                        <code>templates/ures/fastgpt.html</code>。
+                    </p>
+                </div>
+            </section>
+
+            <section id="test-record" class="content-section">
+                <h1>测试记录</h1>
+
+                <table class="record-table">
+                    <thead>
+                    <tr>
+                        <th>测试项</th>
+                        <th>结果</th>
+                        <th>备注</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>页面打开</td>
+                        <td>待测试</td>
+                        <td>访问 /fastgpt</td>
+                    </tr>
+                    <tr>
+                        <td>iframe 嵌入</td>
+                        <td>待测试</td>
+                        <td>如果失败就使用新窗口打开</td>
+                    </tr>
+                    <tr>
+                        <td>左侧目录切换</td>
+                        <td>待测试</td>
+                        <td>点击目录应切换右侧内容</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
     </div>
 </div>
+
+<script src="{{ url_for('static', filename='js/fastgpt.js') }}"></script>
 </body>
 </html>
