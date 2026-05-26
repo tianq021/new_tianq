@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>工具中心</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+</head>
+
+<body>
+<div class="page">
+    <header class="top-header">
+        <div class="header-left">
+            <a class="logo" href="/tools">工具中心</a>
+            <span class="header-desc">本地工具集合页面</span>
+        </div>
+
+        <div class="header-right">
+            <a class="header-link" href="/">返回首页</a>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-title">工具列表</div>
+
+            <div class="tool-menu">
+                {% for tool in tools %}
+                <button
+                    class="tool-menu-item {% if tool.default %}active{% endif %}"
+                    data-target="{{ tool.id }}-panel"
+                >
+                    <span class="tool-title">{{ tool.title }}</span>
+                    <span class="tool-category">{{ tool.category }}</span>
+                </button>
+                {% else %}
+                <div class="empty-menu">暂无工具</div>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <main class="content">
+            {% for tool in tools %}
+            <section
+                id="{{ tool.id }}-panel"
+                class="tool-panel {% if tool.default %}active{% endif %}"
+            >
+                <div class="card">
+                    <h1>{{ tool.title }}</h1>
+                    <p>{{ tool.desc }}</p>
+                </div>
+
+                {% if tool.type == "placeholder" %}
+                <div class="empty-box">
+                    请选择左侧工具
+                </div>
+
+                {% elif tool.type == "file_hash" %}
+                <div class="card">
+                    <h2>上传文件计算哈希值</h2>
+
+                    <form
+                        class="tool-form"
+                        action="/api/file_hash"
+                        method="post"
+                        enctype="multipart/form-data"
+                    >
+                        <input
+                            type="file"
+                            name="file"
+                            required
+                            accept=".png,.jpg,.jpeg,.webp,.pdf,.docx,.txt,.csv,.xlsx"
+                        >
+
+                        <button type="submit">计算哈希值</button>
+                    </form>
+                </div>
+
+                {% elif tool.type == "link" %}
+                <div class="card">
+                    {% if tool.url %}
+                    <a class="open-btn" href="{{ tool.url }}" target="_blank">
+                        打开工具
+                    </a>
+                    {% else %}
+                    <p class="muted-text">该工具暂未配置链接。</p>
+                    {% endif %}
+                </div>
+
+                {% else %}
+                <div class="empty-box">
+                    暂不支持该工具类型：{{ tool.type }}
+                </div>
+                {% endif %}
+            </section>
+            {% endfor %}
+        </main>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/tools.js') }}"></script>
+</body>
+</html>

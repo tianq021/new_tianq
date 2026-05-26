@@ -1,0 +1,26 @@
+[
+  {
+    "id": "translator",
+    "title": "FastGPT 翻译官",
+    "desc": "调用 AI 翻译文本内容，适合中英文互译、短句翻译和文档片段翻译。",
+    "url": "https://fastgpt.nsi-soft.com/chat/share?shareId=wyRTsD2tHd59FtYfngr9rxG6",
+    "category": "文本工具",
+    "enabled": true
+  },
+  {
+    "id": "resume_preparation",
+    "title": "FastGPT 简历整理",
+    "desc": "上传或输入文档内容，让 AI 自动识别并返回结构化结果。",
+    "url": "https://fastgpt.nsi-soft.com/chat/share?shareId=nSNLCLP2jWizS3u0XUiih8fU",
+    "category": "文档工具",
+    "enabled": true
+  },
+  {
+    "id": "receipt-ocr",
+    "title": "FastGPT 票据识别",
+    "desc": "上传票据图片、PDF 或文档，自动识别金额、日期、项目名称等信息。",
+    "url": "https://fastgpt.nsi-soft.com/chat/share?shareId=h3eqmNPDUyIK0sD9Kj4dmACB",
+    "category": "文档工具",
+    "enabled": true
+  }
+]

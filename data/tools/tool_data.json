@@ -1,0 +1,21 @@
+[{
+    "id": "tool-intro",
+    "title": "工具介绍",
+    "desc": "这是默认占位工具标签。左侧工具列表来自 data/tools.json，右侧根据工具类型显示内容。",
+    "category": "默认",
+    "type": "placeholder",
+    "url": "",
+    "enabled": true,
+    "default": true
+  },
+  {
+    "id": "file-hash",
+    "title": "文件哈希计算",
+    "desc": "上传文件后计算 MD5 和 SHA256。默认只计算，不保存文件。",
+    "category": "文件工具",
+    "type": "file_hash",
+    "url": "",
+    "enabled": true,
+    "default": false
+  }
+]

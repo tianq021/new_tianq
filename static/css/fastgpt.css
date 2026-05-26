@@ -326,3 +326,49 @@ code {
         min-height: 420px;
     }
 }
+
+.tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.tool-card {
+    padding: 18px;
+    border-radius: 14px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.tool-card-header {
+    margin-bottom: 10px;
+}
+
+.tool-category {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #e0ecff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.tool-card h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: #111827;
+}
+
+.tool-card p {
+    margin: 0 0 14px;
+    color: #4b5563;
+    line-height: 1.7;
+}
+
+.empty-url {
+    display: inline-block;
+    font-size: 14px;
+    color: #9ca3af;
+}
