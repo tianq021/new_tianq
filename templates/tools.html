@@ -50,8 +50,47 @@
                 </div>
 
                 {% if tool.type == "placeholder" %}
-                <div class="empty-box">
-                    请选择左侧工具
+                <div class="empty-box tool-intro-list">
+                    <div class="intro-item">
+                        <strong>随机数：</strong>
+                        <span>返回随机数</span>
+                    </div>
+
+                    <div class="intro-item">
+                        <strong>文件哈希值计算：</strong>
+                        <span>上传文件并返回多种哈希值，最大 5MB</span>
+                    </div>
+
+                    <div class="intro-item">
+                        <strong>未来添加?:</strong>
+                        <span>???</span>
+                    </div>
+                </div>
+
+                {% elif tool.type == "random" %}
+                <div class="card random-tool-box">
+                    <h2>随机数生成</h2>
+
+                    <div class="tool-form">
+                        <label>
+                            最小值：
+                            <input id="{{ tool.id }}-min" type="number" value="1">
+                        </label>
+
+                        <label>
+                            最大值：
+                            <input id="{{ tool.id }}-max" type="number" value="100">
+                        </label>
+
+                        <button type="button" onclick="generateRandomNumber('{{ tool.id }}')">
+                            生成随机数
+                        </button>
+
+                        <label>
+                            随机结果：
+                            <input id="{{ tool.id }}-result" type="text" readonly placeholder="点击按钮生成随机数">
+                        </label>
+                    </div>
                 </div>
 
                 {% elif tool.type == "file_hash" %}
@@ -59,19 +98,30 @@
                     <h2>上传文件计算哈希值</h2>
 
                     <form
-                        class="tool-form"
-                        action="/api/file_hash"
-                        method="post"
+                        class="tool-form file-hash-form"
                         enctype="multipart/form-data"
                     >
-                        <input
-                            type="file"
-                            name="file"
-                            required
-                            accept=".png,.jpg,.jpeg,.webp,.pdf,.docx,.txt,.csv,.xlsx"
-                        >
 
-                        <button type="submit">计算哈希值</button>
+                    <input
+                        type="file"
+                        name="file"
+                        required
+                        accept=".png,.jpg,.jpeg,.webp,.pdf,.docx,.txt,.csv,.xlsx"
+                    >
+
+                    <button type="submit">计算哈希值</button>
+                    <div class="hash-result-box">
+                        <p>文件名：<span class="hash-filename">等待上传</span></p>
+                        <p>文件大小：<span class="hash-size">-</span></p>
+
+                        <p>MD5：<input class="hash-md5" type="text" readonly></p>
+                        <p>SHA1：<input class="hash-sha1" type="text" readonly></p>
+                        <p>SHA256：<input class="hash-sha256" type="text" readonly></p>
+                        <p>SHA512：<input class="hash-sha512" type="text" readonly></p>
+
+                        <p class="hash-message"></p>
+                    </div>
+
                     </form>
                 </div>
 

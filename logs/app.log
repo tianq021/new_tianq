@@ -1,0 +1,12 @@
+2026-05-26 17:44:16,237 | INFO | 开始计算文件哈希 | filename=玩家必读.txt | size=1632 bytes
+2026-05-26 17:44:16,237 | INFO | 文件哈希计算成功 | filename=玩家必读.txt | size=1632 bytes | md5=d48b53c17a33... | sha1=288d7b3d9137... | sha256=2f9db2d2e585... | sha512=053ca789e0a4...
+2026-05-26 17:59:21 | INFO | app | Flask 应用开始创建
+2026-05-26 17:59:21 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-26 17:59:21 | INFO | app | API 路由 api_bp 注册成功
+2026-05-26 17:59:21 | INFO | app | Flask 应用创建完成
+2026-05-26 17:59:21 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-26 17:59:21 | INFO | app | Flask 应用开始创建
+2026-05-26 17:59:21 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-26 17:59:21 | INFO | app | API 路由 api_bp 注册成功
+2026-05-26 17:59:21 | INFO | app | Flask 应用创建完成
+2026-05-26 17:59:21 | INFO | app | Flask 开始运行 | debug=True | port=5000
