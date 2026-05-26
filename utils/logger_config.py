@@ -46,8 +46,7 @@ def get_logger(name: str, filename: str, level=logging.INFO) -> logging.Logger:
 
 app_logger = get_logger("app", "app.log")
 access_logger = get_logger("access", "access.log")
-api_logger = get_logger("api", "api.log")
-tools_logger = get_logger("tools", "tools.log")
 fastgpt_logger = get_logger("fastgpt", "fastgpt.log")
 hash_logger = get_logger("hash", "hash.log")
+comments_logger = get_logger("comments", "comments.log")
 error_logger = get_logger("error", "error.log", logging.ERROR)

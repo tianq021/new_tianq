@@ -27,5 +27,15 @@
     "url": "",
     "enabled": true,
     "default": false
+  },
+  {
+  "id": "comments",
+  "title": "评论区",
+  "desc": "本地工具评论区，支持分页、点赞和排序。",
+  "category": "互动",
+  "type": "comments",
+  "url": "",
+  "enabled": true,
+  "default": false
   }
 ]

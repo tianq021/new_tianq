@@ -1,0 +1,224 @@
+document.addEventListener("DOMContentLoaded", function () {
+    const PAGE_KEY = "tools";
+    const PAGE_SIZE = 10;
+
+    let currentPage = 1;
+    let currentSort = "time";
+    let totalPages = 1;
+
+    const commentForm = document.getElementById("commentForm");
+    const commentNickname = document.getElementById("commentNickname");
+    const commentContent = document.getElementById("commentContent");
+    const commentMessage = document.getElementById("commentMessage");
+    const commentList = document.getElementById("commentList");
+    const commentSort = document.getElementById("commentSort");
+    const commentPrev = document.getElementById("commentPrev");
+    const commentNext = document.getElementById("commentNext");
+    const commentPageInfo = document.getElementById("commentPageInfo");
+
+    if (!commentForm || !commentList) {
+        return;
+    }
+
+    async function loadComments() {
+        commentList.innerHTML = `<p class="comment-empty">正在加载评论...</p>`;
+
+        try {
+            const url =
+                `/api/comments?page_key=${PAGE_KEY}` +
+                `&page=${currentPage}` +
+                `&page_size=${PAGE_SIZE}` +
+                `&sort=${currentSort}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!data.success) {
+                commentList.innerHTML = `<p class="comment-empty">评论加载失败</p>`;
+                return;
+            }
+
+            totalPages = data.total_pages || 1;
+            renderComments(data.comments || []);
+            renderPagination(data.page || 1, totalPages, data.total || 0);
+        } catch (error) {
+            commentList.innerHTML = `<p class="comment-empty">评论加载失败，请检查后端服务</p>`;
+        }
+    }
+
+    function renderComments(comments) {
+    commentList.innerHTML = "";
+
+    if (comments.length === 0) {
+        commentList.innerHTML = `<p class="comment-empty">暂无评论，来写第一条吧。</p>`;
+        return;
+    }
+
+    comments.forEach(function (comment) {
+        const item = document.createElement("div");
+        item.className = "comment-item";
+
+        const header = document.createElement("div");
+        header.className = "comment-item-header";
+
+        const userBox = document.createElement("div");
+        userBox.className = "comment-user-box";
+
+        const avatar = document.createElement("div");
+        avatar.className = "comment-avatar";
+        avatar.textContent = (comment.nickname || "匿").slice(0, 1);
+
+        const nameTimeBox = document.createElement("div");
+
+        const name = document.createElement("div");
+        name.className = "comment-name";
+        name.textContent = comment.nickname || "匿名用户";
+
+        const time = document.createElement("div");
+        time.className = "comment-time";
+        time.textContent = comment.created_at || "";
+
+        nameTimeBox.appendChild(name);
+        nameTimeBox.appendChild(time);
+
+        userBox.appendChild(avatar);
+        userBox.appendChild(nameTimeBox);
+
+        const likeBtn = document.createElement("button");
+        likeBtn.type = "button";
+        likeBtn.className = "comment-like-btn";
+        likeBtn.textContent = `👍 ${comment.like_count || 0}`;
+        likeBtn.dataset.oldText = likeBtn.textContent;
+
+        likeBtn.addEventListener("click", function () {
+            likeComment(comment.id, likeBtn);
+        });
+
+        header.appendChild(userBox);
+        header.appendChild(likeBtn);
+
+        const content = document.createElement("div");
+        content.className = "comment-content";
+        content.textContent = comment.content || "";
+
+        item.appendChild(header);
+        item.appendChild(content);
+
+        commentList.appendChild(item);
+    });
+}
+    function renderPagination(page, pages, total) {
+        currentPage = page;
+        totalPages = Math.max(pages, 1);
+
+        commentPageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页，共 ${total} 条`;
+
+        commentPrev.disabled = currentPage <= 1;
+        commentNext.disabled = currentPage >= totalPages;
+    }
+
+    async function likeComment(commentId, likeBtn) {
+    try {
+        likeBtn.disabled = true;
+        likeBtn.textContent = "处理中...";
+
+        const response = await fetch(`/api/comments/${commentId}/like`, {
+            method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            commentMessage.textContent = data.message || "操作失败";
+            likeBtn.disabled = false;
+            likeBtn.textContent = likeBtn.dataset.oldText || "👍 0";
+            return;
+        }
+
+        likeBtn.textContent = `👍 ${data.like_count}`;
+        likeBtn.dataset.oldText = `👍 ${data.like_count}`;
+
+        if (data.liked) {
+            likeBtn.classList.add("liked");
+        } else {
+            likeBtn.classList.remove("liked");
+        }
+
+        commentMessage.textContent = data.message || "操作成功";
+        likeBtn.disabled = false;
+
+    } catch (error) {
+        commentMessage.textContent = "操作失败，请检查后端服务";
+        likeBtn.disabled = false;
+        likeBtn.textContent = likeBtn.dataset.oldText || "👍 0";
+    }
+}
+
+    commentForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const nickname = commentNickname.value.trim();
+        const content = commentContent.value.trim();
+
+        if (!content) {
+            commentMessage.textContent = "评论内容不能为空";
+            return;
+        }
+
+        commentMessage.textContent = "正在发布...";
+
+        try {
+            const response = await fetch("/api/comments", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    page_key: PAGE_KEY,
+                    nickname: nickname,
+                    content: content
+                })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                commentMessage.textContent = data.message || "发布失败";
+                return;
+            }
+
+            commentContent.value = "";
+            commentMessage.textContent = "发布成功";
+
+            currentPage = 1;
+            currentSort = "time";
+            commentSort.value = "time";
+
+            await loadComments();
+        } catch (error) {
+            commentMessage.textContent = "发布失败，请检查后端服务";
+        }
+    });
+
+    commentSort.addEventListener("change", function () {
+        currentSort = commentSort.value;
+        currentPage = 1;
+        loadComments();
+    });
+
+    commentPrev.addEventListener("click", function () {
+        if (currentPage > 1) {
+            currentPage -= 1;
+            loadComments();
+        }
+    });
+
+    commentNext.addEventListener("click", function () {
+        if (currentPage < totalPages) {
+            currentPage += 1;
+            loadComments();
+        }
+    });
+
+    loadComments();
+});

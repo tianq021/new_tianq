@@ -3,7 +3,16 @@ import hashlib
 import logging
 from pathlib import Path
 from flask import Blueprint, request, jsonify
-from utils.logger_config import api_logger, hash_logger, error_logger
+from utils.logger_config import hash_logger, error_logger,comments_logger
+
+from services.comment_store_mysql import (
+    toggle_like_comment,
+    add_comment,
+    like_comment,
+    build_visitor_key
+)
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(exist_ok=True)
@@ -31,10 +40,6 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 @api_bp.route("/time")
 def get_time():
     now_time = time.strftime("%Y-%m-%d %H:%M:%S")
-
-    api_logger.info(
-        f"调用时间接口 | ip={request.remote_addr} | time={now_time}"
-    )
 
     return jsonify({
         "time": now_time
@@ -109,4 +114,127 @@ def file_hash():
         return jsonify({
             "success": False,
             "message": "服务器计算哈希值时出现错误"
+        }), 500
+
+
+@api_bp.route("/comments/<int:comment_id>/like", methods=["POST"])
+def like_comment_api(comment_id):
+    visitor_key = build_visitor_key(
+        request.remote_addr,
+        request.headers.get("User-Agent", "")
+    )
+
+    try:
+        result = toggle_like_comment(comment_id, visitor_key)
+
+        comments_logger.info(
+            f"评论点赞切换 | comment_id={comment_id} | "
+            f"liked={result['liked']} | like_count={result['like_count']}"
+        )
+
+        return jsonify({
+            "success": True,
+            **result
+        })
+
+    except ValueError as e:
+        comments_logger.warning(
+            f"评论点赞切换失败 | comment_id={comment_id} | reason={str(e)}"
+        )
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 404
+
+    except Exception as e:
+        error_logger.exception(
+            f"评论点赞切换异常 | comment_id={comment_id} | error={str(e)}"
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "点赞操作失败"
+        }), 500
+
+
+@api_bp.route("/comments", methods=["POST"])
+def create_comment():
+    data = request.get_json(silent=True) or {}
+
+    page_key = data.get("page_key", "tools")
+    nickname = data.get("nickname", "")
+    content = data.get("content", "")
+
+    try:
+        comment = add_comment(
+            page_key=page_key,
+            nickname=nickname,
+            content=content
+        )
+
+        comments_logger.info(
+            f"新增评论成功 | page_key={page_key} | "
+            f"nickname={comment['nickname']} | comment_id={comment['id']}"
+        )
+
+        return jsonify({
+            "success": True,
+            "message": "评论成功",
+            "comment": comment
+        })
+
+    except ValueError as e:
+        comments_logger.warning(
+            f"新增评论失败 | page_key={page_key} | reason={str(e)}"
+        )
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+
+    except Exception as e:
+        error_logger.exception(f"新增评论异常 | error={str(e)}")
+
+        return jsonify({
+            "success": False,
+            "message": "评论保存失败"
+        }), 500
+
+
+@api_bp.route("/comments", methods=["GET"])
+def get_comments():
+    page_key = request.args.get("page_key", "tools")
+    page = request.args.get("page", 1)
+    sort = request.args.get("sort", "time")
+
+    if sort not in ["time", "hot"]:
+        sort = "time"
+
+    try:
+        result = list_comments(
+            page_key=page_key,
+            page=page,
+            page_size=10,
+            sort=sort
+        )
+
+        comments_logger.info(
+            f"读取评论成功 | page_key={page_key} | page={page} | "
+            f"sort={sort} | total={result['total']}"
+        )
+
+        return jsonify({
+            "success": True,
+            **result
+        })
+
+    except Exception as e:
+        error_logger.exception(f"读取评论失败 | error={str(e)}")
+
+        return jsonify({
+            "success": False,
+            "message": "评论读取失败",
+            "error": str(e)
         }), 500

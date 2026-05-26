@@ -52,18 +52,18 @@
                 {% if tool.type == "placeholder" %}
                 <div class="empty-box tool-intro-list">
                     <div class="intro-item">
-                        <strong>随机数：</strong>
+                        <strong>随机数:</strong>
                         <span>返回随机数</span>
                     </div>
 
                     <div class="intro-item">
-                        <strong>文件哈希值计算：</strong>
+                        <strong>文件哈希值计算:</strong>
                         <span>上传文件并返回多种哈希值，最大 5MB</span>
                     </div>
 
                     <div class="intro-item">
-                        <strong>未来添加?:</strong>
-                        <span>???</span>
+                        <strong>评论区:</strong>
+                        <span>所有人都可以评论</span>
                     </div>
                 </div>
 
@@ -125,6 +125,51 @@
                     </form>
                 </div>
 
+                {% elif tool.type == "comments" %}
+                <div class="card comments-card">
+                    <div class="comment-header">
+                        <div>
+                            <h2>评论区</h2>
+                            <p>每页显示 10 条评论，可按时间或热度排序。热度 = 点赞数。</p>
+                        </div>
+
+                        <select id="commentSort">
+                            <option value="time">按时间排序</option>
+                            <option value="hot">按热度排序</option>
+                        </select>
+                    </div>
+
+                    <form id="commentForm" class="comment-form">
+                        <input
+                            id="commentNickname"
+                            type="text"
+                            maxlength="30"
+                            placeholder="昵称，可不填"
+                        >
+
+                        <textarea
+                            id="commentContent"
+                            maxlength="500"
+                            placeholder="写一条评论..."
+                            required
+                        ></textarea>
+
+                        <button type="submit">发布评论</button>
+                    </form>
+
+                    <p id="commentMessage" class="comment-message"></p>
+
+                    <div id="commentList" class="comment-list">
+                        <p class="comment-empty">正在加载评论...</p>
+                    </div>
+
+                    <div class="comment-pagination">
+                        <button id="commentPrev" type="button">上一页</button>
+                        <span id="commentPageInfo">第 1 页 / 共 1 页</span>
+                        <button id="commentNext" type="button">下一页</button>
+                    </div>
+                </div>
+
                 {% elif tool.type == "link" %}
                 <div class="card">
                     {% if tool.url %}
@@ -148,5 +193,6 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
+<script src="{{ url_for('static', filename='js/comments.js') }}"></script>
 </body>
 </html>
