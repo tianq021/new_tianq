@@ -7,6 +7,65 @@ def clean_text(value, default=""):
         return default
     return str(value).strip()
 
+def list_comments(page_key="tools", page=1, page_size=10, sort="time"):
+    page_key = clean_text(page_key, "tools") or "tools"
+
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+
+    try:
+        page_size = int(page_size)
+    except (TypeError, ValueError):
+        page_size = 10
+
+    page = max(page, 1)
+    page_size = min(max(page_size, 1), 10)
+
+    offset = (page - 1) * page_size
+
+    if sort == "hot":
+        order_sql = "like_count DESC, created_at DESC, id DESC"
+    else:
+        order_sql = "created_at DESC, id DESC"
+
+    with get_db() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT COUNT(*) AS total FROM comments WHERE page_key = %s",
+                (page_key,)
+            )
+            total = cursor.fetchone()["total"]
+
+            cursor.execute(
+                f"""
+                SELECT
+                    id,
+                    page_key,
+                    nickname,
+                    content,
+                    like_count,
+                    DATE_FORMAT(created_at, '%%Y-%%m-%%d %%H:%%i:%%s') AS created_at
+                FROM comments
+                WHERE page_key = %s
+                ORDER BY {order_sql}
+                LIMIT %s OFFSET %s
+                """,
+                (page_key, page_size, offset)
+            )
+            comments = cursor.fetchall()
+
+    total_pages = (total + page_size - 1) // page_size
+
+    return {
+        "comments": comments,
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "total_pages": max(total_pages, 1),
+        "sort": sort
+    }
 
 def toggle_like_comment(comment_id, visitor_key):
     with get_db() as conn:

@@ -2,13 +2,13 @@ import time
 import hashlib
 import logging
 from pathlib import Path
-from flask import Blueprint, request, jsonify
+from flask import jsonify
 from utils.logger_config import hash_logger, error_logger,comments_logger
-
+from flask import Blueprint, render_template, request
 from services.comment_store_mysql import (
+    list_comments,
     toggle_like_comment,
     add_comment,
-    like_comment,
     build_visitor_key
 )
 

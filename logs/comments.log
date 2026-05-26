@@ -94,3 +94,27 @@
 2026-05-26 18:34:20 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=12
 2026-05-26 18:34:26 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=12
 2026-05-26 18:34:35 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=12
+2026-05-26 18:46:57 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=12
+2026-05-26 18:47:03 | INFO | comments | 评论点赞切换 | comment_id=12 | liked=False | like_count=0
+2026-05-26 18:47:04 | INFO | comments | 评论点赞切换 | comment_id=12 | liked=True | like_count=1
+2026-05-26 18:47:05 | INFO | comments | 评论点赞切换 | comment_id=12 | liked=False | like_count=0
+2026-05-26 18:47:05 | INFO | comments | 评论点赞切换 | comment_id=12 | liked=True | like_count=1
+2026-05-26 18:47:13 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=hot | total=12
+2026-05-26 18:47:16 | INFO | comments | 读取评论成功 | page_key=tools | page=2 | sort=hot | total=12
+2026-05-26 18:47:19 | INFO | comments | 评论点赞切换 | comment_id=2 | liked=False | like_count=0
+2026-05-26 18:47:27 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=12
+2026-05-26 18:47:43 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=12
+2026-05-26 18:59:32 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=12
+2026-05-26 18:59:50 | INFO | comments | 新增评论成功 | page_key=tools | nickname=手机测试 | comment_id=13
+2026-05-26 18:59:50 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=13
+2026-05-26 19:00:11 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=13
+2026-05-26 19:00:18 | INFO | comments | 评论点赞切换 | comment_id=12 | liked=True | like_count=2
+2026-05-26 19:00:20 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=13
+2026-05-26 19:00:23 | INFO | comments | 评论点赞切换 | comment_id=12 | liked=False | like_count=1
+2026-05-26 19:00:24 | INFO | comments | 评论点赞切换 | comment_id=11 | liked=True | like_count=2
+2026-05-26 19:00:26 | INFO | comments | 评论点赞切换 | comment_id=13 | liked=True | like_count=1
+2026-05-26 19:00:34 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=13
+2026-05-26 19:00:35 | INFO | comments | 评论点赞切换 | comment_id=13 | liked=True | like_count=2
+2026-05-26 19:00:39 | INFO | comments | 读取评论成功 | page_key=tools | page=1 | sort=time | total=13
+2026-05-26 19:00:40 | INFO | comments | 评论点赞切换 | comment_id=13 | liked=False | like_count=1
+2026-05-26 19:00:41 | INFO | comments | 评论点赞切换 | comment_id=13 | liked=True | like_count=2
