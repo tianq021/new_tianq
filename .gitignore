@@ -2,3 +2,34 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 环境变量和本地配置
+.env
+.env.*
+!.env.example
+
+# 本地配置文件
+config.py
+config_local.py
+
+# 日志
+logs/
+*.log
+
+# 数据库/临时文件
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.idea/
+.vscode/
+
+# 系统文件
+.DS_Store
+Thumbs.db
