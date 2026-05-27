@@ -28,3 +28,26 @@
 2026-05-27 12:24:26 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
 2026-05-27 12:24:26 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
 2026-05-27 12:24:26 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-05-27 12:30:44 | INFO | fastgpt | 开始读取 FastGPT 工具配置 | file=F:\python_mmx\new_tianq\data\fastgpt\fastgpt_tools.json
+2026-05-27 12:30:44 | INFO | fastgpt | FastGPT 工具配置读取成功 | total=4 | enabled=4
+2026-05-27 12:30:44 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-05-27 12:30:44 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-05-27 12:30:44 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-05-27 12:30:44 | INFO | fastgpt | FastGPT 工具加载 | id=None | title=None | category=None | url=
+2026-05-27 12:30:45 | INFO | fastgpt | 开始读取 FastGPT 工具配置 | file=F:\python_mmx\new_tianq\data\fastgpt\fastgpt_tools.json
+2026-05-27 12:30:45 | INFO | fastgpt | FastGPT 工具配置读取成功 | total=4 | enabled=4
+2026-05-27 12:30:45 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-05-27 12:30:45 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-05-27 12:30:45 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-05-27 12:30:45 | INFO | fastgpt | FastGPT 工具加载 | id=None | title=None | category=None | url=
+2026-05-27 12:30:53 | INFO | fastgpt | 开始读取 FastGPT 工具配置 | file=F:\python_mmx\new_tianq\data\fastgpt\fastgpt_tools.json
+2026-05-27 12:30:53 | INFO | fastgpt | FastGPT 工具配置读取成功 | total=4 | enabled=4
+2026-05-27 12:30:53 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-05-27 12:30:53 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-05-27 12:30:53 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-05-27 12:30:53 | INFO | fastgpt | FastGPT 工具加载 | id=None | title=None | category=None | url=
+2026-05-27 12:32:02 | INFO | fastgpt | 开始读取 FastGPT 工具配置 | file=F:\python_mmx\new_tianq\data\fastgpt\fastgpt_tools.json
+2026-05-27 12:32:02 | INFO | fastgpt | FastGPT 工具配置读取成功 | total=3 | enabled=3
+2026-05-27 12:32:02 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-05-27 12:32:02 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-05-27 12:32:02 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB

@@ -48,3 +48,7 @@ new_tianq/
 │  └─ tools/
 │     └─ tool_data.json           # 工具列表配置
 └─ logs/                          # 日志目录，本地运行后生成
+```
+
+## 计划更新
+*1* : FastGPT添加一个AI消息框，
