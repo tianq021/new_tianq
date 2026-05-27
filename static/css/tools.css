@@ -154,7 +154,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    max-width: 520px;
+    max-width: 760px;
 }
 
 .tool-form input[type="file"] {
@@ -162,6 +162,66 @@ body {
     border: 1px solid #d1d5db;
     border-radius: 8px;
     background: #ffffff;
+}
+
+.hash-input-label {
+    display: grid;
+    gap: 8px;
+    color: #374151;
+    font-weight: 700;
+}
+
+.hash-input {
+    width: 560px;
+    height: 160px;
+    max-width: 100%;
+    min-width: 320px;
+    min-height: 160px;
+    max-height: 160px;
+    resize: none;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #111827;
+    font: 14px/1.6 Consolas, "Microsoft YaHei", monospace;
+    outline: none;
+}
+
+.hash-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.hash-result-box {
+    display: grid;
+    gap: 8px;
+    width: min(100%, 760px);
+    margin-top: 4px;
+}
+
+.hash-result-row {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+}
+
+.hash-result-label {
+    color: #64748b;
+    font-weight: 700;
+}
+
+.hash-result-value {
+    color: #0f172a;
+    font-family: Consolas, "Microsoft YaHei", monospace;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+
+.hash-message,
+.text-hash-message {
+    color: #2563eb;
+    font-weight: 700;
 }
 
 .tool-form button,
@@ -211,6 +271,16 @@ body {
     .tool-menu-item {
         min-width: 150px;
         flex-shrink: 0;
+    }
+
+    .hash-input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .hash-result-row {
+        grid-template-columns: 1fr;
+        gap: 2px;
     }
 }
 

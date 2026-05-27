@@ -117,6 +117,101 @@ def file_hash():
         }), 500
 
 
+@api_bp.route("/hash", methods=["GET", "POST"])
+def text_hash():
+    """
+    文字/数字内容哈希计算接口
+    GET 示例:
+        /api/hash?value=hello
+
+    POST 示例:
+        {
+            "value": "hello"
+        }
+    """
+
+    hash_logger.info(
+        f"收到文本哈希请求 | method={request.method} | ip={request.remote_addr}"
+    )
+
+    try:
+        if request.method == "GET":
+            value = request.args.get("value", "")
+        else:
+            data = request.get_json(silent=True) or {}
+            value = data.get("value", "")
+
+        value = str(value)
+
+        if value.strip() == "":
+            hash_logger.warning(
+                f"文本哈希失败：输入为空 | method={request.method} | ip={request.remote_addr}"
+            )
+
+            return jsonify({
+                "success": False,
+                "message": "请输入需要计算哈希值的内容"
+            }), 400
+
+        max_length = 10000
+
+        if len(value) > max_length:
+            hash_logger.warning(
+                f"文本哈希失败：输入过长 | length={len(value)} | "
+                f"max_length={max_length} | ip={request.remote_addr}"
+            )
+
+            return jsonify({
+                "success": False,
+                "message": f"输入内容过长，最大允许 {max_length} 个字符",
+                "max_length": max_length,
+                "length": len(value)
+            }), 400
+
+        value_bytes = value.encode("utf-8")
+        md5_hash = hashlib.md5(value_bytes).hexdigest()
+        sha1_hash = hashlib.sha1(value_bytes).hexdigest()
+        sha256_hash = hashlib.sha256(value_bytes).hexdigest()
+        sha512_hash = hashlib.sha512(value_bytes).hexdigest()
+
+        input_preview = value[:20].replace("\n", "\\n").replace("\r", "\\r")
+
+        hash_logger.info(
+            f"文本哈希计算成功 | length={len(value)} | "
+            f"preview={input_preview}... | "
+            f"md5={md5_hash[:12]}... | sha1={sha1_hash[:12]}... | "
+            f"sha256={sha256_hash[:12]}... | sha512={sha512_hash[:12]}... | "
+            f"ip={request.remote_addr}"
+        )
+
+        return jsonify({
+            "success": True,
+            "type": "text_hash",
+            "length": len(value),
+            "md5": md5_hash,
+            "sha1": sha1_hash,
+            "sha256": sha256_hash,
+            "sha512": sha512_hash
+        })
+
+    except Exception as e:
+        error_logger.exception(
+            f"文本哈希计算异常 | method={request.method} | "
+            f"path={request.path} | ip={request.remote_addr} | error={str(e)}"
+        )
+
+        hash_logger.error(
+            f"文本哈希计算异常 | ip={request.remote_addr} | error={str(e)}"
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "服务器计算文本哈希值时出现错误"
+        }), 500
+
+
+
+
 @api_bp.route("/comments/<int:comment_id>/like", methods=["POST"])
 def like_comment_api(comment_id):
     visitor_key = build_visitor_key(
@@ -209,6 +304,11 @@ def get_comments():
     page = request.args.get("page", 1)
     sort = request.args.get("sort", "time")
 
+    comments_logger.info(
+        f"收到评论列表请求 | page_key={page_key} | page={page} | "
+        f"sort={sort} | ip={request.remote_addr}"
+    )
+
     if sort not in ["time", "hot"]:
         sort = "time"
 
@@ -238,3 +338,15 @@ def get_comments():
             "message": "评论读取失败",
             "error": str(e)
         }), 500
+
+
+
+
+
+
+
+
+
+
+
+

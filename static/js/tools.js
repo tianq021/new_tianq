@@ -24,6 +24,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if (targetPanel) {
             targetPanel.classList.add("active");
         }
+
+        document.dispatchEvent(new CustomEvent("toolPanelShown", {
+            detail: {
+                targetId: targetId
+            }
+        }));
     }
 
     menuItems.forEach(function (item) {
@@ -45,6 +51,74 @@ document.addEventListener("DOMContentLoaded", function () {
     } else if (menuItems.length > 0) {
         showPanel(menuItems[0].dataset.target);
     }
+});
+
+// 文字或数字哈希
+document.addEventListener("DOMContentLoaded", function () {
+    const textHashForms = document.querySelectorAll(".text-hash-form");
+
+    textHashForms.forEach(function (form) {
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const card = form.closest(".card");
+            const input = form.querySelector(".hash-input");
+            const lengthBox = card.querySelector(".text-hash-length");
+            const md5Box = card.querySelector(".text-hash-md5");
+            const sha1Box = card.querySelector(".text-hash-sha1");
+            const sha256Box = card.querySelector(".text-hash-sha256");
+            const sha512Box = card.querySelector(".text-hash-sha512");
+            const messageBox = card.querySelector(".text-hash-message");
+            const value = input.value;
+
+            if (value.trim() === "") {
+                messageBox.textContent = "请输入需要计算哈希值的内容";
+                return;
+            }
+
+            messageBox.textContent = "正在计算...";
+            lengthBox.textContent = "-";
+            md5Box.textContent = "-";
+            sha1Box.textContent = "-";
+            sha256Box.textContent = "-";
+            sha512Box.textContent = "-";
+            console.info("开始计算文本哈希", {
+                length: value.length
+            });
+
+            try {
+                const response = await fetch("/api/hash", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        value: value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    messageBox.textContent = data.message || "计算失败";
+                    return;
+                }
+
+                lengthBox.textContent = data.length;
+                md5Box.textContent = data.md5;
+                sha1Box.textContent = data.sha1;
+                sha256Box.textContent = data.sha256;
+                sha512Box.textContent = data.sha512;
+                messageBox.textContent = "计算完成";
+                console.info("文本哈希计算完成", {
+                    length: data.length
+                });
+            } catch (error) {
+                messageBox.textContent = "请求失败，请检查后端服务是否正常运行";
+                console.error("文本哈希请求失败", error);
+            }
+        });
+    });
 });
 
 // 随机数
@@ -107,10 +181,14 @@ document.addEventListener("DOMContentLoaded", function () {
             formData.append("file", fileInput.files[0]);
 
             messageBox.textContent = "正在计算...";
-            md5Box.value = "";
-            sha1Box.value = "";
-            sha256Box.value = "";
-            sha512Box.value = "";
+            md5Box.textContent = "-";
+            sha1Box.textContent = "-";
+            sha256Box.textContent = "-";
+            sha512Box.textContent = "-";
+            console.info("开始计算文件哈希", {
+                filename: fileInput.files[0].name,
+                size: fileInput.files[0].size
+            });
 
             try {
                 const response = await fetch("/api/file_hash", {
@@ -127,13 +205,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 filenameBox.textContent = data.filename;
                 sizeBox.textContent = data.size + " 字节";
-                md5Box.value = data.md5;
-                sha1Box.value = data.sha1;
-                sha256Box.value = data.sha256;
-                sha512Box.value = data.sha512;
+                md5Box.textContent = data.md5;
+                sha1Box.textContent = data.sha1;
+                sha256Box.textContent = data.sha256;
+                sha512Box.textContent = data.sha512;
                 messageBox.textContent = "计算完成";
+                console.info("文件哈希计算完成", {
+                    filename: data.filename,
+                    size: data.size
+                });
             } catch (error) {
                 messageBox.textContent = "请求失败，请检查后端服务是否正常运行";
+                console.error("文件哈希请求失败", error);
             }
         });
     });

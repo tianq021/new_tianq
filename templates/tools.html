@@ -10,13 +10,12 @@
 <div class="page">
     <header class="top-header">
         <div class="header-left">
+            <a class="header-link" href="/">返回首页</a>
             <a class="logo" href="/tools">工具中心</a>
             <span class="header-desc">本地工具集合页面</span>
         </div>
 
-        <div class="header-right">
-            <a class="header-link" href="/">返回首页</a>
-        </div>
+        <div class="header-right"></div>
     </header>
 
     <div class="layout">
@@ -57,6 +56,11 @@
                     </div>
 
                     <div class="intro-item">
+                        <strong>哈希值计算:</strong>
+                        <span>输入文字或数字，返回 MD5、SHA1、SHA256、SHA512 哈希值</span>
+                    </div>
+
+                    <div class="intro-item">
                         <strong>文件哈希值计算:</strong>
                         <span>上传文件并返回多种哈希值，最大 5MB</span>
                     </div>
@@ -93,6 +97,31 @@
                     </div>
                 </div>
 
+                {% elif tool.type == "hash" %}
+                <div class="card">
+                    <h2>文字或数字哈希计算</h2>
+
+                    <form class="tool-form text-hash-form">
+                        <label class="hash-input-label">
+                            输入内容：
+                            <textarea class="hash-input" placeholder="请输入文字、数字或混合内容" required></textarea>
+                        </label>
+
+                        <button type="submit">计算哈希值</button>
+
+                        <div class="hash-result-box">
+                            <p class="hash-result-row"><span class="hash-result-label">内容长度：</span><span class="text-hash-length hash-result-value">-</span></p>
+
+                            <p class="hash-result-row"><span class="hash-result-label">MD5：</span><span class="text-hash-md5 hash-result-value">-</span></p>
+                            <p class="hash-result-row"><span class="hash-result-label">SHA1：</span><span class="text-hash-sha1 hash-result-value">-</span></p>
+                            <p class="hash-result-row"><span class="hash-result-label">SHA256：</span><span class="text-hash-sha256 hash-result-value">-</span></p>
+                            <p class="hash-result-row"><span class="hash-result-label">SHA512：</span><span class="text-hash-sha512 hash-result-value">-</span></p>
+
+                            <p class="text-hash-message"></p>
+                        </div>
+                    </form>
+                </div>
+
                 {% elif tool.type == "file_hash" %}
                 <div class="card">
                     <h2>上传文件计算哈希值</h2>
@@ -111,13 +140,13 @@
 
                     <button type="submit">计算哈希值</button>
                     <div class="hash-result-box">
-                        <p>文件名：<span class="hash-filename">等待上传</span></p>
-                        <p>文件大小：<span class="hash-size">-</span></p>
+                        <p class="hash-result-row"><span class="hash-result-label">文件名：</span><span class="hash-filename hash-result-value">等待上传</span></p>
+                        <p class="hash-result-row"><span class="hash-result-label">文件大小：</span><span class="hash-size hash-result-value">-</span></p>
 
-                        <p>MD5：<input class="hash-md5" type="text" readonly></p>
-                        <p>SHA1：<input class="hash-sha1" type="text" readonly></p>
-                        <p>SHA256：<input class="hash-sha256" type="text" readonly></p>
-                        <p>SHA512：<input class="hash-sha512" type="text" readonly></p>
+                        <p class="hash-result-row"><span class="hash-result-label">MD5：</span><span class="hash-md5 hash-result-value">-</span></p>
+                        <p class="hash-result-row"><span class="hash-result-label">SHA1：</span><span class="hash-sha1 hash-result-value">-</span></p>
+                        <p class="hash-result-row"><span class="hash-result-label">SHA256：</span><span class="hash-sha256 hash-result-value">-</span></p>
+                        <p class="hash-result-row"><span class="hash-result-label">SHA512：</span><span class="hash-sha512 hash-result-value">-</span></p>
 
                         <p class="hash-message"></p>
                     </div>
@@ -160,7 +189,7 @@
                     <p id="commentMessage" class="comment-message"></p>
 
                     <div id="commentList" class="comment-list">
-                        <p class="comment-empty">正在加载评论...</p>
+                        <p class="comment-empty">点击评论区后加载评论。</p>
                     </div>
 
                     <div class="comment-pagination">

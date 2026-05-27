@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentPage = 1;
     let currentSort = "time";
     let totalPages = 1;
+    let hasLoadedComments = false;
 
     const commentForm = document.getElementById("commentForm");
     const commentNickname = document.getElementById("commentNickname");
@@ -22,6 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function loadComments() {
         commentList.innerHTML = `<p class="comment-empty">正在加载评论...</p>`;
+        console.info("开始加载评论", {
+            page: currentPage,
+            sort: currentSort
+        });
 
         try {
             const url =
@@ -41,8 +46,14 @@ document.addEventListener("DOMContentLoaded", function () {
             totalPages = data.total_pages || 1;
             renderComments(data.comments || []);
             renderPagination(data.page || 1, totalPages, data.total || 0);
+            hasLoadedComments = true;
+            console.info("评论加载完成", {
+                page: data.page || 1,
+                total: data.total || 0
+            });
         } catch (error) {
             commentList.innerHTML = `<p class="comment-empty">评论加载失败，请检查后端服务</p>`;
+            console.error("评论加载失败", error);
         }
     }
 
@@ -220,5 +231,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    loadComments();
+    document.addEventListener("toolPanelShown", function (event) {
+        if (event.detail && event.detail.targetId === "comments-panel" && !hasLoadedComments) {
+            loadComments();
+        }
+    });
 });

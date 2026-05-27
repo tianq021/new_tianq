@@ -12,50 +12,121 @@
 <div class="page">
     <header class="top-header">
         <div class="header-left">
+            <a class="header-link" href="/">返回首页</a>
             <a class="logo" href="/">FastGPT 工具页</a>
             <span class="header-desc">AI 工具入口</span>
         </div>
 
-        <div class="header-right">
-            <a class="header-link" href="/">返回首页</a>
-        </div>
+        <div class="header-right"></div>
     </header>
 
-    <main class="content">
-        <section class="content-section active">
-            <div class="section-header">
-                <div>
-                    <h1>FastGPT 工作流</h1>
-                    <p>这里的工具来自 fastgpt.nsi-soft.com,</p>
-                </div>
-            </div>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-title">类型列表</div>
 
-            <div class="tool-grid">
-                {% for tool in tools %}
-                <div class="tool-card">
-                    <div class="tool-card-header">
-                        <span class="tool-category">{{ tool.category }}</span>
+            <nav class="category-menu">
+                {% for category, category_tools in tools|groupby("category") %}
+                <a
+                    class="category-menu-item {% if loop.first %}active{% endif %}"
+                    href="#category-{{ loop.index }}"
+                >
+                    <span class="category-name">{{ category }}</span>
+                    <span class="category-count">{{ category_tools|length }} 个工具</span>
+                </a>
+                {% else %}
+                <div class="empty-menu">暂无类型</div>
+                {% endfor %}
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section class="content-section active">
+                <div class="section-header">
+                    <div>
+                        <h1>FastGPT 工作流</h1>
+                        <p>这里的工具来自 fastgpt.nsi-soft.com,</p>
+                    </div>
+                </div>
+
+                {% for category, category_tools in tools|groupby("category") %}
+                <section id="category-{{ loop.index }}" class="category-section">
+                    <div class="category-section-header">
+                        <h2>{{ category }}</h2>
+                        <span>{{ category_tools|length }} 个工具</span>
                     </div>
 
-                    <h2>{{ tool.title }}</h2>
-                    <p>{{ tool.desc }}</p>
+                    <div class="tool-grid">
+                        {% for tool in category_tools %}
+                        <div
+                            class="tool-card {% if tool.url %}clickable-card{% endif %}"
+                            {% if tool.url %}
+                            role="link"
+                            tabindex="0"
+                            data-url="{{ tool.url }}"
+                            {% endif %}
+                        >
+                            <div class="tool-card-header">
+                                <span class="tool-category">{{ tool.category }}</span>
+                            </div>
 
-                    {% if tool.url %}
-                    <a class="open-btn" href="{{ tool.url }}" target="_blank">
-                        打开工具
-                    </a>
-                    {% else %}
-                    <span class="empty-url">暂未配置链接</span>
-                    {% endif %}
-                </div>
+                            <h2>{{ tool.title }}</h2>
+                            <p>{{ tool.desc }}</p>
+
+                            {% if not tool.url %}
+                            <span class="empty-url">暂未配置链接</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
                 {% else %}
                 <div class="doc-card">
                     <p>当前还没有工具数据，请先检查 <code>data/fastgpt_tools.json</code>。</p>
                 </div>
                 {% endfor %}
-            </div>
-        </section>
-    </main>
+            </section>
+        </main>
+    </div>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const categoryItems = document.querySelectorAll(".category-menu-item");
+
+    categoryItems.forEach(function (item) {
+        item.addEventListener("click", function () {
+            categoryItems.forEach(function (menuItem) {
+                menuItem.classList.remove("active");
+            });
+
+            item.classList.add("active");
+        });
+    });
+
+    document.querySelectorAll(".clickable-card").forEach(function (card) {
+        function openCard() {
+            const url = card.dataset.url;
+
+            if (url) {
+                window.open(url, "_blank", "noopener");
+            }
+        }
+
+        card.addEventListener("click", function (event) {
+            if (event.target.closest("a")) {
+                return;
+            }
+
+            openCard();
+        });
+
+        card.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openCard();
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>
