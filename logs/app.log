@@ -1,146 +1,65 @@
-2026-05-26 17:44:16,237 | INFO | 开始计算文件哈希 | filename=玩家必读.txt | size=1632 bytes
-2026-05-26 17:44:16,237 | INFO | 文件哈希计算成功 | filename=玩家必读.txt | size=1632 bytes | md5=d48b53c17a33... | sha1=288d7b3d9137... | sha256=2f9db2d2e585... | sha512=053ca789e0a4...
-2026-05-26 17:59:21 | INFO | app | Flask 应用开始创建
-2026-05-26 17:59:21 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 17:59:21 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 17:59:21 | INFO | app | Flask 应用创建完成
-2026-05-26 17:59:21 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 17:59:21 | INFO | app | Flask 应用开始创建
-2026-05-26 17:59:21 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 17:59:21 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 17:59:21 | INFO | app | Flask 应用创建完成
-2026-05-26 17:59:21 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:18:08 | INFO | app | Flask 应用开始创建
-2026-05-26 18:18:08 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:18:08 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:18:08 | INFO | app | Flask 应用创建完成
-2026-05-26 18:18:08 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:18:40 | INFO | app | Flask 应用开始创建
-2026-05-26 18:18:40 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:18:40 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:18:40 | INFO | app | Flask 应用创建完成
-2026-05-26 18:18:40 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:19:05 | INFO | app | Flask 应用开始创建
-2026-05-26 18:19:05 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:19:05 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:19:05 | INFO | app | Flask 应用创建完成
-2026-05-26 18:19:05 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:19:33 | INFO | app | Flask 应用开始创建
-2026-05-26 18:19:33 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:19:33 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:19:33 | INFO | app | Flask 应用创建完成
-2026-05-26 18:19:33 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:28:21 | INFO | app | Flask 应用开始创建
-2026-05-26 18:28:21 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:28:21 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:28:21 | INFO | app | Flask 应用创建完成
-2026-05-26 18:28:21 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:28:22 | INFO | app | Flask 应用开始创建
-2026-05-26 18:28:22 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:28:22 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:28:22 | INFO | app | Flask 应用创建完成
-2026-05-26 18:28:22 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:32:18 | INFO | app | Flask 应用开始创建
-2026-05-26 18:32:18 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:32:18 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:32:18 | INFO | app | Flask 应用创建完成
-2026-05-26 18:32:18 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:32:18 | INFO | app | Flask 应用开始创建
-2026-05-26 18:32:18 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:32:18 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:32:18 | INFO | app | Flask 应用创建完成
-2026-05-26 18:32:18 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:36:46 | INFO | app | Flask 应用开始创建
-2026-05-26 18:36:46 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:37:14 | INFO | app | Flask 应用开始创建
-2026-05-26 18:37:14 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:39:35 | INFO | app | Flask 应用开始创建
-2026-05-26 18:39:35 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:39:35 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:39:35 | INFO | app | Flask 应用创建完成
-2026-05-26 18:39:35 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:39:35 | INFO | app | Flask 应用开始创建
-2026-05-26 18:39:35 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:39:35 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:39:35 | INFO | app | Flask 应用创建完成
-2026-05-26 18:39:35 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:41:58 | INFO | app | Flask 应用开始创建
-2026-05-26 18:41:58 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:41:58 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:41:58 | INFO | app | Flask 应用创建完成
-2026-05-26 18:41:58 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:41:58 | INFO | app | Flask 应用开始创建
-2026-05-26 18:41:58 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:41:58 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:41:58 | INFO | app | Flask 应用创建完成
-2026-05-26 18:41:58 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:46:15 | INFO | app | Flask 应用开始创建
-2026-05-26 18:46:15 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:46:15 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:46:15 | INFO | app | Flask 应用创建完成
-2026-05-26 18:46:15 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:46:39 | INFO | app | Flask 应用开始创建
-2026-05-26 18:46:39 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:46:39 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:46:39 | INFO | app | Flask 应用创建完成
-2026-05-26 18:46:39 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:46:53 | INFO | app | Flask 应用开始创建
-2026-05-26 18:46:53 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:46:53 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:46:53 | INFO | app | Flask 应用创建完成
-2026-05-26 18:46:53 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:46:53 | INFO | app | Flask 应用开始创建
-2026-05-26 18:46:53 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:46:53 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:46:53 | INFO | app | Flask 应用创建完成
-2026-05-26 18:46:53 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:51:14 | INFO | app | Flask 应用开始创建
-2026-05-26 18:51:14 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:51:14 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:51:14 | INFO | app | Flask 应用创建完成
-2026-05-26 18:51:14 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:51:15 | INFO | app | Flask 应用开始创建
-2026-05-26 18:51:15 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:51:15 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:51:15 | INFO | app | Flask 应用创建完成
-2026-05-26 18:51:15 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:52:02 | INFO | app | Flask 应用开始创建
-2026-05-26 18:52:02 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:52:02 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:52:02 | INFO | app | Flask 应用创建完成
-2026-05-26 18:52:02 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:53:25 | INFO | app | Flask 应用开始创建
-2026-05-26 18:53:25 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:53:25 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:53:25 | INFO | app | Flask 应用创建完成
-2026-05-26 18:53:25 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:53:25 | INFO | app | Flask 应用开始创建
-2026-05-26 18:53:25 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:53:25 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:53:25 | INFO | app | Flask 应用创建完成
-2026-05-26 18:53:25 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:54:27 | INFO | app | Flask 应用开始创建
-2026-05-26 18:54:27 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:54:27 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:54:27 | INFO | app | Flask 应用创建完成
-2026-05-26 18:54:27 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:57:00 | INFO | app | Flask 应用开始创建
-2026-05-26 18:57:00 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:57:00 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:57:00 | INFO | app | Flask 应用创建完成
-2026-05-26 18:57:00 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:57:00 | INFO | app | Flask 应用开始创建
-2026-05-26 18:57:00 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:57:00 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:57:00 | INFO | app | Flask 应用创建完成
-2026-05-26 18:57:00 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:58:53 | INFO | app | Flask 应用开始创建
-2026-05-26 18:58:53 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:58:53 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:58:53 | INFO | app | Flask 应用创建完成
-2026-05-26 18:58:53 | INFO | app | Flask 开始运行 | debug=True | port=5000
-2026-05-26 18:58:53 | INFO | app | Flask 应用开始创建
-2026-05-26 18:58:53 | INFO | app | 页面路由 page_bp 注册成功
-2026-05-26 18:58:53 | INFO | app | API 路由 api_bp 注册成功
-2026-05-26 18:58:53 | INFO | app | Flask 应用创建完成
-2026-05-26 18:58:53 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-28 15:41:51 | INFO | app | logger smoke app
+2026-05-28 15:42:39 | INFO | app | Flask 应用开始创建
+2026-05-28 15:42:39 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:42:39 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:42:39 | INFO | app | Flask 应用创建完成
+2026-05-28 15:43:10 | INFO | app | Flask 应用开始创建
+2026-05-28 15:43:10 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:43:10 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:43:10 | INFO | app | Flask 应用创建完成
+2026-05-28 15:43:10 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-28 15:43:10 | INFO | app | Flask 应用开始创建
+2026-05-28 15:43:10 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:43:10 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:43:10 | INFO | app | Flask 应用创建完成
+2026-05-28 15:43:10 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-28 15:46:41 | INFO | app | Flask 应用开始创建
+2026-05-28 15:46:41 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:46:41 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:46:41 | INFO | app | Flask 应用创建完成
+2026-05-28 15:46:51 | INFO | app | Flask 应用开始创建
+2026-05-28 15:46:51 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:46:51 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:46:51 | INFO | app | Flask 应用创建完成
+2026-05-28 15:48:29 | INFO | app | Flask 应用开始创建
+2026-05-28 15:48:29 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:48:29 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:48:29 | INFO | app | Flask 应用创建完成
+2026-05-28 15:48:29 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-28 15:48:30 | INFO | app | Flask 应用开始创建
+2026-05-28 15:48:30 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:48:30 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:48:30 | INFO | app | Flask 应用创建完成
+2026-05-28 15:48:30 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-28 15:51:14 | INFO | app | Flask 应用开始创建
+2026-05-28 15:51:14 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:51:14 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:51:14 | INFO | app | Flask 应用创建完成
+2026-05-28 15:52:47 | INFO | app | Flask 应用开始创建
+2026-05-28 15:52:47 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:52:47 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:52:47 | INFO | app | Flask 应用创建完成
+2026-05-28 15:52:47 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-28 15:52:48 | INFO | app | Flask 应用开始创建
+2026-05-28 15:52:48 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:52:48 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:52:48 | INFO | app | Flask 应用创建完成
+2026-05-28 15:52:48 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-28 15:55:35 | INFO | app | Flask 应用开始创建
+2026-05-28 15:55:35 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:55:35 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:55:35 | INFO | app | Flask 应用创建完成
+2026-05-28 15:55:35 | INFO | app | Flask 应用开始创建
+2026-05-28 15:55:35 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:55:35 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:55:35 | INFO | app | Flask 应用创建完成
+2026-05-28 15:56:38 | INFO | app | Flask 应用开始创建
+2026-05-28 15:56:38 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:56:38 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:56:38 | INFO | app | Flask 应用创建完成
+2026-05-28 15:56:38 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-28 15:56:38 | INFO | app | Flask 应用开始创建
+2026-05-28 15:56:38 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-28 15:56:38 | INFO | app | API 路由 api_bp 注册成功
+2026-05-28 15:56:38 | INFO | app | Flask 应用创建完成
+2026-05-28 15:56:38 | INFO | app | Flask 开始运行 | debug=True | port=5000

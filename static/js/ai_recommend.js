@@ -3,6 +3,8 @@
     if (!root) return;
 
     const page = root.dataset.page || "tools";
+    const apiUrl = root.dataset.apiUrl || "/api/ai/tools/recommend";
+    const mode = root.dataset.mode || "recommend";
     const storageKey = "ai_recommend_history_" + page;
     const openKey = "ai_recommend_open_" + page;
 
@@ -69,9 +71,14 @@
         if (tool.url) {
             const link = document.createElement("a");
             link.href = tool.url;
-            link.target = "_blank";
-            link.rel = "noopener";
+            link.dataset.target = tool.target || "";
             link.textContent = tool.link_text || "打开工具";
+
+            if (tool.external) {
+                link.target = "_blank";
+                link.rel = "noopener";
+            }
+
             card.appendChild(link);
         }
 
@@ -97,19 +104,19 @@
         addTextMessage("user", message);
         input.value = "";
 
-        const loading = addTextMessage("bot", "正在分析适合你的工具...");
+        const loadingText = mode === "chat" ? "正在回复..." : "正在分析适合你的工具...";
+        const loading = addTextMessage("bot", loadingText);
 
         const submitBtn = form.querySelector("button");
         submitBtn.disabled = true;
 
         try {
-            const res = await fetch("/api/ai/recommend", {
+            const res = await fetch(apiUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    page: page,
                     message: message
                 })
             });
@@ -117,14 +124,14 @@
             const data = await res.json();
 
             if (!data.success) {
-                loading.textContent = data.message || "推荐失败，请稍后再试。";
+                loading.textContent = data.message || "请求失败，请稍后再试。";
                 saveHistory();
                 return;
             }
 
-            loading.textContent = data.reply || "已为你找到推荐工具。";
+            loading.textContent = data.reply || "我暂时没有生成回复。";
 
-            if (Array.isArray(data.tools)) {
+            if (mode !== "chat" && Array.isArray(data.tools)) {
                 data.tools.forEach(addToolCard);
             }
 

@@ -2,7 +2,25 @@ document.addEventListener("DOMContentLoaded", function () {
     const menuItems = document.querySelectorAll(".tool-menu-item");
     const panels = document.querySelectorAll(".tool-panel");
 
-    function showPanel(targetId) {
+    function scrollToPanel(targetPanel) {
+        const content = targetPanel.closest(".content");
+
+        if (content) {
+            content.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        targetPanel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    function showPanel(targetId, options) {
+        const shouldScroll = options && options.scroll;
+
         menuItems.forEach(function (item) {
             item.classList.remove("active");
         });
@@ -23,6 +41,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (targetPanel) {
             targetPanel.classList.add("active");
+
+            if (shouldScroll) {
+                window.setTimeout(function () {
+                    scrollToPanel(targetPanel);
+                }, 0);
+            }
         }
 
         document.dispatchEvent(new CustomEvent("toolPanelShown", {
@@ -32,6 +56,34 @@ document.addEventListener("DOMContentLoaded", function () {
         }));
     }
 
+    document.addEventListener("showToolPanel", function (event) {
+        const targetId = event.detail && event.detail.targetId;
+
+        if (!targetId) {
+            return;
+        }
+
+        window.location.hash = targetId;
+        showPanel(targetId, {
+            scroll: true
+        });
+    });
+
+    function showPanelFromHash() {
+        const hashTarget = window.location.hash.replace("#", "");
+
+        if (hashTarget && document.getElementById(hashTarget)) {
+            showPanel(hashTarget, {
+                scroll: true
+            });
+            return true;
+        }
+
+        return false;
+    }
+
+    window.addEventListener("hashchange", showPanelFromHash);
+
     menuItems.forEach(function (item) {
         item.addEventListener("click", function () {
             const targetId = item.dataset.target;
@@ -40,13 +92,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            showPanel(targetId);
+            window.location.hash = targetId;
+            showPanel(targetId, {
+                scroll: true
+            });
         });
     });
 
     const activeItem = document.querySelector(".tool-menu-item.active");
 
-    if (activeItem) {
+    if (showPanelFromHash()) {
+        return;
+    } else if (activeItem) {
         showPanel(activeItem.dataset.target);
     } else if (menuItems.length > 0) {
         showPanel(menuItems[0].dataset.target);

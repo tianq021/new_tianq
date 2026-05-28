@@ -1,11 +1,10 @@
 import time
 import hashlib
-import logging
 import os
 import json
-from pathlib import Path
 from urllib import request as urlrequest
 from urllib.error import HTTPError, URLError
+from dotenv import load_dotenv
 from flask import jsonify
 from utils.logger_config import hash_logger, error_logger,comments_logger
 from flask import Blueprint, render_template, request
@@ -16,37 +15,24 @@ from services.comment_store_mysql import (
     build_visitor_key
 )
 from services.tool_srore import load_tools_data
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-LOG_DIR = BASE_DIR / "logs"
-LOG_DIR.mkdir(exist_ok=True)
-
-logger = logging.getLogger("tool_logger")
-logger.setLevel(logging.INFO)
-
-if not logger.handlers:
-    log_file = LOG_DIR / "app.log"
-
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
-    file_handler.setLevel(logging.INFO)
-
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(message)s"
-    )
-
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+from services.fastgpt_tool_srore import load_tools as load_fastgpt_tools
 
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
+load_dotenv()
 
 
-def call_fastgpt_recommend_api(system_prompt, user_prompt):
-    api_key = os.getenv("FASTGPT_RECOMMEND_API_KEY")
+def call_fastgpt_recommend_api(
+    system_prompt,
+    user_prompt,
+    chat_id,
+    api_key_env="FASTGPT_RECOMMEND_API_KEY"
+):
+    api_key = os.getenv(api_key_env)
     base_url = os.getenv("FASTGPT_BASE_URL", "").rstrip("/")
 
     if not api_key:
-        raise RuntimeError("未配置 FASTGPT_RECOMMEND_API_KEY")
+        raise RuntimeError(f"未配置 {api_key_env}")
 
     if not base_url:
         raise RuntimeError("未配置 FASTGPT_BASE_URL")
@@ -54,7 +40,7 @@ def call_fastgpt_recommend_api(system_prompt, user_prompt):
     api_url = f"{base_url}/v1/chat/completions"
 
     payload = {
-        "chatId": "tools-recommend",
+        "chatId": chat_id,
         "stream": False,
         "detail": False,
         "messages": [
@@ -79,8 +65,34 @@ def call_fastgpt_recommend_api(system_prompt, user_prompt):
         method="POST"
     )
 
-    with urlrequest.urlopen(req, timeout=60) as response:
-        data = json.loads(response.read().decode("utf-8"))
+    last_error = None
+    max_attempts = 3
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            with urlrequest.urlopen(req, timeout=90) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            break
+        except HTTPError:
+            raise
+        except (URLError, TimeoutError, ConnectionError, OSError) as e:
+            last_error = e
+
+            if attempt >= max_attempts:
+                error_logger.exception(
+                    f"FastGPT 网络请求失败 | chat_id={chat_id} | "
+                    f"api_key_env={api_key_env} | attempts={attempt}"
+                )
+                raise
+
+            error_logger.error(
+                f"FastGPT 网络请求重试 | chat_id={chat_id} | "
+                f"api_key_env={api_key_env} | attempt={attempt} | error={e}"
+            )
+            time.sleep(0.8 * attempt)
+
+    if last_error and "data" not in locals():
+        raise last_error
 
     choices = data.get("choices") or []
     if choices:
@@ -96,13 +108,9 @@ def call_fastgpt_recommend_api(system_prompt, user_prompt):
 
 
 def parse_fastgpt_reply(raw_reply):
-    """
-    FastGPT 有时会返回 JSON 字符串。
-    这个函数负责把 JSON 字符串解析成前端可直接显示的格式。
-    """
+    """解析模型返回的 JSON，模型没有返回合法 JSON 时直接报错。"""
     text = str(raw_reply).strip()
 
-    # 去掉 ```json ... ``` 这种代码块包裹
     if text.startswith("```"):
         lines = text.splitlines()
         if lines[0].startswith("```"):
@@ -122,36 +130,30 @@ def parse_fastgpt_reply(raw_reply):
 
     try:
         data = json.loads(json_text)
+    except json.JSONDecodeError as e:
+        raise ValueError("模型没有返回合法 JSON") from e
 
-        if isinstance(data, dict):
-            reply = (
-                data.get("reply")
-                or data.get("message")
-                or data.get("answer")
-                or "已为你找到相关结果。"
-            )
+    if not isinstance(data, dict):
+        raise ValueError("模型 JSON 必须是对象")
 
-            tools = data.get("tools", [])
-            if not isinstance(tools, list):
-                tools = []
+    tools = data.get("tools", [])
+    if tools is None:
+        tools = []
+    if not isinstance(tools, list):
+        raise ValueError("模型 JSON 的 tools 必须是数组")
 
-            return {
-                "success": True,
-                "reply": reply,
-                "tools": tools,
-                "matched": data.get("matched", False),
-                "confidence": data.get("confidence", None),
-                "suggestions": data.get("suggestions", [])
-            }
-
-    except Exception:
-        pass
-
-    # 如果不是 JSON，就按普通文本返回
     return {
         "success": True,
-        "reply": raw_reply,
-        "tools": []
+        "reply": str(
+            data.get("reply")
+            or data.get("message")
+            or data.get("answer")
+            or ""
+        ).strip(),
+        "tools": tools,
+        "matched": bool(data.get("matched", bool(tools))),
+        "confidence": data.get("confidence", None),
+        "suggestions": data.get("suggestions", [])
     }
 
 
@@ -166,53 +168,92 @@ def build_tool_context(tools):
         if not tool.get("enabled", True):
             continue
 
+        if tool.get("type") == "placeholder":
+            continue
+
+        tool_id = tool.get("id", "")
+
         simple_tools.append({
-            "id": tool.get("id", ""),
+            "id": tool_id,
             "title": tool.get("title", ""),
             "desc": tool.get("desc", ""),
             "category": tool.get("category", ""),
             "type": tool.get("type", ""),
-            "url": tool.get("url", "")
+            "url": tool.get("url") or f"/tools#{tool_id}-panel"
         })
 
     return json.dumps(simple_tools, ensure_ascii=False, indent=2)
 
 
-def pick_recommended_tools(message, reply, tools, limit=3):
-    """
-    根据用户问题和 AI 回复，简单匹配工具卡片给前端展示。
-    不强制 AI 返回 JSON，避免模型格式不稳定。
-    """
-    text = f"{message}\n{reply}".lower()
-    picked = []
+def get_tool_url(tool):
+    tool_id = tool.get("id", "")
+    panel_id = f"{tool_id}-panel" if tool_id else ""
+    return tool.get("url") or (f"/tools#{panel_id}" if panel_id else "")
 
-    for tool in tools:
-        if not tool.get("enabled", True):
+
+def build_tool_card(tool, reason=""):
+    tool_id = tool.get("id", "")
+    panel_id = f"{tool_id}-panel" if tool_id else ""
+    configured_url = tool.get("url", "")
+    url = get_tool_url(tool)
+
+    return {
+        "id": tool_id,
+        "target": panel_id,
+        "title": tool.get("title", "推荐工具"),
+        "desc": tool.get("desc", ""),
+        "reason": reason or tool.get("desc", ""),
+        "url": url,
+        "external": bool(configured_url),
+        "link_text": "打开工具"
+    }
+
+
+def normalize_ai_tools(ai_tools, tools, limit=3):
+    tool_by_id = {
+        str(tool.get("id", "")).lower(): tool
+        for tool in tools
+        if tool.get("enabled", True)
+    }
+    tool_by_title = {
+        str(tool.get("title", "")).lower(): tool
+        for tool in tools
+        if tool.get("enabled", True)
+    }
+
+    normalized = []
+    seen = set()
+
+    for item in ai_tools:
+        if isinstance(item, str):
+            key = item.strip().lower()
+            reason = ""
+        elif isinstance(item, dict):
+            key = str(
+                item.get("id")
+                or item.get("title")
+                or item.get("name")
+                or ""
+            ).strip().lower()
+            reason = str(item.get("reason") or item.get("desc") or "")
+        else:
             continue
 
-        if tool.get("type") == "placeholder":
+        tool = tool_by_id.get(key) or tool_by_title.get(key)
+        if not tool:
             continue
 
-        keywords = [
-            tool.get("id", ""),
-            tool.get("title", ""),
-            tool.get("desc", ""),
-            tool.get("category", "")
-        ]
+        tool_id = tool.get("id", "")
+        if not tool_id or tool_id in seen or tool.get("type") == "placeholder":
+            continue
 
-        if any(keyword and keyword.lower() in text for keyword in keywords):
-            picked.append({
-                "title": tool.get("title", "推荐工具"),
-                "desc": tool.get("desc", ""),
-                "reason": f"根据你的输入，可能会用到：{tool.get('title', '该工具')}",
-                "url": tool.get("url", ""),
-                "link_text": "打开工具"
-            })
+        normalized.append(build_tool_card(tool, reason))
+        seen.add(tool_id)
 
-        if len(picked) >= limit:
+        if len(normalized) >= limit:
             break
 
-    return picked
+    return normalized
 
 
 
@@ -226,46 +267,83 @@ def get_time():
     })
 
 
-@api_bp.route("/ai/recommend", methods=["POST"])
-def ai_recommend():
-    data = request.get_json(silent=True) or {}
-
-    page = str(data.get("page", "tools")).strip()
-    message = str(data.get("message", "")).strip()
-
-    if not message:
-        return jsonify({
-            "success": False,
-            "message": "请输入需要咨询的内容"
-        }), 400
-
-    tools = load_tools_data()
-
-    tool_text = json.dumps([
-        {
-            "id": tool.get("id", ""),
-            "title": tool.get("title", ""),
-            "desc": tool.get("desc", ""),
-            "category": tool.get("category", ""),
-            "type": tool.get("type", "")
-        }
-        for tool in tools
-        if tool.get("enabled", True)
-    ], ensure_ascii=False, indent=2)
+def run_ai_recommend(tools, message, chat_id, api_key_env):
+    tool_text = build_tool_context(tools)
 
     system_prompt = (
         "你是一个网站工具推荐助手。"
         "你只能根据当前工具列表推荐工具。"
-        "请用中文简洁回答，不要编造不存在的工具。"
+        "如果当前工具列表里没有适合用户需求的工具，必须返回 matched=false 且 tools=[]。"
+        "不要编造不存在的工具，不要返回当前工具列表之外的 id。"
+        "必须返回 JSON，不要使用 Markdown 代码块。"
+        "JSON 格式："
+        "{\"reply\":\"给用户看的简短回复\",\"matched\":true,\"tools\":[{\"id\":\"工具 id\",\"reason\":\"推荐理由\"}]}"
     )
 
-    user_prompt = message
+    user_prompt = (
+        f"当前工具列表：\n{tool_text}\n\n"
+        f"用户需求：{message}"
+    )
 
+    reply = call_fastgpt_recommend_api(
+        system_prompt,
+        user_prompt,
+        chat_id=chat_id,
+        api_key_env=api_key_env
+    )
+    result = parse_fastgpt_reply(reply)
+    result["tools"] = normalize_ai_tools(result.get("tools", []), tools)
+
+    if not result["tools"]:
+        result["matched"] = False
+        result["reply"] = result.get("reply") or "没有找到匹配的工具。"
+
+    return result
+
+
+def run_ai_chat(message, chat_id, api_key_env):
+    system_prompt = (
+        "你是一个日常对话助手。"
+        "请用自然、清晰、友好的中文回答用户。"
+        "如果用户问到项目里的具体功能，可以简要说明，但不要强行推荐工具。"
+    )
+
+    reply = call_fastgpt_recommend_api(
+        system_prompt,
+        message,
+        chat_id=chat_id,
+        api_key_env=api_key_env
+    )
+
+    return {
+        "success": True,
+        "reply": reply,
+        "tools": []
+    }
+
+
+def get_ai_message():
+    data = request.get_json(silent=True) or {}
+
+    message = str(data.get("message", "")).strip()
+
+    if not message:
+        raise ValueError("请输入需要咨询的内容")
+
+    return message
+
+
+def build_network_error_message(error):
+    reason = getattr(error, "reason", None)
+    if reason:
+        return f"FastGPT 接口网络连接失败：{reason}"
+
+    return f"FastGPT 接口网络连接失败：{error}"
+
+
+def chat_response(message, chat_id, api_key_env):
     try:
-        reply = call_fastgpt_recommend_api(system_prompt, user_prompt)
-        result = parse_fastgpt_reply(reply)
-
-        return jsonify(result)
+        return jsonify(run_ai_chat(message, chat_id, api_key_env))
 
     except HTTPError as e:
         return jsonify({
@@ -273,10 +351,10 @@ def ai_recommend():
             "message": f"FastGPT 接口请求失败，状态码：{e.code}"
         }), 500
 
-    except URLError:
+    except (URLError, TimeoutError, ConnectionError, OSError) as e:
         return jsonify({
             "success": False,
-            "message": "FastGPT 接口网络连接失败"
+            "message": build_network_error_message(e)
         }), 500
 
     except Exception as e:
@@ -284,6 +362,90 @@ def ai_recommend():
             "success": False,
             "message": str(e)
         }), 500
+
+
+def recommend_response(tools, message, chat_id, api_key_env):
+    try:
+        return jsonify(run_ai_recommend(tools, message, chat_id, api_key_env))
+
+    except ValueError as e:
+        status_code = 400 if str(e) == "请输入需要咨询的内容" else 502
+
+        return jsonify({
+            "success": False,
+            "message": str(e),
+            "reply": "模型回复格式错误，请稍后再试。" if status_code == 502 else "",
+            "tools": []
+        }), status_code
+
+    except HTTPError as e:
+        return jsonify({
+            "success": False,
+            "message": f"FastGPT 接口请求失败，状态码：{e.code}"
+        }), 500
+
+    except (URLError, TimeoutError, ConnectionError, OSError) as e:
+        return jsonify({
+            "success": False,
+            "message": build_network_error_message(e)
+        }), 500
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@api_bp.route("/ai/tools/chat", methods=["POST"])
+def tools_ai_chat():
+    try:
+        message = get_ai_message()
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+
+    return chat_response(
+        message,
+        chat_id="tools-chat",
+        api_key_env="FASTGPT_TOOLS_RECOMMEND_API_KEY"
+    )
+
+
+@api_bp.route("/ai/tools/recommend", methods=["POST"])
+def tools_ai_recommend():
+    return tools_ai_chat()
+
+
+@api_bp.route("/ai/fastgpt/recommend", methods=["POST"])
+def fastgpt_ai_recommend():
+    try:
+        message = get_ai_message()
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+
+    return recommend_response(
+        load_fastgpt_tools(),
+        message,
+        chat_id="fastgpt-recommend",
+        api_key_env="FASTGPT_RECOMMEND_API_KEY"
+    )
+
+
+@api_bp.route("/ai/recommend", methods=["POST"])
+def ai_recommend():
+    data = request.get_json(silent=True) or {}
+    page = str(data.get("page", "tools")).strip()
+
+    if page == "fastgpt":
+        return fastgpt_ai_recommend()
+
+    return tools_ai_chat()
 
 
 @api_bp.route("/file_hash", methods=["POST"])
