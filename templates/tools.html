@@ -221,6 +221,42 @@
     </div>
 </div>
 
+
+<div
+    id="aiRecommendRoot"
+    class="ai-recommend-root"
+    data-page="tools"
+>
+    <button id="aiRecommendBtn" class="ai-recommend-btn" type="button" title="智能推荐">
+        🤖
+    </button>
+
+    <div id="aiRecommendPanel" class="ai-recommend-panel">
+        <div class="ai-recommend-header">
+            <span>工具推荐</span>
+            <button id="aiRecommendClose" type="button">×</button>
+        </div>
+
+        <div id="aiRecommendMessages" class="ai-recommend-messages">
+            <div class="ai-msg ai-msg-bot">需要我做什么？</div>
+        </div>
+
+        <form id="aiRecommendForm" class="ai-recommend-form">
+            <input
+                id="aiRecommendInput"
+                type="text"
+                placeholder="例如：我需要识别票据..."
+                autocomplete="off"
+            >
+            <button type="submit">发送</button>
+        </form>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ai_recommend.css') }}">
+<script src="{{ url_for('static', filename='js/ai_recommend.js') }}"></script>
+
+
 <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
 <script src="{{ url_for('static', filename='js/comments.js') }}"></script>
 </body>

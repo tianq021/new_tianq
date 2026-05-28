@@ -1,44 +1,38 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const menuItems = document.querySelectorAll('.menu-item');
-    const sections = document.querySelectorAll('.content-section');
+document.addEventListener("DOMContentLoaded", function () {
+    const categoryItems = document.querySelectorAll(".category-menu-item");
 
-    function showSection(targetId) {
-        sections.forEach(function (section) {
-            section.classList.remove('active');
-        });
+    categoryItems.forEach(function (item) {
+        item.addEventListener("click", function () {
+            categoryItems.forEach(function (menuItem) {
+                menuItem.classList.remove("active");
+            });
 
-        menuItems.forEach(function (item) {
-            item.classList.remove('active');
-        });
-
-        const targetSection = document.getElementById(targetId);
-        const targetMenu = document.querySelector(`.menu-item[data-target="${targetId}"]`);
-
-        if (targetSection) {
-            targetSection.classList.add('active');
-        }
-
-        if (targetMenu) {
-            targetMenu.classList.add('active');
-        }
-    }
-
-    menuItems.forEach(function (item) {
-        item.addEventListener('click', function (event) {
-            event.preventDefault();
-
-            const targetId = item.dataset.target;
-
-            if (!targetId) {
-                return;
-            }
-
-            showSection(targetId);
-
-            history.replaceState(null, '', `#${targetId}`);
+            item.classList.add("active");
         });
     });
 
-    const defaultTarget = location.hash ? location.hash.replace('#', '') : 'fastgpt-page';
-    showSection(defaultTarget);
+    document.querySelectorAll(".clickable-card").forEach(function (card) {
+        function openCard() {
+            const url = card.dataset.url;
+
+            if (url) {
+                window.open(url, "_blank", "noopener");
+            }
+        }
+
+        card.addEventListener("click", function (event) {
+            if (event.target.closest("a")) {
+                return;
+            }
+
+            openCard();
+        });
+
+        card.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openCard();
+            }
+        });
+    });
 });
