@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from services.tool_store_db import load_tools_by_source
 from utils.logger_config import fastgpt_logger, error_logger
 
 
@@ -22,7 +23,7 @@ def mask_url(url: str) -> str:
     return url
 
 
-def load_tools():
+def load_tools_from_json():
     fastgpt_logger.info(f"开始读取 FastGPT 工具配置 | file={DATA_FILE}")
 
     if not DATA_FILE.exists():
@@ -57,3 +58,27 @@ def load_tools():
         error_logger.exception(f"FastGPT 工具读取异常 | file={DATA_FILE} | error={str(e)}")
         fastgpt_logger.error(f"FastGPT 工具读取异常 | file={DATA_FILE} | error={str(e)}")
         return []
+
+
+def load_tools():
+    try:
+        tools = load_tools_by_source("fastgpt")
+        if tools:
+            fastgpt_logger.info(
+                f"FastGPT 工具数据库读取成功 | enabled={len(tools)}"
+            )
+
+            for tool in tools:
+                fastgpt_logger.info(
+                    f"FastGPT 工具加载 | id={tool.get('id')} | "
+                    f"title={tool.get('title')} | category={tool.get('category')} | "
+                    f"url={mask_url(tool.get('url', ''))}"
+                )
+
+            return tools
+
+    except Exception as e:
+        error_logger.exception(f"FastGPT 工具数据库读取失败，回退 JSON | error={str(e)}")
+        fastgpt_logger.error(f"FastGPT 工具数据库读取失败，回退 JSON | error={str(e)}")
+
+    return load_tools_from_json()

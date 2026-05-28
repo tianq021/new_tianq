@@ -2105,3 +2105,17 @@ Traceback (most recent call last):
     raise NotFound() from None
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 2026-05-28 16:01:23 | ERROR | error | FastGPT 网络请求重试 | chat_id=tools-chat | api_key_env=FASTGPT_TOOLS_RECOMMEND_API_KEY | attempt=1 | error=<urlopen error temporary reset>
+2026-05-28 16:19:59 | ERROR | error | 本地工具数据库读取失败，回退 JSON | error=db down
+Traceback (most recent call last):
+  File "F:\python_mmx\new_tianq\services\tool_srore.py", line 23, in load_tools_data
+    tools = load_tools_by_source("local")
+  File "<stdin>", line 4, in <lambda>
+  File "<stdin>", line 4, in <genexpr>
+RuntimeError: db down
+2026-05-28 16:19:59 | ERROR | error | FastGPT 工具数据库读取失败，回退 JSON | error=db down
+Traceback (most recent call last):
+  File "F:\python_mmx\new_tianq\services\fastgpt_tool_srore.py", line 65, in load_tools
+    tools = load_tools_by_source("fastgpt")
+  File "<stdin>", line 5, in <lambda>
+  File "<stdin>", line 5, in <genexpr>
+RuntimeError: db down
