@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import sys
 from pathlib import Path
@@ -13,10 +14,22 @@ FASTGPT_TOOLS_FILE = BASE_DIR / "data" / "fastgpt" / "fastgpt_tools.json"
 
 
 def load_json_list(path):
+    """
+    Called by: import_tools().
+    Purpose: Read a JSON file that is expected to contain a list of tool records.
+    调用方：import_tools() 调用。
+    作用：读取预期为工具列表的 JSON 文件并返回解析结果。
+    """
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def upsert_tool(cursor, tool, source, sort_order):
+    """
+    Called by: import_tools().
+    Purpose: Insert or update one tool record in ai_tools and return its database id.
+    调用方：import_tools() 调用。
+    作用：向 ai_tools 表插入或更新一条工具记录，并返回该工具的数据库 id。
+    """
     tool_key = str(tool.get("id", "")).strip()
     title = str(tool.get("title", "")).strip()
 
@@ -91,6 +104,12 @@ def upsert_tool(cursor, tool, source, sort_order):
 
 
 def upsert_keyword(cursor, tool_id, keyword, weight):
+    """
+    Called by: import_tools().
+    Purpose: Insert or update one keyword weight for a tool in ai_tool_keywords.
+    调用方：import_tools() 调用。
+    作用：向 ai_tool_keywords 表插入或更新某个工具的关键词权重。
+    """
     keyword = str(keyword or "").strip()
 
     if not tool_id or not keyword:
@@ -108,6 +127,12 @@ def upsert_keyword(cursor, tool_id, keyword, weight):
 
 
 def seed_profile(cursor, profile_key, name, mode, api_key_env, chat_id, system_prompt, tool_source, require_json):
+    """
+    Called by: import_tools().
+    Purpose: Insert or update one AI chat profile used by chat/recommend flows.
+    调用方：import_tools() 调用。
+    作用：向 ai_chat_profiles 表插入或更新一个 AI 对话配置。
+    """
     cursor.execute(
         """
         INSERT INTO ai_chat_profiles (
@@ -145,6 +170,12 @@ def seed_profile(cursor, profile_key, name, mode, api_key_env, chat_id, system_p
 
 
 def import_tools():
+    """
+    Called by: this script's __main__ block.
+    Purpose: Import local/FastGPT tool JSON files into MySQL and seed keywords plus AI profiles.
+    调用方：本脚本的 __main__ 入口调用。
+    作用：把本地工具和 FastGPT 工具 JSON 导入 MySQL，并初始化关键词和 AI 对话配置。
+    """
     local_tools = load_json_list(LOCAL_TOOLS_FILE)
     fastgpt_tools = load_json_list(FASTGPT_TOOLS_FILE)
 

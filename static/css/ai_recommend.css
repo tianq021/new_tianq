@@ -68,6 +68,7 @@
 }
 
 .ai-msg {
+    position: relative;
     max-width: 88%;
     margin-bottom: 12px;
     padding: 10px 12px;
@@ -75,6 +76,33 @@
     line-height: 1.6;
     font-size: 14px;
     white-space: pre-wrap;
+}
+
+.ai-deletable {
+    padding-right: 34px;
+}
+
+.ai-msg-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ai-msg-delete:hover {
+    background: #fee2e2;
+    color: #b91c1c;
 }
 
 .ai-msg-bot {
@@ -90,6 +118,7 @@
 }
 
 .ai-tool-card {
+    position: relative;
     margin-top: 10px;
     padding: 12px;
     border-radius: 12px;

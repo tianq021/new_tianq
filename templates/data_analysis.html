@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle"></title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/data_analysis.css') }}">
+</head>
+<body>
+<div
+    id="dataAnalysisApp"
+    class="page"
+    data-page-config-url="/api/data-analysis/page-config"
+    data-analysis-url="/api/data-analysis/run"
+>
+    <header class="topbar">
+        <div class="brand">
+            <a id="backLink" class="back-link" href="/" aria-label=""></a>
+            <div>
+                <h1 id="brandTitle" class="brand-title"></h1>
+                <p id="brandSubtitle" class="brand-subtitle"></p>
+            </div>
+        </div>
+        <div id="statusPill" class="status-pill">
+            <span class="status-dot"></span>
+            <span id="statusText"></span>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <section class="section">
+                <div class="section-header">
+                    <div>
+                        <h2 id="uploadTitle" class="section-title"></h2>
+                        <p id="uploadDesc" class="section-desc"></p>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="upload-box">
+                        <div id="dropZone" class="drop-zone">
+                            <input id="fileInput" type="file">
+                            <div>
+                                <span id="uploadIcon" class="upload-icon"></span>
+                                <p id="uploadDropTitle" class="upload-title"></p>
+                                <p id="uploadDropMeta" class="upload-meta"></p>
+                            </div>
+                        </div>
+
+                        <div id="fileSummary" class="file-summary"></div>
+
+                        <div id="filterList" class="filter-list"></div>
+
+                        <button id="analyzeBtn" class="primary-btn" type="button"></button>
+                        <button id="resetBtn" class="ghost-btn" type="button"></button>
+                    </div>
+                </div>
+            </section>
+
+            <div id="stepList" class="steps"></div>
+        </aside>
+
+        <main class="content">
+            <section class="section">
+                <div class="section-header">
+                    <div>
+                        <h2 id="overviewTitle" class="section-title"></h2>
+                        <p id="resultDesc" class="section-desc"></p>
+                    </div>
+                    <div id="loading" class="loading">
+                        <span class="spinner"></span>
+                        <span id="loadingText"></span>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div id="metricGrid" class="grid-row"></div>
+                </div>
+            </section>
+
+            <div class="workspace">
+                <section class="section">
+                    <div class="section-header">
+                        <div>
+                            <h2 id="chartTitle" class="section-title"></h2>
+                            <p id="chartDesc" class="section-desc"></p>
+                        </div>
+                        <div id="chartTabs" class="chart-tabs"></div>
+                    </div>
+                    <div class="section-body">
+                        <div class="chart-wrap">
+                            <svg id="chartSvg" class="chart" role="img" aria-label=""></svg>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-header">
+                        <div>
+                            <h2 id="insightTitle" class="section-title"></h2>
+                            <p id="insightDesc" class="section-desc"></p>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <ul id="insightList" class="insight-list"></ul>
+                    </div>
+                </section>
+            </div>
+
+            <section class="section">
+                <div class="section-header">
+                    <div>
+                        <h2 id="tableTitle" class="section-title"></h2>
+                        <p id="tableDesc" class="section-desc"></p>
+                    </div>
+                    <div class="toolbar">
+                        <button id="exportBtn" class="ghost-btn" type="button"></button>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr id="tableHead"></tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/data_analysis.js') }}"></script>
+</body>
+</html>

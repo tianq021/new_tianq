@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 from pathlib import Path
 from services.tool_store_db import load_tools_by_source
@@ -9,7 +10,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_FILE = BASE_DIR / "data" / "fastgpt" / "fastgpt_tools.json"
 
 
+
+"""
+
+这个处理工作流的json
+"""
+
+
+
 def mask_url(url: str) -> str:
+    """
+    Called by: load_tools_from_json() and load_tools().
+    Purpose: Hide most of a shareId query value before writing URLs to logs.
+    调用方：load_tools_from_json() 和 load_tools() 调用。
+    作用：在写日志前隐藏 URL 中 shareId 的中间部分，避免完整敏感参数进入日志。
+    """
+    # Existing docstring below is kept for the original local note.
     """
     避免日志里完整输出 shareId。
     """
@@ -24,6 +40,12 @@ def mask_url(url: str) -> str:
 
 
 def load_tools_from_json():
+    """
+    Called by: load_tools() when the database is empty or unavailable.
+    Purpose: Read FastGPT tool definitions from data/fastgpt/fastgpt_tools.json and return enabled tools.
+    调用方：load_tools() 在数据库为空或不可用时调用。
+    作用：从 data/fastgpt/fastgpt_tools.json 读取 FastGPT 工具配置，并只返回启用的工具。
+    """
     fastgpt_logger.info(f"开始读取 FastGPT 工具配置 | file={DATA_FILE}")
 
     if not DATA_FILE.exists():
@@ -61,6 +83,12 @@ def load_tools_from_json():
 
 
 def load_tools():
+    """
+    Called by: routes.page_routes.fastgpt() and routes.ai_routes.fastgpt_ai_recommend().
+    Purpose: Load FastGPT tools from MySQL first, falling back to the JSON file on failure or empty data.
+    调用方：routes.page_routes.fastgpt() 和 routes.ai_routes.fastgpt_ai_recommend() 调用。
+    作用：优先从数据库读取 FastGPT 工具，失败或没有数据时回退到 JSON 文件。
+    """
     try:
         tools = load_tools_by_source("fastgpt")
         if tools:

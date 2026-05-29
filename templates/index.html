@@ -3,52 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>本地工具首页</title>
-
+    <title>本地工具工作台</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 
 <body>
     <main class="page">
-        <section class="card">
-
-            <h1>FastGPT 调用页面</h1>
-
-            <p class="desc">
-                这是项目首页入口，可以从这里进入 FastGPT 调用页面，也可以用于后续添加更多测试工具、接口测试页面和数据分析页面。
-            </p>
-
-            <div class="actions">
-                <a class="action-card" href="/fastgpt">
-                    <p class="action-title">打开 FastGPT 页面</p>
-                    <p class="action-desc">进入当前项目的 FastGPT 调用与测试页面。</p>
-                </a>
-
-                <a class="action-card" href="/tools">
-                    <p class="action-title">打开 通用工具 页面</p>
-                    <p class="action-desc">通用工具 测试</p>
-                </a>
-            </div>
-
-            <div class="time-box">
-                <p class="time-title">本地时间</p>
-                <p class="time-text">
-                    当前时间：
-                    <span id="timeText" aria-live="polite">加载中...</span>
-                </p>
-
-                <div class="info-item">
-                    <span class="info-label">访问者 IP</span>
-                    <strong>{{ user_ip }}</strong>
+        <section class="workspace-shell">
+            <header class="workspace-header">
+                <div>
+                    <p class="eyebrow">Local Workspace</p>
+                    <h1>本地工具工作台</h1>
+                    <p class="desc">
+                        集中管理 FastGPT 调用、通用工具测试和数据分析入口，后续新增页面可以继续扩展到这里。
+                    </p>
                 </div>
 
-                <div class="info-item">
-                    <span class="info-label">服务器 IP</span>
-                    <strong>{{ server_ip }}</strong>
+                <div class="time-panel" aria-label="本地时间">
+                    <span class="time-label">当前时间</span>
+                    <strong id="timeText" aria-live="polite">加载中...</strong>
                 </div>
-            </div>
+            </header>
+
+            <section class="tool-section" aria-labelledby="toolSectionTitle">
+                <div class="section-heading">
+                    <div>
+                        <h2 id="toolSectionTitle">功能入口</h2>
+                        <p>按模块进入不同测试和分析页面。</p>
+                    </div>
+                    <span class="section-count">3 个模块</span>
+                </div>
+
+                <div class="tool-grid">
+                    <a class="tool-card" href="/fastgpt">
+                        <span class="tool-tag ai">AI</span>
+                        <h3>FastGPT 调用</h3>
+                        <p>进入 FastGPT 工作流调用与接口测试页面。</p>
+                    </a>
+
+                    <a class="tool-card" href="/tools">
+                        <span class="tool-tag utility">Tools</span>
+                        <h3>通用工具</h3>
+                        <p>使用哈希计算、文件工具、评论区等通用测试能力。</p>
+                    </a>
+
+                    <a class="tool-card" href="/data_analy">
+                        <span class="tool-tag data">Data</span>
+                        <h3>数据分析</h3>
+                        <p>上传文件后展示后端返回的数据、图表和分析结果。</p>
+                    </a>
+                </div>
+            </section>
+
+            <section class="info-section" aria-labelledby="infoSectionTitle">
+                <div>
+                    <h2 id="infoSectionTitle">运行信息</h2>
+                    <p>用于本地调试时快速确认访问来源和服务地址。</p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">访问者 IP</span>
+                        <strong>{{ user_ip }}</strong>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">服务器 IP</span>
+                        <strong>{{ server_ip }}</strong>
+                    </div>
+                </div>
+            </section>
         </section>
-
     </main>
 
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>

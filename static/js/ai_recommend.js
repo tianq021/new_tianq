@@ -19,16 +19,44 @@
         sessionStorage.setItem(storageKey, messages.innerHTML);
     }
 
-    function restoreHistory() {
-        const html = sessionStorage.getItem(storageKey);
-        if (html) {
-            messages.innerHTML = html;
-            scrollBottom();
-        }
-    }
-
     function scrollBottom() {
         messages.scrollTop = messages.scrollHeight;
+    }
+
+    function createDeleteButton() {
+        const button = document.createElement("button");
+        button.className = "ai-msg-delete";
+        button.type = "button";
+        button.title = "删除这条 AI 回复";
+        button.setAttribute("aria-label", "删除这条 AI 回复");
+        button.textContent = "×";
+        return button;
+    }
+
+    function makeDeletable(item) {
+        if (!item || item.querySelector(".ai-msg-delete")) {
+            return;
+        }
+
+        item.classList.add("ai-deletable");
+        item.appendChild(createDeleteButton());
+    }
+
+    function enhanceDeletableItems() {
+        messages.querySelectorAll(".ai-msg-bot, .ai-tool-card").forEach(makeDeletable);
+    }
+
+    function restoreHistory() {
+        const html = sessionStorage.getItem(storageKey);
+
+        if (html) {
+            messages.innerHTML = html;
+            enhanceDeletableItems();
+            scrollBottom();
+            return;
+        }
+
+        enhanceDeletableItems();
     }
 
     function openPanel() {
@@ -43,10 +71,33 @@
         sessionStorage.setItem(openKey, "0");
     }
 
+    function setMessageText(messageNode, text) {
+        let content = messageNode.querySelector(".ai-msg-content");
+
+        if (!content) {
+            messageNode.textContent = "";
+            content = document.createElement("span");
+            content.className = "ai-msg-content";
+            messageNode.appendChild(content);
+            makeDeletable(messageNode);
+        }
+
+        content.textContent = text;
+    }
+
     function addTextMessage(role, text) {
         const div = document.createElement("div");
         div.className = role === "user" ? "ai-msg ai-msg-user" : "ai-msg ai-msg-bot";
-        div.textContent = text;
+
+        const content = document.createElement("span");
+        content.className = "ai-msg-content";
+        content.textContent = text;
+        div.appendChild(content);
+
+        if (role !== "user") {
+            makeDeletable(div);
+        }
+
         messages.appendChild(div);
         saveHistory();
         scrollBottom();
@@ -82,6 +133,7 @@
             card.appendChild(link);
         }
 
+        makeDeletable(card);
         messages.appendChild(card);
         saveHistory();
         scrollBottom();
@@ -93,6 +145,23 @@
 
     closeBtn.addEventListener("click", function () {
         closePanel();
+    });
+
+    messages.addEventListener("click", function (event) {
+        const deleteBtn = event.target.closest(".ai-msg-delete");
+
+        if (!deleteBtn) {
+            return;
+        }
+
+        const item = deleteBtn.closest(".ai-msg-bot, .ai-tool-card");
+
+        if (!item) {
+            return;
+        }
+
+        item.remove();
+        saveHistory();
     });
 
     form.addEventListener("submit", async function (event) {
@@ -124,12 +193,12 @@
             const data = await res.json();
 
             if (!data.success) {
-                loading.textContent = data.message || "请求失败，请稍后再试。";
+                setMessageText(loading, data.message || "请求失败，请稍后再试。");
                 saveHistory();
                 return;
             }
 
-            loading.textContent = data.reply || "我暂时没有生成回复。";
+            setMessageText(loading, data.reply || "我暂时没有生成回复。");
 
             if (mode !== "chat" && Array.isArray(data.tools)) {
                 data.tools.forEach(addToolCard);
@@ -137,9 +206,8 @@
 
             saveHistory();
             scrollBottom();
-
         } catch (err) {
-            loading.textContent = "请求失败，请检查后端接口或网络。";
+            setMessageText(loading, "请求失败，请检查后端接口或网络。");
             saveHistory();
         } finally {
             submitBtn.disabled = false;

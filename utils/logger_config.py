@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import time
 from logging.handlers import TimedRotatingFileHandler
@@ -21,6 +22,12 @@ class SafeTimedRotatingFileHandler(TimedRotatingFileHandler):
     """
 
     def doRollover(self):
+        """
+        Called by: Python logging when the timed file handler rotates logs.
+        Purpose: Ignore Windows PermissionError during log rotation and schedule the next rollover.
+        调用方：Python logging 在定时轮转日志文件时调用。
+        作用：在 Windows 文件被占用导致轮转失败时忽略 PermissionError，并重新安排下一次轮转。
+        """
         try:
             super().doRollover()
         except PermissionError:
@@ -41,6 +48,12 @@ class SafeTimedRotatingFileHandler(TimedRotatingFileHandler):
 
 
 def get_logger(name: str, filename: str, level=logging.INFO) -> logging.Logger:
+    """
+    Called by: module-level logger definitions below.
+    Purpose: Create or reuse a named timed-rotating file logger under the logs directory.
+    调用方：本文件底部的各个 logger 定义调用。
+    作用：创建或复用写入 logs 目录的定时轮转文件日志器。
+    """
     logger = logging.getLogger(name)
     logger.setLevel(level)
     logger.propagate = False
@@ -78,4 +91,5 @@ access_logger = get_logger("access", "access.log")
 fastgpt_logger = get_logger("fastgpt", "fastgpt.log")
 hash_logger = get_logger("hash", "hash.log")
 comments_logger = get_logger("comments", "comments.log")
+ai_chat_logger = get_logger("ai_chat", "ai_chat.log")
 error_logger = get_logger("error", "error.log", logging.ERROR)
