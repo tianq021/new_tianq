@@ -84,3 +84,29 @@
 2026-05-30 14:03:36 | INFO | app | API 路由 base64_api 注册成功
 2026-05-30 14:03:36 | INFO | app | Flask 应用创建完成
 2026-05-30 14:03:36 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-30 14:15:07 | INFO | app | Flask 应用开始创建
+2026-05-30 14:15:07 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-30 14:15:07 | INFO | app | API 路由 common_api 注册成功
+2026-05-30 14:15:07 | INFO | app | API 路由 ai_api 注册成功
+2026-05-30 14:15:07 | INFO | app | API 路由 hash_api 注册成功
+2026-05-30 14:15:07 | INFO | app | API 路由 comment_api 注册成功
+2026-05-30 14:15:07 | INFO | app | API 路由 base64_api 注册成功
+2026-05-30 14:15:07 | INFO | app | Flask 应用创建完成
+2026-05-30 14:19:28 | INFO | app | Flask 应用开始创建
+2026-05-30 14:19:28 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 common_api 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 ai_api 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 hash_api 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 comment_api 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 base64_api 注册成功
+2026-05-30 14:19:28 | INFO | app | Flask 应用创建完成
+2026-05-30 14:19:28 | INFO | app | Flask 开始运行 | debug=True | port=5000
+2026-05-30 14:19:28 | INFO | app | Flask 应用开始创建
+2026-05-30 14:19:28 | INFO | app | 页面路由 page_bp 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 common_api 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 ai_api 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 hash_api 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 comment_api 注册成功
+2026-05-30 14:19:28 | INFO | app | API 路由 base64_api 注册成功
+2026-05-30 14:19:28 | INFO | app | Flask 应用创建完成
+2026-05-30 14:19:28 | INFO | app | Flask 开始运行 | debug=True | port=5000

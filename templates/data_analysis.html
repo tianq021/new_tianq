@@ -3,27 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle"></title>
+    <title>{{ page_title or "数据分析" }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/data_analysis.css') }}">
 </head>
 <body>
 <div
     id="dataAnalysisApp"
+    v-cloak
     class="page"
     data-page-config-url="/api/data-analysis/page-config"
     data-analysis-url="/api/data-analysis/run"
 >
     <header class="topbar">
         <div class="brand">
-            <a id="backLink" class="back-link" href="/" aria-label=""></a>
+            <a
+                class="back-link"
+                :href="pageConfig.page.backUrl"
+                :aria-label="pageConfig.page.backLabel"
+            >[[ pageConfig.page.backIcon ]]</a>
             <div>
-                <h1 id="brandTitle" class="brand-title"></h1>
-                <p id="brandSubtitle" class="brand-subtitle"></p>
+                <h1 class="brand-title">[[ pageConfig.page.title ]]</h1>
+                <p class="brand-subtitle">[[ pageConfig.page.subtitle ]]</p>
             </div>
         </div>
-        <div id="statusPill" class="status-pill">
+        <div class="status-pill">
             <span class="status-dot"></span>
-            <span id="statusText"></span>
+            <span>[[ pageConfig.page.statusText ]]</span>
         </div>
     </header>
 
@@ -32,48 +37,113 @@
             <section class="section">
                 <div class="section-header">
                     <div>
-                        <h2 id="uploadTitle" class="section-title"></h2>
-                        <p id="uploadDesc" class="section-desc"></p>
+                        <h2 class="section-title">[[ pageConfig.upload.title ]]</h2>
+                        <p class="section-desc">[[ pageConfig.upload.desc ]]</p>
                     </div>
                 </div>
                 <div class="section-body">
                     <div class="upload-box">
-                        <div id="dropZone" class="drop-zone">
-                            <input id="fileInput" type="file">
+                        <div
+                            class="drop-zone"
+                            :class="{ dragging: isDragging }"
+                            @dragenter.prevent="isDragging = true"
+                            @dragover.prevent="isDragging = true"
+                            @dragleave.prevent="isDragging = false"
+                            @drop.prevent="handleDrop"
+                        >
+                            <input
+                                ref="fileInput"
+                                type="file"
+                                :accept="pageConfig.upload.accept"
+                                @change="handleFileChange"
+                            >
                             <div>
-                                <span id="uploadIcon" class="upload-icon"></span>
-                                <p id="uploadDropTitle" class="upload-title"></p>
-                                <p id="uploadDropMeta" class="upload-meta"></p>
+                                <span class="upload-icon">[[ pageConfig.upload.icon ]]</span>
+                                <p class="upload-title">[[ pageConfig.upload.dropTitle ]]</p>
+                                <p class="upload-meta">[[ pageConfig.upload.dropMeta ]]</p>
                             </div>
                         </div>
 
-                        <div id="fileSummary" class="file-summary"></div>
+                        <div class="file-summary">
+                            <strong>[[ fileSummaryTitle ]]</strong>
+                            <span>[[ fileSummaryMeta ]]</span>
+                        </div>
 
-                        <div id="filterList" class="filter-list"></div>
+                        <div class="filter-list">
+                            <div
+                                v-for="filter in pageConfig.filters"
+                                :key="filter.id"
+                                class="form-row"
+                            >
+                                <label :for="filter.id">[[ filter.label ]]</label>
+                                <select
+                                    :id="filter.id"
+                                    v-model="filterValues[filter.name]"
+                                    :name="filter.name"
+                                >
+                                    <option
+                                        v-for="item in filter.options"
+                                        :key="item.value"
+                                        :value="item.value"
+                                    >[[ item.label ]]</option>
+                                </select>
+                            </div>
+                        </div>
 
-                        <button id="analyzeBtn" class="primary-btn" type="button"></button>
-                        <button id="resetBtn" class="ghost-btn" type="button"></button>
+                        <button
+                            class="primary-btn"
+                            type="button"
+                            :disabled="isAnalyzing"
+                            @click="handleAnalyze"
+                        >[[ pageConfig.buttons.analyze ]]</button>
+                        <button
+                            class="ghost-btn"
+                            type="button"
+                            @click="resetAnalysis"
+                        >[[ pageConfig.buttons.reset ]]</button>
                     </div>
                 </div>
             </section>
 
-            <div id="stepList" class="steps"></div>
+            <div class="steps">
+                <div
+                    v-for="step in pageConfig.steps"
+                    :key="step.index"
+                    class="step"
+                >
+                    <span class="step-num">[[ step.index ]]</span>
+                    <div>
+                        <strong>[[ step.title ]]</strong>
+                        <span>[[ step.desc ]]</span>
+                    </div>
+                </div>
+            </div>
         </aside>
 
         <main class="content">
             <section class="section">
                 <div class="section-header">
                     <div>
-                        <h2 id="overviewTitle" class="section-title"></h2>
-                        <p id="resultDesc" class="section-desc"></p>
+                        <h2 class="section-title">[[ pageConfig.sections.overview.title ]]</h2>
+                        <p class="section-desc">[[ analysisData.resultDesc || pageConfig.sections.overview.desc ]]</p>
                     </div>
-                    <div id="loading" class="loading">
+                    <div class="loading" :class="{ show: isAnalyzing }">
                         <span class="spinner"></span>
-                        <span id="loadingText"></span>
+                        <span>[[ pageConfig.loadingText ]]</span>
                     </div>
                 </div>
                 <div class="section-body">
-                    <div id="metricGrid" class="grid-row"></div>
+                    <div class="grid-row">
+                        <div
+                            v-for="metric in analysisData.metrics"
+                            :key="metric.label"
+                            class="section metric"
+                        >
+                            <p class="metric-label">[[ metric.label ]]</p>
+                            <p class="metric-value">[[ metric.value ]]</p>
+                            <p class="metric-note" :class="metric.level || ''">[[ metric.note ]]</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -81,14 +151,28 @@
                 <section class="section">
                     <div class="section-header">
                         <div>
-                            <h2 id="chartTitle" class="section-title"></h2>
-                            <p id="chartDesc" class="section-desc"></p>
+                            <h2 class="section-title">[[ pageConfig.sections.chart.title ]]</h2>
+                            <p class="section-desc">[[ pageConfig.sections.chart.desc ]]</p>
                         </div>
-                        <div id="chartTabs" class="chart-tabs"></div>
+                        <div class="chart-tabs">
+                            <button
+                                v-for="tab in pageConfig.chart.tabs"
+                                :key="tab.type"
+                                class="chart-tab"
+                                :class="{ active: tab.type === chartType }"
+                                type="button"
+                                @click="setChartType(tab.type)"
+                            >[[ tab.label ]]</button>
+                        </div>
                     </div>
                     <div class="section-body">
                         <div class="chart-wrap">
-                            <svg id="chartSvg" class="chart" role="img" aria-label=""></svg>
+                            <svg
+                                ref="chartSvg"
+                                class="chart"
+                                role="img"
+                                :aria-label="pageConfig.sections.chart.ariaLabel"
+                            ></svg>
                         </div>
                     </div>
                 </section>
@@ -96,12 +180,25 @@
                 <section class="section">
                     <div class="section-header">
                         <div>
-                            <h2 id="insightTitle" class="section-title"></h2>
-                            <p id="insightDesc" class="section-desc"></p>
+                            <h2 class="section-title">[[ pageConfig.sections.insight.title ]]</h2>
+                            <p class="section-desc">[[ pageConfig.sections.insight.desc ]]</p>
                         </div>
                     </div>
                     <div class="section-body">
-                        <ul id="insightList" class="insight-list"></ul>
+                        <ul class="insight-list">
+                            <li
+                                v-for="item in analysisData.insights"
+                                :key="item.title"
+                                class="insight-item"
+                                :class="item.level || ''"
+                            >
+                                <span class="insight-mark"></span>
+                                <div>
+                                    <strong>[[ item.title ]]</strong>
+                                    <span>[[ item.desc ]]</span>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
                 </section>
             </div>
@@ -109,20 +206,44 @@
             <section class="section">
                 <div class="section-header">
                     <div>
-                        <h2 id="tableTitle" class="section-title"></h2>
-                        <p id="tableDesc" class="section-desc"></p>
+                        <h2 class="section-title">[[ pageConfig.sections.table.title ]]</h2>
+                        <p class="section-desc">[[ pageConfig.sections.table.desc ]]</p>
                     </div>
                     <div class="toolbar">
-                        <button id="exportBtn" class="ghost-btn" type="button"></button>
+                        <button class="ghost-btn" type="button">[[ pageConfig.buttons.export ]]</button>
                     </div>
                 </div>
                 <div class="section-body">
                     <div class="table-wrap">
                         <table>
                             <thead>
-                            <tr id="tableHead"></tr>
+                            <tr>
+                                <th
+                                    v-for="column in analysisData.table.columns"
+                                    :key="column.key"
+                                >[[ column.label ]]</th>
+                            </tr>
                             </thead>
-                            <tbody id="tableBody"></tbody>
+                            <tbody>
+                            <tr
+                                v-for="(row, rowIndex) in analysisData.table.rows"
+                                :key="rowIndex"
+                            >
+                                <td
+                                    v-for="column in analysisData.table.columns"
+                                    :key="column.key"
+                                >
+                                    <template v-if="column.type === 'tag'">
+                                        <span class="tag" :class="tagMeta(row[column.key]).level || ''">
+                                            [[ tagMeta(row[column.key]).label || row[column.key] ]]
+                                        </span>
+                                    </template>
+                                    <template v-else>
+                                        [[ row[column.key] ]]
+                                    </template>
+                                </td>
+                            </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -131,6 +252,7 @@
     </div>
 </div>
 
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="{{ url_for('static', filename='js/data_analysis.js') }}"></script>
 </body>
 </html>
