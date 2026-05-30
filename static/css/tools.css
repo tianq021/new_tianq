@@ -224,6 +224,47 @@ body {
     font-weight: 700;
 }
 
+.base64-card,
+.base64-note-card {
+    max-width: 860px;
+}
+
+.base64-actions,
+.base64-result-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.base64-clear-btn {
+    background: #64748b !important;
+}
+
+.base64-copy-btn {
+    background: #0f766e !important;
+}
+
+.base64-message {
+    color: #2563eb;
+    font-weight: 700;
+}
+
+.base64-message.error {
+    color: #dc2626;
+}
+
+.base64-note-list {
+    display: grid;
+    gap: 10px;
+    color: #475569;
+    line-height: 1.7;
+}
+
+.base64-note-list strong {
+    color: #0f172a;
+}
+
 .tool-form button,
 .open-btn {
     width: fit-content;

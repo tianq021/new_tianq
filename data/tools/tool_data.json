@@ -39,6 +39,16 @@
     "default": false
   },
   {
+  "id": "base64",
+  "title": "Base64 编码/解码",
+  "desc": "输入文字后进行 Base64 编码或解码，适合接口调试、文本传输和简单数据转换。",
+  "category": "文本工具",
+  "type": "base64",
+  "url": "",
+  "enabled": true,
+  "default": false
+  },
+  {
   "id": "comments",
   "title": "评论区",
   "desc": "本地工具评论区，支持分页、点赞和排序。",

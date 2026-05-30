@@ -1,4 +1,4 @@
-2026-05-28 16:44:16 | INFO | hash | 收到文本哈希请求 | method=POST | ip=127.0.0.1
-2026-05-28 16:44:16 | INFO | hash | 文本哈希计算成功 | length=5 | preview=hello... | md5=5d41402abc4b... | sha1=aaf4c61ddcc5... | sha256=2cf24dba5fb0... | sha512=9b71d224bd62... | ip=127.0.0.1
-2026-05-28 16:44:16 | INFO | hash | 收到文本哈希请求 | method=POST | ip=127.0.0.1
-2026-05-28 16:44:16 | INFO | hash | 文本哈希计算成功 | length=5 | preview=hello... | md5=5d41402abc4b... | sha1=aaf4c61ddcc5... | sha256=2cf24dba5fb0... | sha512=9b71d224bd62... | ip=127.0.0.1
+2026-05-29 14:54:27 | INFO | hash | 收到文本哈希请求 | method=GET | ip=127.0.0.1
+2026-05-29 14:54:27 | WARNING | hash | 文本哈希失败：输入为空 | method=GET | ip=127.0.0.1
+2026-05-29 14:54:27 | INFO | hash | 收到文本哈希请求 | method=GET | ip=127.0.0.1
+2026-05-29 14:54:27 | INFO | hash | 文本哈希计算成功 | length=3 | preview=abc... | md5=900150983cd2... | sha1=a9993e364706... | sha256=ba7816bf8f01... | sha512=ddaf35a19361... | ip=127.0.0.1

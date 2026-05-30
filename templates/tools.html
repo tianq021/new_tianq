@@ -154,6 +154,50 @@
                     </form>
                 </div>
 
+                {% elif tool.type == "base64" %}
+                <div class="card base64-card">
+                    <h2>Base64 编码/解码</h2>
+
+                    <form class="tool-form base64-form">
+                        <label class="hash-input-label">
+                            输入内容：
+                            <textarea class="hash-input base64-input" placeholder="请输入需要编码或解码的内容" required></textarea>
+                        </label>
+
+                        <div class="base64-actions">
+                            <button type="button" class="base64-encode-btn">编码</button>
+                            <button type="button" class="base64-decode-btn">解码</button>
+                            <button type="button" class="base64-clear-btn">清空</button>
+                        </div>
+
+                        <label class="hash-input-label">
+                            输出结果：
+                            <textarea class="hash-input base64-output" placeholder="结果会显示在这里" readonly></textarea>
+                        </label>
+
+                        <div class="base64-result-tools">
+                            <button type="button" class="base64-copy-btn">复制结果</button>
+                            <span class="base64-message"></span>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card base64-note-card">
+                    <div class="base64-note-list">
+                        <div>
+                            <strong>编码：</strong>
+                            <span>支持中文、英文、数字和常见符号，按 UTF-8 处理。</span>
+                        </div>
+
+                        <div>
+                            <strong>解码：</strong>
+                            <span>输入合法 Base64 字符串后还原为原始文本。</span>
+                        </div>
+                    </div>
+                </div>
+
+
+
                 {% elif tool.type == "comments" %}
                 <div class="card comments-card">
                     <div class="comment-header">

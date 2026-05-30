@@ -12,9 +12,9 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        targetPanel.scrollIntoView({
+        window.scrollTo({
+            top: 0,
             behavior: "smooth",
-            block: "start"
         });
     }
 
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        window.location.hash = targetId;
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
         showPanel(targetId, {
             scroll: true
         });
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            window.location.hash = targetId;
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
             showPanel(targetId, {
                 scroll: true
             });
@@ -101,9 +101,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const activeItem = document.querySelector(".tool-menu-item.active");
 
-    if (showPanelFromHash()) {
-        return;
-    } else if (activeItem) {
+    if (window.location.hash) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+
+    if (activeItem) {
         showPanel(activeItem.dataset.target);
     } else if (menuItems.length > 0) {
         showPanel(menuItems[0].dataset.target);
@@ -274,6 +276,100 @@ document.addEventListener("DOMContentLoaded", function () {
             } catch (error) {
                 messageBox.textContent = "请求失败，请检查后端服务是否正常运行";
                 console.error("文件哈希请求失败", error);
+            }
+        });
+    });
+});
+
+// Base64 编码/解码
+document.addEventListener("DOMContentLoaded", function () {
+    const base64Forms = document.querySelectorAll(".base64-form");
+
+    function encodeBase64(value) {
+        const bytes = new TextEncoder().encode(value);
+        let binary = "";
+
+        bytes.forEach(function (byte) {
+            binary += String.fromCharCode(byte);
+        });
+
+        return window.btoa(binary);
+    }
+
+    function decodeBase64(value) {
+        const normalizedValue = value.replace(/\s+/g, "");
+        const binary = window.atob(normalizedValue);
+        const bytes = Uint8Array.from(binary, function (char) {
+            return char.charCodeAt(0);
+        });
+
+        return new TextDecoder().decode(bytes);
+    }
+
+    function setMessage(messageBox, message, isError) {
+        messageBox.textContent = message;
+        messageBox.classList.toggle("error", Boolean(isError));
+    }
+
+    base64Forms.forEach(function (form) {
+        const input = form.querySelector(".base64-input");
+        const output = form.querySelector(".base64-output");
+        const encodeButton = form.querySelector(".base64-encode-btn");
+        const decodeButton = form.querySelector(".base64-decode-btn");
+        const clearButton = form.querySelector(".base64-clear-btn");
+        const copyButton = form.querySelector(".base64-copy-btn");
+        const messageBox = form.querySelector(".base64-message");
+
+        encodeButton.addEventListener("click", function () {
+            const value = input.value;
+
+            if (value === "") {
+                setMessage(messageBox, "请输入需要编码的内容", true);
+                return;
+            }
+
+            output.value = encodeBase64(value);
+            setMessage(messageBox, "编码完成", false);
+        });
+
+        decodeButton.addEventListener("click", function () {
+            const value = input.value;
+
+            if (value.trim() === "") {
+                setMessage(messageBox, "请输入需要解码的 Base64 内容", true);
+                return;
+            }
+
+            try {
+                output.value = decodeBase64(value);
+                setMessage(messageBox, "解码完成", false);
+            } catch (error) {
+                output.value = "";
+                setMessage(messageBox, "解码失败，请检查 Base64 内容是否正确", true);
+                console.error("Base64 解码失败", error);
+            }
+        });
+
+        clearButton.addEventListener("click", function () {
+            input.value = "";
+            output.value = "";
+            setMessage(messageBox, "已清空", false);
+            input.focus();
+        });
+
+        copyButton.addEventListener("click", async function () {
+            if (output.value === "") {
+                setMessage(messageBox, "暂无可复制的结果", true);
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(output.value);
+                setMessage(messageBox, "结果已复制", false);
+            } catch (error) {
+                output.select();
+                document.execCommand("copy");
+                setMessage(messageBox, "结果已复制", false);
             }
         });
     });
