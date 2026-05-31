@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import os
+
 from flask import Flask, request
+from werkzeug.exceptions import HTTPException
 from routes.page_routes import page_bp
 from routes.api_routes import api_blueprints
 from utils.logger_config import app_logger, access_logger, error_logger
@@ -13,6 +16,7 @@ def create_app():
     作用：创建 Flask 应用，注册页面和 API 蓝图，并挂载请求日志、响应日志和全局异常处理。
     """
     app = Flask(__name__)
+    app.secret_key = os.getenv("FLASK_SECRET_KEY", "new-tianq-dev-secret")
 
     app_logger.info("Flask 应用开始创建")
 
@@ -63,6 +67,19 @@ def create_app():
         error_logger.exception(
             f"全局异常 | method={request.method} | path={request.path} | error={str(e)}"
         )
+        is_api_request = request.path.startswith("/api")
+
+        if isinstance(e, HTTPException):
+            if is_api_request:
+                return {
+                    "success": False,
+                    "message": e.description
+                }, e.code
+            return e
+
+        if not is_api_request:
+            return "服务器内部错误", 500
+
         return {
             "success": False,
             "message": "服务器内部错误"

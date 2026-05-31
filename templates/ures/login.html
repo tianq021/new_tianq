@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <main class="login-shell">
+        <section class="login-panel">
+            <div class="login-copy">
+                <p class="eyebrow">NEW TIANQ</p>
+                <h1>选择身份进入系统</h1>
+                <p>管理员可以查看并维护接口说明，普通用户进入工具使用页面。</p>
+            </div>
+
+            <form class="login-form" action="{{ url_for('page.login') }}" method="post">
+                <fieldset class="role-group">
+                    <legend>登录身份</legend>
+                    <label class="role-card">
+                        <input type="radio" name="role" value="user" checked>
+                        <span>用户</span>
+                    </label>
+                    <label class="role-card">
+                        <input type="radio" name="role" value="admin">
+                        <span>管理员</span>
+                    </label>
+                </fieldset>
+
+                <label class="password-field">
+                    <span>管理员密码</span>
+                    <input type="password" name="password" placeholder="普通用户可留空">
+                </label>
+
+                {% if error %}
+                <p class="form-error">{{ error }}</p>
+                {% endif %}
+
+                <button type="submit">进入</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

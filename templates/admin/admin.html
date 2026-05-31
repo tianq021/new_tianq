@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <header class="admin-header">
+        <div>
+            <p class="eyebrow">ADMIN</p>
+            <h1>管理后台</h1>
+        </div>
+        <nav>
+            <a href="{{ url_for('page.user_home') }}">用户首页</a>
+            <a href="{{ url_for('page.logout') }}">退出</a>
+        </nav>
+    </header>
+
+    <main class="admin-main">
+        <section class="admin-tabs" aria-label="后台功能">
+            <button class="tab-button active" type="button" data-tab-target="api-panel">接口管理</button>
+            <button class="tab-button" type="button" data-tab-target="data-panel">数据管理</button>
+        </section>
+
+        <section id="api-panel" class="tab-panel active">
+            <div class="toolbar">
+                <input id="endpoint-search" type="search" placeholder="搜索路径、名称或方法">
+                <span id="save-status" aria-live="polite"></span>
+            </div>
+
+            <section class="endpoint-list" aria-label="接口列表">
+                {% for item in endpoints %}
+                <article class="endpoint-item" data-search="{{ item.path }} {{ item.methods }} {{ item.title }} {{ item.description }}">
+                    <div class="endpoint-meta">
+                        <span class="method">{{ item.methods }}</span>
+                        <code>{{ item.path }}</code>
+                        <small>{{ item.endpoint }}</small>
+                    </div>
+
+                    <div class="endpoint-editor">
+                        <label>
+                            <span>名称</span>
+                            <input type="text" data-field="title" value="{{ item.title }}">
+                        </label>
+                        <label>
+                            <span>说明</span>
+                            <textarea data-field="description" rows="2">{{ item.description }}</textarea>
+                        </label>
+                        <button type="button" data-endpoint="{{ item.endpoint }}">保存</button>
+                    </div>
+                </article>
+                {% endfor %}
+            </section>
+        </section>
+
+        <section id="data-panel" class="tab-panel">
+            <div class="data-layout">
+                <section class="tool-list-panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>工具数据</h2>
+                            <p id="tool-file-path"></p>
+                        </div>
+                        <select id="tool-source">
+                            <option value="local">本地工具 JSON</option>
+                            <option value="fastgpt">FastGPT JSON</option>
+                            <option value="custom">自定义工具 JSON</option>
+                        </select>
+                    </div>
+                    <p id="tool-source-note" class="source-note"></p>
+                    <div id="tool-list" class="tool-list"></div>
+                </section>
+
+                <section class="tool-editor-panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>添加或修改工具</h2>
+                            <p>按工具 ID 保存；已有 ID 会被更新。</p>
+                        </div>
+                        <button id="tool-reset" class="secondary-button" type="button">清空</button>
+                    </div>
+
+                    <form id="tool-form" class="tool-form">
+                        <div class="form-grid">
+                            <label>
+                                <span>工具 ID</span>
+                                <input name="id" type="text" placeholder="my-tool" required>
+                            </label>
+                            <label>
+                                <span>名称</span>
+                                <input name="title" type="text" placeholder="工具名称" required>
+                            </label>
+                            <label>
+                                <span>分类</span>
+                                <input name="category" type="text" placeholder="文本工具">
+                            </label>
+                            <label>
+                                <span>类型</span>
+                                <input name="type" type="text" placeholder="link">
+                            </label>
+                            <label class="wide">
+                                <span>URL</span>
+                                <input name="url" type="url" placeholder="https://...">
+                            </label>
+                            <label class="wide">
+                                <span>说明</span>
+                                <textarea name="desc" rows="3" placeholder="工具说明"></textarea>
+                            </label>
+                            <label class="wide">
+                                <span>扩展 JSON</span>
+                                <textarea name="extra_json" rows="4" placeholder='{"icon":"sparkles"}'></textarea>
+                            </label>
+                        </div>
+
+                        <div class="check-row">
+                            <label>
+                                <input name="enabled" type="checkbox" checked>
+                                <span>启用</span>
+                            </label>
+                            <label>
+                                <input name="default" type="checkbox">
+                                <span>默认工具</span>
+                            </label>
+                            <label>
+                                <input name="sync_db" type="checkbox">
+                                <span>同步数据库</span>
+                            </label>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit">保存工具</button>
+                            <span id="tool-status" aria-live="polite"></span>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
+import os
 import socket
-from flask import Blueprint, render_template ,request
+
+from flask import Blueprint, redirect, render_template, request, session, url_for
+
+from services.admin import list_api_endpoints
+from services.data_ay import hello_world
 from services.fastgpt_tool_srore import load_tools
 from services.tool_srore import load_tools_data
-from services.data_ay import hello_world
 
 
 page_bp = Blueprint("page", __name__)
@@ -11,12 +15,45 @@ page_bp = Blueprint("page", __name__)
 
 @page_bp.route("/")
 def index():
-    """
-    Called by: Flask when a browser visits GET /.
-    Purpose: Render the home page with visitor IP and server IP values.
-    调用方：浏览器访问 GET / 时由 Flask 调用。
-    作用：渲染首页，并把访问者 IP 和服务器 IP 传给模板。
-    """
+    if session.get("role") == "admin":
+        return redirect(url_for("page.admin"))
+
+    if session.get("role") == "user":
+        return redirect(url_for("page.user_home"))
+
+    return render_template("ures/login.html", error="")
+
+
+@page_bp.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        return render_template("ures/login.html", error="")
+
+    role = request.form.get("role", "user")
+    password = request.form.get("password", "")
+
+    if role not in {"admin", "user"}:
+        return render_template("ures/login.html", error="请选择正确的身份"), 400
+
+    if role == "admin":
+        admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+        if password != admin_password:
+            return render_template("ures/login.html", error="管理员密码错误"), 401
+
+    session["role"] = role
+    if role == "admin":
+        return redirect(url_for("page.admin"))
+    return redirect(url_for("page.user_home"))
+
+
+@page_bp.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("page.login"))
+
+
+@page_bp.route("/user")
+def user_home():
     user_ip = request.remote_addr
     server_ip = get_server_ip()
 
@@ -26,13 +63,8 @@ def index():
         server_ip=server_ip
     )
 
+
 def get_server_ip():
-    """
-    Called by: index().
-    Purpose: Detect the local server IP by opening a UDP socket to a public DNS address.
-    调用方：index() 调用。
-    作用：通过 UDP socket 探测当前服务器对外使用的本机 IP。
-    """
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
@@ -45,39 +77,25 @@ def get_server_ip():
 
 @page_bp.route("/fastgpt")
 def fastgpt():
-    """
-    Called by: Flask when a browser visits GET /fastgpt.
-    Purpose: Load FastGPT tool definitions and render the FastGPT tool page.
-    调用方：浏览器访问 GET /fastgpt 时由 Flask 调用。
-    作用：加载 FastGPT 工具列表，并渲染 FastGPT 工具页面。
-    """
     tools = load_tools()
-    print(tools)
-    return render_template("ures/fastgpt.html",tools=tools)
+    return render_template("ures/fastgpt.html", tools=tools)
 
 
 @page_bp.route("/tools")
 def tools():
-    """
-    Called by: Flask when a browser visits GET /tools.
-    Purpose: Load local tool definitions and render the tools center page.
-    调用方：浏览器访问 GET /tools 时由 Flask 调用。
-    作用：加载本地工具列表，并渲染工具中心页面。
-    """
     tool_list = load_tools_data()
-    print(tool_list)
-    return render_template("tools.html", tools=tool_list)
+    return render_template("ures/tools.html", tools=tool_list)
 
 
 @page_bp.route("/data_analy")
 def data_analy():
-    """
-    Called by: Flask when a browser visits GET /data_analy.
-    Purpose: Render the data analysis template and reserve a data provider hook.
-    调用方：浏览器访问 GET /data_analy 时由 Flask 调用。
-    作用：渲染数据分析页面，并预留数据提供函数入口。
-    """
     data_ay = hello_world
-    return render_template("data_analysis.html", data_ay=data_ay)
+    return render_template("ures/data_analysis.html", data_ay=data_ay)
 
 
+@page_bp.route("/admin")
+def admin():
+    if session.get("role") != "admin":
+        return redirect(url_for("page.login"))
+
+    return render_template("admin/admin.html", endpoints=list_api_endpoints())

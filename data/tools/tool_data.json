@@ -1,4 +1,5 @@
-[{
+[
+  {
     "id": "tool-intro",
     "title": "工具介绍",
     "desc": "简单介绍当前的工具",
@@ -39,23 +40,43 @@
     "default": false
   },
   {
-  "id": "base64",
-  "title": "Base64 编码/解码",
-  "desc": "输入文字后进行 Base64 编码或解码，适合接口调试、文本传输和简单数据转换。",
-  "category": "文本工具",
-  "type": "base64",
-  "url": "",
-  "enabled": true,
-  "default": false
+    "id": "base64",
+    "title": "Base64 编码/解码",
+    "desc": "输入文字后进行 Base64 编码或解码，适合接口调试、文本传输和简单数据转换。",
+    "category": "文本工具",
+    "type": "base64",
+    "url": "",
+    "enabled": true,
+    "default": false
   },
   {
-  "id": "comments",
-  "title": "评论区",
-  "desc": "本地工具评论区，支持分页、点赞和排序。",
-  "category": "互动",
-  "type": "comments",
-  "url": "",
-  "enabled": true,
-  "default": false
+    "id": "comments",
+    "title": "评论区",
+    "desc": "本地工具评论区，支持分页、点赞和排序。",
+    "category": "互动",
+    "type": "comments",
+    "url": "",
+    "enabled": true,
+    "default": false
+  },
+  {
+    "id": "test",
+    "title": "test",
+    "desc": "测试",
+    "category": "test",
+    "type": "txt",
+    "url": "",
+    "enabled": false,
+    "default": false
+  },
+  {
+    "id": "1",
+    "title": "1",
+    "desc": "1",
+    "category": "1",
+    "type": "1",
+    "url": "",
+    "enabled": false,
+    "default": false
   }
 ]
