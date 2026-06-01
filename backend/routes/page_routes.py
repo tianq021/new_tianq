@@ -78,6 +78,19 @@ def get_server_ip():
 @page_bp.route("/fastgpt")
 def fastgpt():
     tools = load_tools()
+    for tool in tools:
+        if tool.get("group"):
+            continue
+
+        category = tool.get("category", "")
+        title = tool.get("title", "")
+        if "票据" in category or "简历" in category or "文档" in category:
+            tool["group"] = "文档能力"
+        elif "翻译" in category or "文本" in category or "翻译" in title:
+            tool["group"] = "文本能力"
+        else:
+            tool["group"] = "通用能力"
+
     return render_template("ures/fastgpt.html", tools=tools)
 
 

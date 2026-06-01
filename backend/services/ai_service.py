@@ -21,6 +21,44 @@ from backend.utils.logger_config import error_logger
 load_dotenv()
 
 
+def build_fastgpt_url(base_url):
+    path = os.getenv("FASTGPT_API_PATH", "/v1/chat/completions").strip()
+    if not path:
+        path = "/v1/chat/completions"
+    if not path.startswith("/"):
+        path = "/" + path
+    return f"{base_url}{path}"
+
+
+def extract_text_from_fastgpt_response(data):
+    if not isinstance(data, dict):
+        return str(data).strip()
+
+    choices = data.get("choices") or []
+    if choices:
+        content = choices[0].get("message", {}).get("content", "")
+        if content:
+            return str(content).strip()
+
+        delta = choices[0].get("delta", {}).get("content", "")
+        if delta:
+            return str(delta).strip()
+
+    for key in ("responseData", "reply", "answer", "content", "message", "text", "output"):
+        value = data.get(key)
+        if value:
+            return str(value).strip()
+
+    nested = data.get("data")
+    if isinstance(nested, dict):
+        for key in ("responseData", "reply", "answer", "content", "message", "text", "output"):
+            value = nested.get(key)
+            if value:
+                return str(value).strip()
+
+    return ""
+
+
 def call_fastgpt_api(system_prompt, user_prompt, chat_id, api_key_env):
     """
     Called by: run_ai_chat() and run_ai_recommend().
@@ -54,7 +92,7 @@ def call_fastgpt_api(system_prompt, user_prompt, chat_id, api_key_env):
     }
 
     req = urlrequest.Request(
-        f"{base_url}/v1/chat/completions",
+        build_fastgpt_url(base_url),
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
@@ -92,14 +130,9 @@ def call_fastgpt_api(system_prompt, user_prompt, chat_id, api_key_env):
     if last_error and "data" not in locals():
         raise last_error
 
-    choices = data.get("choices") or []
-    if choices:
-        content = choices[0].get("message", {}).get("content", "")
-        if content:
-            return content.strip()
-
-    if data.get("responseData"):
-        return str(data.get("responseData")).strip()
+    content = extract_text_from_fastgpt_response(data)
+    if content:
+        return content
 
     raise RuntimeError("FastGPT 没有返回可显示内容")
 

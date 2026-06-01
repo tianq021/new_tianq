@@ -6507,3 +6507,81 @@ Traceback (most recent call last):
   File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\werkzeug\routing\map.py", line 629, in match
     raise NotFound() from None
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-06-01 15:29:36 | ERROR | error | 全局异常 | method=GET | path=/favicon.ico | error=404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+Traceback (most recent call last):
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 891, in dispatch_request
+    self.raise_routing_exception(req)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 500, in raise_routing_exception
+    raise request.routing_exception  # type: ignore[misc]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\ctx.py", line 362, in match_request
+    result = self.url_adapter.match(return_rule=True)  # type: ignore
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\werkzeug\routing\map.py", line 629, in match
+    raise NotFound() from None
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-06-01 15:48:38 | ERROR | error | 全局异常 | method=GET | path=/fastgpt | error='jinja2.runtime.LoopContext object' has no attribute 'parent'
+Traceback (most recent call last):
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\python_mmx\new_tianq\backend\routes\page_routes.py", line 94, in fastgpt
+    return render_template("ures/fastgpt.html", tools=tools)
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "F:\python_mmx\new_tianq\frontend\templates\ures\fastgpt.html", line 61, in top-level template code
+    class="tool-link-item {% if loop.first and loop.parent.loop.first and loop.parent.loop.parent.loop.first %}active{% endif %}"
+    
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\jinja2\environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'jinja2.runtime.LoopContext object' has no attribute 'parent'
+2026-06-01 15:48:55 | ERROR | error | 全局异常 | method=GET | path=/fastgpt | error='jinja2.runtime.LoopContext object' has no attribute 'parent'
+Traceback (most recent call last):
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\python_mmx\new_tianq\backend\routes\page_routes.py", line 94, in fastgpt
+    return render_template("ures/fastgpt.html", tools=tools)
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "F:\python_mmx\new_tianq\frontend\templates\ures\fastgpt.html", line 61, in top-level template code
+    class="tool-link-item {% if loop.first and loop.parent.loop.first and loop.parent.loop.parent.loop.first %}active{% endif %}"
+    
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\jinja2\environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'jinja2.runtime.LoopContext object' has no attribute 'parent'
+2026-06-01 16:01:40 | ERROR | error | 全局异常 | method=GET | path=/favicon.ico | error=404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+Traceback (most recent call last):
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 891, in dispatch_request
+    self.raise_routing_exception(req)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\app.py", line 500, in raise_routing_exception
+    raise request.routing_exception  # type: ignore[misc]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\flask\ctx.py", line 362, in match_request
+    result = self.url_adapter.match(return_rule=True)  # type: ignore
+  File "F:\python_mmx\new_tianq\.venv\Lib\site-packages\werkzeug\routing\map.py", line 629, in match
+    raise NotFound() from None
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.

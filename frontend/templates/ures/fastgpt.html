@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FastGPT 工具页</title>
+    <title>FastGPT 对话工作台</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fastgpt.css') }}">
 </head>
@@ -12,78 +12,120 @@
 <div class="page">
     <header class="top-header">
         <div class="header-left">
-            <a class="header-link" href="/">返回首页</a>
-            <a class="logo" href="/fastgpt">FastGPT 工具页</a>
-            <span class="header-desc">AI 工具入口</span>
+            <a class="header-link" href="/" aria-label="返回首页">←</a>
+            <a class="logo" href="/fastgpt">FastGPT</a>
+            <span class="header-desc">对话工作台</span>
         </div>
 
-        <div class="header-right"></div>
+        <div class="header-right">
+            <span class="header-pill">{{ tools|length }} 个工具</span>
+        </div>
     </header>
 
     <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar-title">类型列表</div>
+        <aside class="sidebar" aria-label="FastGPT 两级分类">
+            <div class="sidebar-title">分类</div>
 
-            <nav class="category-menu">
-                {% for category, category_tools in tools|groupby("category") %}
-                <a
-                    class="category-menu-item {% if loop.first %}active{% endif %}"
-                    href="#category-{{ loop.index }}"
-                >
-                    <span class="category-name">{{ category }}</span>
-                    <span class="category-count">{{ category_tools|length }} 个工具</span>
-                </a>
-                {% else %}
-                <div class="empty-menu">暂无类型</div>
-                {% endfor %}
-            </nav>
-        </aside>
+            <div class="classification-shell">
+                <nav class="major-menu" aria-label="大类">
+                    {% for group, group_tools in tools|groupby("group") %}
+                    <button
+                        class="major-menu-item {% if loop.first %}active{% endif %}"
+                        type="button"
+                        data-group="{{ group }}"
+                    >
+                        <span>{{ group }}</span>
+                        <small>{{ group_tools|length }}</small>
+                    </button>
+                    {% else %}
+                    <div class="empty-menu">暂无大类</div>
+                    {% endfor %}
+                </nav>
 
-        <main class="content">
-            <section class="content-section active">
-                <div class="section-header">
-                    <div>
-                        <h1>FastGPT 工作流</h1>
-                        <p>这里的工具来自 fastgpt.nsi-soft.com,</p>
-                    </div>
-                </div>
-
-                {% for category, category_tools in tools|groupby("category") %}
-                <section id="category-{{ loop.index }}" class="category-section">
-                    <div class="category-section-header">
-                        <h2>{{ category }}</h2>
-                        <span>{{ category_tools|length }} 个工具</span>
-                    </div>
-
-                    <div class="tool-grid">
-                        {% for tool in category_tools %}
-                        <div
-                            class="tool-card {% if tool.url %}clickable-card{% endif %}"
-                            {% if tool.url %}
-                            role="link"
-                            tabindex="0"
-                            data-url="{{ tool.url }}"
-                            {% endif %}
-                        >
-                            <div class="tool-card-header">
-                                <span class="tool-category">{{ tool.category }}</span>
+                <nav class="minor-menu" aria-label="小类和工具">
+                    {% for group, group_tools in tools|groupby("group") %}
+                    <div
+                        class="minor-group {% if loop.first %}active{% endif %}"
+                        data-group="{{ group }}"
+                    >
+                        {% for category, category_tools in group_tools|groupby("category") %}
+                        <div class="minor-section">
+                            <div class="minor-section-title">
+                                <span>{{ category }}</span>
+                                <small>{{ category_tools|length }} 个</small>
                             </div>
 
-                            <h2>{{ tool.title }}</h2>
-                            <p>{{ tool.desc }}</p>
-
-                            {% if not tool.url %}
-                            <span class="empty-url">暂未配置链接</span>
-                            {% endif %}
+                            <div class="tool-link-list">
+                                {% for tool in category_tools %}
+                                <button
+                                    class="tool-link-item"
+                                    type="button"
+                                    data-id="{{ tool.id }}"
+                                    data-title="{{ tool.title }}"
+                                    data-desc="{{ tool.desc }}"
+                                    {% if tool.url %}
+                                    data-url="{{ tool.url }}"
+                                    {% endif %}
+                                >
+                                    <span>{{ tool.title }}</span>
+                                </button>
+                                {% endfor %}
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
-                </section>
-                {% else %}
-                <div class="doc-card">
-                    <p>当前还没有工具数据，请先检查 <code>data/fastgpt_tools.json</code>。</p>
+                    {% else %}
+                    <div class="empty-menu">暂无小类</div>
+                    {% endfor %}
+                </nav>
+            </div>
+        </aside>
+
+        <main class="content">
+            <section
+                class="chat-workspace"
+                aria-label="FastGPT 对话区域"
+                data-api-url="/api/ai/fastgpt/recommend"
+            >
+                <div class="chat-header">
+                    <div>
+                        <p class="eyebrow">FASTGPT CHAT</p>
+                        <h1 id="chatTitle">FastGPT 对话</h1>
+                        <p id="chatDesc">右侧主页面预留为直接对话区，后续可以接入选中工具的 FastGPT 会话。</p>
+                    </div>
+                    <button id="openSelectedTool" class="open-tool-btn" type="button" disabled>打开工具</button>
                 </div>
-                {% endfor %}
+
+                <div id="mainChatMessages" class="chat-body">
+                    <div class="chat-message bot">
+                        <span class="avatar">AI</span>
+                        <div class="bubble">
+                            请选择左侧的大类和小类，也可以直接描述你的任务。我会调用 FastGPT 推荐接口，把结果展示在这里。
+                        </div>
+                    </div>
+                </div>
+
+                <form id="fastgptMainChatForm" class="chat-input-area">
+                    <div id="resumeUploadBar" class="resume-upload-bar" hidden>
+                        <label for="fastgptResumeFile">上传简历文件</label>
+                        <input
+                            id="fastgptResumeFile"
+                            type="file"
+                            accept=".pdf,.doc,.docx,.txt,.md,.csv,.json"
+                        >
+                        <span id="resumeFileName">未选择文件</span>
+                    </div>
+
+                    <div class="chat-input-bar">
+                        <input
+                            id="fastgptMainChatInput"
+                            type="text"
+                            placeholder="描述你的任务，例如：我需要识别票据金额"
+                            autocomplete="off"
+                        >
+                        <button id="fastgptMainChatSubmit" type="submit">发送</button>
+                    </div>
+                </form>
             </section>
         </main>
     </div>
@@ -95,25 +137,25 @@
     data-page="fastgpt"
     data-api-url="/api/ai/fastgpt/recommend"
 >
-    <button id="aiRecommendBtn" class="ai-recommend-btn" type="button" title="智能推荐">
-        🤖
+    <button id="aiRecommendBtn" class="ai-recommend-btn" type="button" title="智能推荐" aria-label="打开智能推荐">
+        AI
     </button>
 
     <div id="aiRecommendPanel" class="ai-recommend-panel">
         <div class="ai-recommend-header">
             <span>工具推荐</span>
-            <button id="aiRecommendClose" type="button">×</button>
+            <button id="aiRecommendClose" type="button" aria-label="关闭">×</button>
         </div>
 
         <div id="aiRecommendMessages" class="ai-recommend-messages">
-            <div class="ai-msg ai-msg-bot">需要我做什么？</div>
+            <div class="ai-msg ai-msg-bot">描述你的任务，我来帮你匹配合适的 FastGPT 工具。</div>
         </div>
 
         <form id="aiRecommendForm" class="ai-recommend-form">
             <input
                 id="aiRecommendInput"
                 type="text"
-                placeholder="例如：我需要识别票据..."
+                placeholder="例如：我需要识别票据金额"
                 autocomplete="off"
             >
             <button type="submit">发送</button>
@@ -123,9 +165,6 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_recommend.css') }}">
 <script src="{{ url_for('static', filename='js/ai_recommend.js') }}"></script>
-
-
-
 <script src="{{ url_for('static', filename='js/fastgpt.js') }}"></script>
 </body>
 </html>
