@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from flask import Blueprint, jsonify, request
 
-from services.comment_store_mysql import (
+from backend.services.comment_store_mysql import (
     add_comment,
     build_visitor_key,
     list_comments,
     toggle_like_comment
 )
-from utils.logger_config import comments_logger, error_logger
+from backend.utils.logger_config import comments_logger, error_logger
 
 
 comment_bp = Blueprint("comment_api", __name__, url_prefix="/api")

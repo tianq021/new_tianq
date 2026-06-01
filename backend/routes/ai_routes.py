@@ -5,16 +5,53 @@ from urllib.error import HTTPError, URLError
 
 from flask import Blueprint, jsonify, request
 
-from services.ai_service import (
+from backend.services.ai_service import (
     build_network_error_message,
     run_ai_chat,
     run_ai_recommend
 )
-from services.fastgpt_tool_srore import load_tools as load_fastgpt_tools
-from utils.logger_config import ai_chat_logger
+from backend.services.fastgpt_tool_srore import load_tools as load_fastgpt_tools
+from backend.utils.logger_config import ai_chat_logger
 
 
 ai_bp = Blueprint("ai_api", __name__, url_prefix="/api")
+
+FASTGPT_COOLDOWN_SECONDS = 5
+fastgpt_last_response_at = {}
+
+
+def get_client_key():
+    forwarded_for = request.headers.get("X-Forwarded-For", "")
+    if forwarded_for:
+        return forwarded_for.split(",", 1)[0].strip()
+    return request.remote_addr or "unknown"
+
+
+def check_fastgpt_cooldown():
+    client_key = get_client_key()
+    now = time.monotonic()
+    last_response_at = fastgpt_last_response_at.get(client_key)
+
+    if last_response_at is None:
+        return None
+
+    wait_seconds = FASTGPT_COOLDOWN_SECONDS - (now - last_response_at)
+    if wait_seconds <= 0:
+        return None
+
+    retry_after = max(1, int(wait_seconds + 0.999))
+    response = jsonify({
+        "success": False,
+        "message": f"FastGPT requests are limited. Please wait {retry_after} seconds before trying again.",
+        "retry_after": retry_after
+    })
+    response.headers["Retry-After"] = str(retry_after)
+    return response, 429
+
+
+def mark_fastgpt_response_finished():
+    client_key = get_client_key()
+    fastgpt_last_response_at[client_key] = time.monotonic()
 
 
 def log_ai_chat_event(
@@ -270,12 +307,18 @@ def fastgpt_ai_recommend():
             "message": str(e)
         }), 400
 
-    return recommend_response(
+    cooldown_response = check_fastgpt_cooldown()
+    if cooldown_response is not None:
+        return cooldown_response
+
+    response = recommend_response(
         load_fastgpt_tools(),
         message,
         chat_id="fastgpt-recommend",
         api_key_env="FASTGPT_RECOMMEND_API_KEY"
     )
+    mark_fastgpt_response_finished()
+    return response
 
 
 @ai_bp.route("/ai/recommend", methods=["POST"])

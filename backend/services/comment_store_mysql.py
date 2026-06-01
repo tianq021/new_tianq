@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import hashlib
-from services.db import get_db
+from backend.services.db import get_db
 
 
 

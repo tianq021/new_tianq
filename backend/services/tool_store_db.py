@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
-from services.db import get_db
+from backend.services.db import get_db
 
 
 def normalize_tool_row(row):

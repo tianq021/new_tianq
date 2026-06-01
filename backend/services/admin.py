@@ -4,11 +4,11 @@ from pathlib import Path
 
 from flask import current_app
 
-from services.db import get_db
+from backend.services.db import get_db
 
 
-META_FILE = Path("data/admin/api_endpoints.json")
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
+META_FILE = BASE_DIR / "data" / "admin" / "api_endpoints.json"
 TOOL_FILES = {
     "local": BASE_DIR / "data" / "tools" / "tool_data.json",
     "fastgpt": BASE_DIR / "data" / "fastgpt" / "fastgpt_tools.json",
@@ -182,10 +182,11 @@ def list_tool_data(source="local"):
     if source not in TOOL_FILES:
         raise ValueError("未知工具来源")
 
+    path = TOOL_FILES[source]
     tools = _load_json_list(TOOL_FILES[source])
     return {
         "source": source,
-        "file": str(TOOL_FILES[source]),
+        "file": path.relative_to(BASE_DIR).as_posix(),
         "tools": tools
     }
 
@@ -247,7 +248,7 @@ def upsert_tool_json(source, tool):
     _save_json_list(path, tools)
     return {
         "source": source,
-        "file": str(path),
+        "file": path.relative_to(BASE_DIR).as_posix(),
         "tool": tool,
         "created": not replaced,
         "total": len(tools)
