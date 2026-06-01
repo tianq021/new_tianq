@@ -3,7 +3,7 @@ import hashlib
 
 from flask import Blueprint, jsonify, request
 
-from utils.logger_config import error_logger, hash_logger
+from backend.utils.logger_config import error_logger, hash_logger
 
 
 hash_bp = Blueprint("hash_api", __name__, url_prefix="/api")

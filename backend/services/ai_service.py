@@ -7,7 +7,7 @@ from urllib.error import HTTPError, URLError
 
 from dotenv import load_dotenv
 
-from utils.logger_config import error_logger
+from backend.utils.logger_config import error_logger
 
 
 """

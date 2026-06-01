@@ -4,7 +4,7 @@ import binascii
 
 from flask import Blueprint, jsonify, request
 
-from utils.logger_config import error_logger
+from backend.utils.logger_config import error_logger
 
 
 base64_bp = Blueprint("base64_api", __name__, url_prefix="/api")

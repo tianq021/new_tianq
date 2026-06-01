@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pymysql
 from contextlib import contextmanager
-from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+from backend.config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 
 
 @contextmanager

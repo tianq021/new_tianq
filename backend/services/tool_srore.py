@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
 from pathlib import Path
-from services.tool_store_db import load_tools_by_source
-from utils.logger_config import error_logger
+from backend.services.tool_store_db import load_tools_by_source
+from backend.utils.logger_config import error_logger
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 TOOLS_FILE = BASE_DIR / "data" / "tools" / "tool_data.json"
 
 

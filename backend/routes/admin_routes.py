@@ -3,7 +3,7 @@ from functools import wraps
 
 from flask import Blueprint, jsonify, request, session
 
-from services.admin import (
+from backend.services.admin import (
     list_api_endpoints,
     list_tool_data,
     update_api_endpoint,

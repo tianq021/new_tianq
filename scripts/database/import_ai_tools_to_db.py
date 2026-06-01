@@ -3,10 +3,10 @@ import json
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE_DIR))
 
-from services.db import get_db
+from backend.services.db import get_db
 
 
 LOCAL_TOOLS_FILE = BASE_DIR / "data" / "tools" / "tool_data.json"

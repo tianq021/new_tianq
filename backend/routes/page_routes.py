@@ -4,10 +4,10 @@ import socket
 
 from flask import Blueprint, redirect, render_template, request, session, url_for
 
-from services.admin import list_api_endpoints
-from services.data_ay import hello_world
-from services.fastgpt_tool_srore import load_tools
-from services.tool_srore import load_tools_data
+from backend.services.admin import list_api_endpoints
+from backend.services.data_ay import hello_world
+from backend.services.fastgpt_tool_srore import load_tools
+from backend.services.tool_srore import load_tools_data
 
 
 page_bp = Blueprint("page", __name__)
