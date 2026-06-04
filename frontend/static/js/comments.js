@@ -1,12 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const PAGE_KEY = "tools";
-    const PAGE_SIZE = 10;
-
-    let currentPage = 1;
-    let currentSort = "time";
-    let totalPages = 1;
-    let hasLoadedComments = false;
-
     const commentForm = document.getElementById("commentForm");
     const commentNickname = document.getElementById("commentNickname");
     const commentContent = document.getElementById("commentContent");
@@ -20,6 +12,15 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!commentForm || !commentList) {
         return;
     }
+
+    const PAGE_KEY = commentForm.dataset.pageKey || "tools";
+    const PAGE_SIZE = Number(commentForm.dataset.pageSize || 10);
+    const shouldAutoload = commentForm.dataset.autoload === "true";
+
+    let currentPage = 1;
+    let currentSort = "time";
+    let totalPages = 1;
+    let hasLoadedComments = false;
 
     async function loadComments() {
         commentList.innerHTML = `<p class="comment-empty">正在加载评论...</p>`;
@@ -236,4 +237,8 @@ document.addEventListener("DOMContentLoaded", function () {
             loadComments();
         }
     });
+
+    if (shouldAutoload) {
+        loadComments();
+    }
 });

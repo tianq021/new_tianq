@@ -69,7 +69,8 @@
 
 .ai-msg {
     position: relative;
-    max-width: 88%;
+    width: fit-content;
+    max-width: min(72%, 760px);
     margin-bottom: 12px;
     padding: 10px 12px;
     border-radius: 12px;
@@ -183,6 +184,65 @@
 .ai-recommend-form button:disabled {
     background: #93c5fd;
     cursor: not-allowed;
+}
+
+.ai-recommend-root.embedded-ai {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: 700px;
+    z-index: auto;
+}
+
+.embedded-ai .ai-recommend-btn {
+    display: none;
+}
+
+.embedded-ai .ai-recommend-panel {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: inherit;
+    display: grid;
+    grid-template-rows: auto minmax(0, auto) auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.embedded-ai .ai-recommend-panel.open {
+    display: flex;
+}
+
+.embedded-ai .ai-recommend-header button {
+    display: none;
+}
+
+.embedded-ai .ai-recommend-header {
+    height: 48px;
+    flex: 0 0 auto;
+}
+
+.embedded-ai .ai-recommend-messages {
+    min-height: 0;
+    max-height: 590px;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.embedded-ai .ai-msg {
+    width: fit-content;
+    max-width: min(68%, 720px);
+    margin-bottom: 10px;
+    padding: 9px 11px;
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+.embedded-ai .ai-recommend-form {
+    height: 54px;
+    flex: 0 0 auto;
+    padding: 9px;
 }
 
 @media (max-width: 520px) {

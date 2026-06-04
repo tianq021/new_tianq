@@ -320,6 +320,7 @@ small {
 }
 
 .form-grid input,
+.form-grid select,
 .form-grid textarea {
     width: 100%;
     border: 1px solid #cdd7e4;

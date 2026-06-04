@@ -31,7 +31,7 @@ TOOL_BASE_FIELDS = {
 DEFAULT_API_META = {
     "admin_api.api_endpoints": {
         "title": "接口列表",
-        "description": "查看系统已注册的 API 路由、请求方法、接口名称和说明。"
+        "description": "查看系统已注册的接口路由、请求方法、接口名称和说明。"
     },
     "admin_api.api_endpoint_update": {
         "title": "修改接口说明",
@@ -50,22 +50,32 @@ DEFAULT_API_META = {
         "description": "返回当前服务器时间。"
     },
     "ai_api.tools_ai_chat": {
-        "title": "本地工具 AI 对话",
-        "description": "处理工具页面的 AI 对话请求。"
+        "title": "本地工具智能对话",
+        "description": "处理工具页面的智能对话请求。"
     },
     "ai_api.fastgpt_ai_recommend": {
         "title": "FastGPT 工具推荐",
         "description": "根据 FastGPT 工具列表和用户需求返回工具推荐结果。"
     },
     "ai_api.ai_recommend": {
-        "title": "AI 推荐统一入口",
+        "title": "智能推荐统一入口",
         "description": "根据 page 参数分发到本地工具对话或 FastGPT 推荐流程。"
     }
 }
 
 
 def _rule_methods(rule):
-    methods = sorted(rule.methods - {"HEAD", "OPTIONS"})
+    method_labels = {
+        "GET": "读取",
+        "POST": "提交",
+        "PUT": "替换",
+        "PATCH": "更新",
+        "DELETE": "删除"
+    }
+    methods = [
+        method_labels.get(method, method)
+        for method in sorted(rule.methods - {"HEAD", "OPTIONS"})
+    ]
     return ", ".join(methods)
 
 

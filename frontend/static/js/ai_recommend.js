@@ -5,6 +5,7 @@
     const page = root.dataset.page || "tools";
     const apiUrl = root.dataset.apiUrl || "/api/ai/tools/recommend";
     const mode = root.dataset.mode || "recommend";
+    const embedded = root.dataset.embedded === "true";
     const storageKey = "ai_recommend_history_" + page;
     const openKey = "ai_recommend_open_" + page;
 
@@ -27,8 +28,8 @@
         const button = document.createElement("button");
         button.className = "ai-msg-delete";
         button.type = "button";
-        button.title = "删除这条 AI 回复";
-        button.setAttribute("aria-label", "删除这条 AI 回复");
+        button.title = "删除这条智能回复";
+        button.setAttribute("aria-label", "删除这条智能回复");
         button.textContent = "×";
         return button;
     }
@@ -62,7 +63,9 @@
     function openPanel() {
         panel.classList.add("open");
         sessionStorage.setItem(openKey, "1");
-        input.focus();
+        if (!embedded) {
+            input.focus();
+        }
         scrollBottom();
     }
 
@@ -139,13 +142,17 @@
         scrollBottom();
     }
 
-    btn.addEventListener("click", function () {
-        openPanel();
-    });
+    if (btn) {
+        btn.addEventListener("click", function () {
+            openPanel();
+        });
+    }
 
-    closeBtn.addEventListener("click", function () {
-        closePanel();
-    });
+    if (closeBtn) {
+        closeBtn.addEventListener("click", function () {
+            closePanel();
+        });
+    }
 
     messages.addEventListener("click", function (event) {
         const deleteBtn = event.target.closest(".ai-msg-delete");
@@ -216,7 +223,9 @@
 
     restoreHistory();
 
-    if (sessionStorage.getItem(openKey) === "1") {
+    if (embedded) {
+        openPanel();
+    } else if (sessionStorage.getItem(openKey) === "1") {
         openPanel();
     }
 })();

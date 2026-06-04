@@ -25,12 +25,12 @@ body {
 
 .page {
     min-height: 100vh;
-    padding: 34px;
+    padding: 24px;
 }
 
 .workspace-layout {
-    width: min(1180px, 100%);
-    min-height: calc(100vh - 68px);
+    width: min(1280px, 100%);
+    min-height: calc(100vh - 48px);
     display: grid;
     grid-template-columns: 360px minmax(0, 1fr);
     gap: 18px;
@@ -53,8 +53,213 @@ body {
 }
 
 .right-panel {
-    min-height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 18px;
+    padding: 18px;
     background: rgba(255, 255, 255, 0.74);
+}
+
+.right-card {
+    min-height: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.compact-comments {
+    min-height: 360px;
+    max-height: 1000px;
+    display: flex;
+    flex-direction: column;
+    padding: 18px;
+}
+
+.comment-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.comment-header h2 {
+    margin: 0 0 5px;
+    color: #0f172a;
+    font-size: 18px;
+}
+
+.comment-header p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+#commentSort {
+    min-height: 34px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0 9px;
+    background: #ffffff;
+    color: #334155;
+}
+
+.comment-form {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1fr) auto;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.comment-form input,
+.comment-form textarea {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 9px 10px;
+    color: #172033;
+    font: inherit;
+    outline: none;
+}
+
+.comment-form textarea {
+    min-height: 38px;
+    max-height: 64px;
+    resize: vertical;
+}
+
+.comment-form button,
+.comment-pagination button {
+    border: 0;
+    border-radius: 8px;
+    background: var(--blue);
+    color: #ffffff;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.comment-form button {
+    min-height: 38px;
+    padding: 0 14px;
+}
+
+.comment-message {
+    min-height: 20px;
+    margin: 0 0 8px;
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.comment-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+.comment-item {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.comment-item-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.comment-user-box {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.comment-avatar {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--soft-blue);
+    color: var(--blue);
+    font-weight: 900;
+}
+
+.comment-name {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.comment-time {
+    margin-top: 2px;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.comment-content {
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.comment-like-btn {
+    min-height: 28px;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+}
+
+.comment-empty {
+    margin: 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.comment-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 12px;
+}
+
+.comment-pagination button {
+    min-height: 32px;
+    padding: 0 12px;
+}
+
+.comment-pagination button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+#commentPageInfo {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.ai-card {
+    max-height: 700px;
+    padding: 0;
 }
 
 .workspace-header {
@@ -224,12 +429,14 @@ h1 {
     }
 
     .workspace-layout {
+        height: auto;
         min-height: auto;
         grid-template-columns: 1fr;
     }
 
     .right-panel {
         min-height: 260px;
+        grid-template-rows: auto auto;
     }
 }
 
@@ -244,5 +451,11 @@ h1 {
 
     .tool-card {
         grid-template-columns: 1fr;
+    }
+
+    .comment-header,
+    .comment-form {
+        grid-template-columns: 1fr;
+        display: grid;
     }
 }

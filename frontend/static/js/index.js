@@ -1,3 +1,11 @@
+if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+}
+
+window.addEventListener("load", function () {
+    window.scrollTo(0, 0);
+});
+
 function formatLocalTime(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');

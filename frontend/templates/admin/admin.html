@@ -9,7 +9,7 @@
 <body>
     <header class="admin-header">
         <div>
-            <p class="eyebrow">ADMIN</p>
+            <p class="eyebrow">管理</p>
             <h1>管理后台</h1>
         </div>
         <nav>
@@ -22,7 +22,7 @@
         <section class="admin-tabs" aria-label="后台功能">
             <button class="tab-button active" type="button" data-tab-target="api-panel">接口管理</button>
             <button class="tab-button" type="button" data-tab-target="data-panel">数据管理</button>
-            <button class="tab-button" type="button" data-tab-target="logs-panel">FastGPT Logs</button>
+            <button class="tab-button" type="button" data-tab-target="logs-panel">FastGPT 日志</button>
         </section>
 
         <section id="api-panel" class="tab-panel active">
@@ -65,11 +65,11 @@
                             <p id="tool-file-path"></p>
                         </div>
                         <select id="tool-source">
-                            <option value="local">Local Tools</option>
-                            <option value="fastgpt">FastGPT Tools</option>
-                            <option value="custom">Custom Tools</option>
+                            <option value="local">本地工具</option>
+                            <option value="fastgpt">FastGPT 工具</option>
+                            <option value="custom">自定义工具</option>
                         </select>
-                        <button id="config-export" class="secondary-button" type="button">Export Config</button>
+                        <button id="config-export" class="secondary-button" type="button">导出配置</button>
                     </div>
                     <p id="tool-source-note" class="source-note"></p>
                     <div id="tool-list" class="tool-list"></div>
@@ -87,8 +87,8 @@
                     <form id="tool-form" class="tool-form">
                         <div class="form-grid">
                             <label>
-                                <span>工具 ID</span>
-                                <input name="id" type="text" placeholder="my-tool" required>
+                                <span>工具编号</span>
+                                <input name="id" type="text" placeholder="例如：工具编号" required>
                             </label>
                             <label>
                                 <span>名称</span>
@@ -99,32 +99,40 @@
                                 <input name="category" type="text" placeholder="文本工具">
                             </label>
                             <label>
-                                <span>Type</span>
-                                <input name="type" type="text" placeholder="link">
+                                <span>工具类型</span>
+                                <select name="type">
+                                    <option value="link">链接工具</option>
+                                    <option value="placeholder">占位说明</option>
+                                    <option value="random">随机数</option>
+                                    <option value="hash">文字哈希</option>
+                                    <option value="file_hash">文件哈希</option>
+                                    <option value="base64">Base64 编解码</option>
+                                    <option value="comments">评论区</option>
+                                </select>
                             </label>
                             <label>
-                                <span>Sort</span>
+                                <span>排序</span>
                                 <input name="sort_order" type="number" min="0" step="1" placeholder="100">
                             </label>
                             <label class="wide">
-                                <span>Sort</span>
-                                <input name="url" type="url" placeholder="https://...">
+                                <span>工具链接</span>
+                                <input name="url" type="url" placeholder="请输入完整工具链接">
                             </label>
                             <label>
-                                <span>FastGPT Chat ID</span>
-                                <input name="chat_id" type="text" placeholder="Default: tool ID">
+                                <span>FastGPT 会话编号</span>
+                                <input name="chat_id" type="text" placeholder="默认使用工具编号">
                             </label>
                             <label>
-                                <span>FastGPT API Key</span>
-                                <input name="api_key" type="password" placeholder="Leave blank to keep current key">
+                                <span>FastGPT 接口密钥</span>
+                                <input name="api_key" type="password" placeholder="留空则保留当前密钥">
                             </label>
                             <label class="wide">
                                 <span>说明</span>
                                 <textarea name="desc" rows="3" placeholder="工具说明"></textarea>
                             </label>
                             <label class="wide">
-                                <span>扩展 JSON</span>
-                                <textarea name="extra_json" rows="4" placeholder='{"icon":"sparkles"}'></textarea>
+                                <span>扩展配置</span>
+                                <textarea name="extra_json" rows="4" placeholder='例如：{"图标":"星标"}'></textarea>
                             </label>
                         </div>
 
@@ -149,12 +157,12 @@
         </section>
         <section id="logs-panel" class="tab-panel">
             <div class="toolbar">
-                <button id="refresh-fastgpt-logs" class="secondary-button" type="button">Refresh Logs</button>
+                <button id="refresh-fastgpt-logs" class="secondary-button" type="button">刷新日志</button>
                 <select id="fastgpt-log-limit">
-                    <option value="50">Last 50</option>
-                    <option value="100" selected>Last 100</option>
-                    <option value="200">Last 200</option>
-                    <option value="500">Last 500</option>
+                    <option value="50">最近 50 条</option>
+                    <option value="100" selected>最近 100 条</option>
+                    <option value="200">最近 200 条</option>
+                    <option value="500">最近 500 条</option>
                 </select>
                 <span id="fastgpt-log-status" aria-live="polite"></span>
             </div>

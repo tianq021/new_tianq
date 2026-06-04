@@ -25,6 +25,7 @@ def create_app():
         static_folder=str(BASE_DIR / "frontend" / "static")
     )
     app.secret_key = os.getenv("FLASK_SECRET_KEY", "new-tianq-dev-secret")
+    app.json.ensure_ascii = False
 
     app_logger.info("Flask 应用开始创建")
 

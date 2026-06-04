@@ -108,7 +108,7 @@ function renderToolList() {
         summary.innerHTML = `
             <strong>${escapeHtml(tool.title || tool.id)}</strong>
             <span>${escapeHtml(tool.id || "")}</span>
-            <small>${escapeHtml(tool.category || "未分类")} · 排序 ${Number(tool.sort_order || 100)} · ${tool.enabled === false ? "停用" : "启用"}${tool.has_api_key === false ? " · 未配置 Key" : ""}</small>
+            <small>${escapeHtml(tool.category || "未分类")} · 排序 ${Number(tool.sort_order || 100)} · ${tool.enabled === false ? "停用" : "启用"}${tool.has_api_key === false ? " · 未配置密钥" : ""}</small>
         `;
         summary.addEventListener("click", () => fillToolForm(tool));
 
@@ -350,9 +350,9 @@ function renderFastgptLogs(logs) {
         row.className = `log-row ${item.success ? "success" : "error"}`;
         row.innerHTML = `
             <div class="log-row-head">
-                <strong>${escapeHtml(item.chat_id || "unknown")}</strong>
+                <strong>${escapeHtml(item.chat_id || "未知会话")}</strong>
                 <span>${item.success ? "成功" : "失败"}</span>
-                <small>${escapeHtml(item.created_at || "")} · ${Number(item.elapsed_ms || 0).toFixed(0)} ms · ${escapeHtml(item.remote_addr || "")}</small>
+                <small>${escapeHtml(item.created_at || "")} · ${Number(item.elapsed_ms || 0).toFixed(0)} 毫秒 · ${escapeHtml(item.remote_addr || "")}</small>
             </div>
             <p><b>用户：</b>${escapeHtml(item.user_message || "")}</p>
             <p><b>回复：</b>${escapeHtml(item.ai_reply || "")}</p>

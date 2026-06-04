@@ -121,11 +121,12 @@ def get_comments():
     """
     page_key = request.args.get("page_key", "tools")
     page = request.args.get("page", 1)
+    page_size = request.args.get("page_size", 10)
     sort = request.args.get("sort", "time")
 
     comments_logger.info(
         f"收到评论列表请求 | page_key={page_key} | page={page} | "
-        f"sort={sort} | ip={request.remote_addr}"
+        f"page_size={page_size} | sort={sort} | ip={request.remote_addr}"
     )
 
     if sort not in ["time", "hot"]:
@@ -135,7 +136,7 @@ def get_comments():
         result = list_comments(
             page_key=page_key,
             page=page,
-            page_size=10,
+            page_size=page_size,
             sort=sort
         )
 

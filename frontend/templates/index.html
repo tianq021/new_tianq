@@ -13,7 +13,7 @@
             <aside class="left-panel">
                 <header class="workspace-header">
                     <div>
-                        <p class="eyebrow">Local Workspace</p>
+                        <p class="eyebrow">本地工作台</p>
                         <h1>本地工具工作台</h1>
                         <p class="desc">选择一个功能开始使用。</p>
                     </div>
@@ -30,7 +30,7 @@
 
                     <div class="tool-list">
                         <a class="tool-card" href="{{ url_for('page.fastgpt') }}">
-                            <span class="tool-tag ai">AI</span>
+                            <span class="tool-tag ai">智能</span>
                             <div>
                                 <h3>FastGPT 调用</h3>
                                 <p>工作流调用与接口测试。</p>
@@ -38,7 +38,7 @@
                         </a>
 
                         <a class="tool-card" href="{{ url_for('page.tools') }}">
-                            <span class="tool-tag utility">Tools</span>
+                            <span class="tool-tag utility">工具</span>
                             <div>
                                 <h3>通用工具</h3>
                                 <p>哈希、Base64、评论区等工具。</p>
@@ -61,21 +61,108 @@
                             <strong id="timeText" aria-live="polite">加载中...</strong>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">访问者 IP</span>
+                            <span class="info-label">访问者地址</span>
                             <strong>{{ user_ip }}</strong>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">服务器 IP</span>
+                            <span class="info-label">服务器地址</span>
                             <strong>{{ server_ip }}</strong>
                         </div>
                     </div>
                 </section>
             </aside>
 
-            <section class="right-panel" aria-label="预留区域"></section>
+            <section class="right-panel" aria-label="用户页面内容区">
+                <section class="right-card comments-card compact-comments">
+                    <div class="comment-header">
+                        <div>
+                            <h2>评论区</h2>
+                            <p>这里复用通用工具的评论数据。</p>
+                        </div>
+
+                        <select id="commentSort">
+                            <option value="time">按时间排序</option>
+                            <option value="hot">按热度排序</option>
+                        </select>
+                    </div>
+
+                    <form
+                        id="commentForm"
+                        class="comment-form"
+                        data-page-key="tools"
+                        data-page-size="5"
+                        data-autoload="true"
+                    >
+                        <input
+                            id="commentNickname"
+                            type="text"
+                            maxlength="30"
+                            placeholder="昵称，可不填"
+                        >
+
+                        <textarea
+                            id="commentContent"
+                            maxlength="500"
+                            placeholder="写一条评论..."
+                            required
+                        ></textarea>
+
+                        <button type="submit">发布评论</button>
+                    </form>
+
+                    <p id="commentMessage" class="comment-message"></p>
+
+                    <div id="commentList" class="comment-list">
+                        <p class="comment-empty">正在加载评论...</p>
+                    </div>
+
+                    <div class="comment-pagination">
+                        <button id="commentPrev" type="button">上一页</button>
+                        <span id="commentPageInfo">第 1 页 / 共 1 页</span>
+                        <button id="commentNext" type="button">下一页</button>
+                    </div>
+                </section>
+
+                <section class="right-card ai-card">
+                    <div
+                        id="aiRecommendRoot"
+                        class="ai-recommend-root embedded-ai"
+                        data-page="user"
+                        data-api-url="/api/ai/tools/chat"
+                        data-mode="chat"
+                        data-embedded="true"
+                    >
+                        <button id="aiRecommendBtn" class="ai-recommend-btn" type="button" title="智能对话">智能</button>
+
+                        <div id="aiRecommendPanel" class="ai-recommend-panel">
+                            <div class="ai-recommend-header">
+                                <span>智能对话</span>
+                                <button id="aiRecommendClose" type="button" aria-label="关闭">×</button>
+                            </div>
+
+                            <div id="aiRecommendMessages" class="ai-recommend-messages">
+                                <div class="ai-msg ai-msg-bot">有什么想问的，可以直接在这里发送。</div>
+                            </div>
+
+                            <form id="aiRecommendForm" class="ai-recommend-form">
+                                <input
+                                    id="aiRecommendInput"
+                                    type="text"
+                                    placeholder="例如：帮我写一段说明"
+                                    autocomplete="off"
+                                >
+                                <button type="submit">发送</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </section>
         </section>
     </main>
 
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_recommend.css') }}">
+    <script src="{{ url_for('static', filename='js/comments.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai_recommend.js') }}"></script>
 </body>
 </html>

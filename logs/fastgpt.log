@@ -351,3 +351,13 @@
 2026-06-04 13:44:27 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
 2026-06-04 13:44:27 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
 2026-06-04 13:44:27 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 14:19:01 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 14:19:01 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 14:19:01 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 14:19:01 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 14:19:01 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 14:29:08 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 14:29:08 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 14:29:08 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 14:29:08 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 14:29:08 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i

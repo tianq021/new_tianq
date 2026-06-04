@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const avatar = document.createElement("span");
         avatar.className = "avatar";
-        avatar.textContent = role === "user" ? "我" : "AI";
+        avatar.textContent = role === "user" ? "我" : "助手";
 
         const bubble = document.createElement("div");
         bubble.className = "bubble";
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const avatar = document.createElement("span");
         avatar.className = "avatar";
-        avatar.textContent = "AI";
+        avatar.textContent = "助手";
 
         message.appendChild(avatar);
         message.appendChild(card);
