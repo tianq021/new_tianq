@@ -38,6 +38,14 @@ FASTGPT_TOOL_PROFILES = {
 }
 
 
+def execute_schema_file(cursor, schema_path):
+    schema_sql = schema_path.read_text(encoding="utf-8")
+    for statement in schema_sql.split(";"):
+        statement = statement.strip()
+        if statement:
+            cursor.execute(statement)
+
+
 def load_json(path, default):
     if not path.exists():
         return default
@@ -45,11 +53,9 @@ def load_json(path, default):
 
 
 def ensure_schema(cursor):
-    schema_sql = (BASE_DIR / "scripts" / "database" / "schema_ai_tools.sql").read_text(encoding="utf-8")
-    for statement in schema_sql.split(";"):
-        statement = statement.strip()
-        if statement:
-            cursor.execute(statement)
+    database_dir = BASE_DIR / "scripts" / "database"
+    execute_schema_file(cursor, database_dir / "schema_ai_tools.sql")
+    execute_schema_file(cursor, database_dir / "schema_comments.sql")
 
     cursor.execute("SHOW COLUMNS FROM ai_chat_profiles LIKE 'tool_key'")
     if not cursor.fetchone():
