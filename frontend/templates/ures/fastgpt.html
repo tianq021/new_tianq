@@ -12,13 +12,14 @@
 <div class="page">
     <header class="top-header">
         <div class="header-left">
-            <a class="header-link" href="/" aria-label="返回首页">←</a>
+            <a class="header-link" href="{{ url_for('page.user_home') }}" aria-label="返回首页">←</a>
             <a class="logo" href="/fastgpt">FastGPT</a>
             <span class="header-desc">对话工作台</span>
         </div>
 
         <div class="header-right">
             <span class="header-pill">{{ tools|length }} 个工具</span>
+            <a class="header-text-link" href="{{ url_for('page.logout') }}">退出登录</a>
         </div>
     </header>
 
@@ -106,15 +107,6 @@
                 </div>
 
                 <form id="fastgptMainChatForm" class="chat-input-area">
-                    <div id="resumeUploadBar" class="resume-upload-bar" hidden>
-                        <label for="fastgptResumeFile">上传简历文件</label>
-                        <input
-                            id="fastgptResumeFile"
-                            type="file"
-                            accept=".pdf,.doc,.docx,.txt,.md,.csv,.json"
-                        >
-                        <span id="resumeFileName">未选择文件</span>
-                    </div>
 
                     <div class="chat-input-bar">
                         <input

@@ -215,7 +215,8 @@ small {
     overflow-wrap: anywhere;
 }
 
-#tool-source {
+#tool-source,
+#fastgpt-log-limit {
     min-height: 38px;
     border: 1px solid #cdd7e4;
     border-radius: 8px;
@@ -239,7 +240,9 @@ small {
 
 .tool-row {
     display: grid;
-    gap: 4px;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px;
     width: 100%;
     padding: 12px;
     text-align: left;
@@ -247,6 +250,39 @@ small {
     border-radius: 8px;
     background: #f8fafc;
     cursor: pointer;
+}
+
+.tool-row-main {
+    display: grid;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
+.tool-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: end;
+}
+
+.small-button {
+    min-height: 30px;
+    padding: 0 8px;
+    border: 1px solid #cdd7e4;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #255f85;
+    cursor: pointer;
+}
+
+.small-button:disabled {
+    color: #9aa5b1;
+    cursor: not-allowed;
 }
 
 .tool-row strong,
@@ -320,6 +356,56 @@ small {
 #tool-status {
     color: #376345;
     font-size: 14px;
+}
+
+.log-list {
+    display: grid;
+    gap: 10px;
+}
+
+.log-row {
+    padding: 14px;
+    border: 1px solid #dce3ee;
+    border-left: 4px solid #376345;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.log-row.error {
+    border-left-color: #b42318;
+}
+
+.log-row-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.log-row-head span {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #e8f2ec;
+    color: #376345;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.log-row.error .log-row-head span {
+    background: #fdecec;
+    color: #b42318;
+}
+
+.log-row p {
+    margin: 6px 0 0;
+    color: #526174;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.log-error {
+    color: #b42318 !important;
 }
 
 @media (max-width: 860px) {

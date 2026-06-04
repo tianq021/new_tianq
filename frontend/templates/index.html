@@ -9,70 +9,70 @@
 
 <body>
     <main class="page">
-        <section class="workspace-shell">
-            <header class="workspace-header">
-                <div>
-                    <p class="eyebrow">Local Workspace</p>
-                    <h1>本地工具工作台</h1>
-                    <p class="desc">
-                        集中管理 FastGPT 调用、通用工具测试和数据分析入口，后续新增页面可以继续扩展到这里。
-                    </p>
-                </div>
-
-                <div class="time-panel" aria-label="本地时间">
-                    <span class="time-label">当前时间</span>
-                    <strong id="timeText" aria-live="polite">加载中...</strong>
-                </div>
-            </header>
-
-            <section class="tool-section" aria-labelledby="toolSectionTitle">
-                <div class="section-heading">
+        <section class="workspace-layout">
+            <aside class="left-panel">
+                <header class="workspace-header">
                     <div>
-                        <h2 id="toolSectionTitle">功能入口</h2>
-                        <p>按模块进入不同测试和分析页面。</p>
+                        <p class="eyebrow">Local Workspace</p>
+                        <h1>本地工具工作台</h1>
+                        <p class="desc">选择一个功能开始使用。</p>
                     </div>
-                    <span class="section-count">3 个模块</span>
-                </div>
+                    <a class="logout-link" href="{{ url_for('page.logout') }}">退出登录</a>
+                </header>
 
-                <div class="tool-grid">
-                    <a class="tool-card" href="/fastgpt">
-                        <span class="tool-tag ai">AI</span>
-                        <h3>FastGPT 调用</h3>
-                        <p>进入 FastGPT 工作流调用与接口测试页面。</p>
-                    </a>
-
-                    <a class="tool-card" href="/tools">
-                        <span class="tool-tag utility">Tools</span>
-                        <h3>通用工具</h3>
-                        <p>使用哈希计算、文件工具、评论区等通用测试能力。</p>
-                    </a>
-
-                    <a class="tool-card" href="/data_analy">
-                        <span class="tool-tag data">Data</span>
-                        <h3>数据分析</h3>
-                        <p>上传文件后展示后端返回的数据、图表和分析结果。</p>
-                    </a>
-                </div>
-            </section>
-
-            <section class="info-section" aria-labelledby="infoSectionTitle">
-                <div>
-                    <h2 id="infoSectionTitle">运行信息</h2>
-                    <p>用于本地调试时快速确认访问来源和服务地址。</p>
-                </div>
-
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">访问者 IP</span>
-                        <strong>{{ user_ip }}</strong>
+                <section class="tool-section" aria-labelledby="toolSectionTitle">
+                    <div class="section-heading">
+                        <div>
+                            <h2 id="toolSectionTitle">功能</h2>
+                            <p>当前可用 2 个模块。</p>
+                        </div>
                     </div>
 
-                    <div class="info-item">
-                        <span class="info-label">服务器 IP</span>
-                        <strong>{{ server_ip }}</strong>
+                    <div class="tool-list">
+                        <a class="tool-card" href="{{ url_for('page.fastgpt') }}">
+                            <span class="tool-tag ai">AI</span>
+                            <div>
+                                <h3>FastGPT 调用</h3>
+                                <p>工作流调用与接口测试。</p>
+                            </div>
+                        </a>
+
+                        <a class="tool-card" href="{{ url_for('page.tools') }}">
+                            <span class="tool-tag utility">Tools</span>
+                            <div>
+                                <h3>通用工具</h3>
+                                <p>哈希、Base64、评论区等工具。</p>
+                            </div>
+                        </a>
                     </div>
-                </div>
-            </section>
+                </section>
+
+                <section class="info-section" aria-labelledby="infoSectionTitle">
+                    <div class="section-heading">
+                        <div>
+                            <h2 id="infoSectionTitle">信息</h2>
+                            <p>本地调试信息。</p>
+                        </div>
+                    </div>
+
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">当前时间</span>
+                            <strong id="timeText" aria-live="polite">加载中...</strong>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">访问者 IP</span>
+                            <strong>{{ user_ip }}</strong>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">服务器 IP</span>
+                            <strong>{{ server_ip }}</strong>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="right-panel" aria-label="预留区域"></section>
         </section>
     </main>
 

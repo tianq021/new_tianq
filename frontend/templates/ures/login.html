@@ -7,17 +7,23 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
+    <div class="ambient-bg" aria-hidden="true">
+        <span class="shape shape-one"></span>
+        <span class="shape shape-two"></span>
+        <span class="shape shape-three"></span>
+    </div>
+
     <main class="login-shell">
         <section class="login-panel">
-            <div class="login-copy">
-                <p class="eyebrow">NEW TIANQ</p>
-                <h1>选择身份进入系统</h1>
-                <p>管理员可以查看并维护接口说明，普通用户进入工具使用页面。</p>
-            </div>
+            <aside class="quote-panel" aria-label="名人名言" data-quote-url="{{ url_for('common_api.get_quote') }}">
+                <p class="eyebrow">QUOTE</p>
+                <blockquote id="loginQuote">{{ login_quote }}</blockquote>
+                <cite id="loginQuoteAuthor"></cite>
+            </aside>
 
             <form class="login-form" action="{{ url_for('page.login') }}" method="post">
                 <fieldset class="role-group">
-                    <legend>登录身份</legend>
+                    <legend>登录</legend>
                     <label class="role-card">
                         <input type="radio" name="role" value="user" checked>
                         <span>用户</span>
@@ -30,7 +36,7 @@
 
                 <label class="password-field">
                     <span>管理员密码</span>
-                    <input type="password" name="password" placeholder="普通用户可留空">
+                    <input id="adminPassword" type="password" name="password" placeholder="普通用户可留空">
                 </label>
 
                 {% if error %}
@@ -41,5 +47,7 @@
             </form>
         </section>
     </main>
+
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>

@@ -9,9 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const chatForm = document.getElementById("fastgptMainChatForm");
     const chatInput = document.getElementById("fastgptMainChatInput");
     const chatSubmit = document.getElementById("fastgptMainChatSubmit");
-    const resumeUploadBar = document.getElementById("resumeUploadBar");
-    const resumeFileInput = document.getElementById("fastgptResumeFile");
-    const resumeFileName = document.getElementById("resumeFileName");
     const openButton = document.getElementById("openSelectedTool");
     let selectedUrl = "";
     let selectedId = "";
@@ -89,23 +86,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function updateResumeUploadState() {
-        if (!resumeUploadBar) {
-            return;
-        }
-
-        const isResumeTool = selectedId === "resume_preparation";
-        resumeUploadBar.hidden = !isResumeTool;
-
-        if (!isResumeTool && resumeFileInput) {
-            resumeFileInput.value = "";
-        }
-
-        if (!isResumeTool && resumeFileName) {
-            resumeFileName.textContent = "未选择文件";
-        }
-    }
-
     function selectTool(item) {
         if (requestRunning) {
             return;
@@ -132,9 +112,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (openButton) {
             openButton.disabled = !selectedUrl;
+            openButton.textContent = selectedUrl ? "开始使用" : "未配置链接";
+            openButton.title = selectedUrl ? "打开 FastGPT 对话页面" : "请在后台为该工具配置 URL";
         }
 
-        updateResumeUploadState();
         loadToolSession(getSessionId());
     }
 
@@ -229,22 +210,20 @@ document.addEventListener("DOMContentLoaded", function () {
             title: selectedTitle,
             url: selectedUrl
         };
-        const selectedFile = resumeFileInput && resumeFileInput.files.length > 0
-            ? resumeFileInput.files[0]
-            : null;
-        const body = new FormData();
-        body.append("message", buildMessage(message));
-        body.append("page", "fastgpt");
-        body.append("selected_tool", JSON.stringify(selectedTool));
+        const body = {
+            message: buildMessage(message),
+            page: "fastgpt",
+            selected_tool: selectedTool
+        };
 
-        if (selectedFile) {
-            body.append("file", selectedFile);
-        }
 
         try {
             const response = await fetch(apiUrl, {
                 method: "POST",
-                body: body
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(body)
             });
             const data = await response.json();
 
@@ -314,27 +293,15 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault();
 
             let message = chatInput.value.trim();
-            const selectedFile = resumeFileInput && resumeFileInput.files.length > 0
-                ? resumeFileInput.files[0]
-                : null;
 
-            if ((!message && !selectedFile) || chatSubmit.disabled) {
+            if (!message || chatSubmit.disabled) {
                 return;
             }
 
-            if (!message && selectedFile) {
-                message = "请整理这份简历";
-            }
 
             chatInput.value = "";
             submitMainChat(message);
         });
     }
 
-    if (resumeFileInput && resumeFileName) {
-        resumeFileInput.addEventListener("change", function () {
-            const file = resumeFileInput.files[0];
-            resumeFileName.textContent = file ? file.name : "未选择文件";
-        });
-    }
 });

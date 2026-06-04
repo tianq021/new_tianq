@@ -35,9 +35,11 @@ CREATE TABLE IF NOT EXISTS ai_tool_keywords (
 CREATE TABLE IF NOT EXISTS ai_chat_profiles (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     profile_key VARCHAR(100) NOT NULL UNIQUE,
+    tool_key VARCHAR(100) DEFAULT NULL,
     name VARCHAR(100) NOT NULL,
     mode VARCHAR(30) NOT NULL DEFAULT 'chat',
-    api_key_env VARCHAR(100) NOT NULL,
+    api_key TEXT NULL,
+    api_key_env VARCHAR(100) DEFAULT NULL,
     chat_id VARCHAR(100) NOT NULL,
     system_prompt TEXT,
     tool_source VARCHAR(30) DEFAULT NULL,
@@ -46,6 +48,16 @@ CREATE TABLE IF NOT EXISTS ai_chat_profiles (
     config_json JSON NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_ai_chat_profiles_tool_key (tool_key),
     INDEX idx_ai_chat_profiles_mode_enabled (mode, enabled),
     INDEX idx_ai_chat_profiles_tool_source (tool_source)
+);
+
+CREATE TABLE IF NOT EXISTS api_endpoint_meta (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    endpoint VARCHAR(150) NOT NULL UNIQUE,
+    title VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

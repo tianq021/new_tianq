@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
-import os
-import re
 import time
-import zipfile
-from io import BytesIO
 from urllib.error import HTTPError, URLError
-from xml.etree import ElementTree
 
 from flask import Blueprint, jsonify, request
 
@@ -16,6 +11,7 @@ from backend.services.ai_service import (
     run_ai_recommend
 )
 from backend.services.fastgpt_tool_srore import load_tools as load_fastgpt_tools
+from backend.services.tool_store_db import load_chat_profile, load_chat_profile_by_tool
 from backend.utils.logger_config import ai_chat_logger
 
 
@@ -115,86 +111,11 @@ def get_ai_message():
         data = request.get_json(silent=True) or {}
         message = str(data.get("message", "")).strip()
 
-    message = append_uploaded_file_context(message)
 
     if not message:
         raise ValueError("请输入需要咨询的内容")
 
     return message
-
-
-def append_uploaded_file_context(message):
-    uploaded_file = request.files.get("file")
-    if not uploaded_file or not uploaded_file.filename:
-        return message
-
-    filename = uploaded_file.filename
-    content_type = uploaded_file.mimetype or "application/octet-stream"
-    raw = uploaded_file.read()
-    uploaded_file.stream.seek(0)
-    size = len(raw)
-    max_inline_size = 800_000
-
-    file_note = (
-        "\n\n[上传文件]\n"
-        f"文件名：{filename}\n"
-        f"类型：{content_type}\n"
-        f"大小：{size} bytes"
-    )
-
-    file_text = extract_uploaded_file_text(filename, content_type, raw, max_inline_size)
-
-    if file_text:
-        file_note += f"\n内容：\n{file_text}"
-    else:
-        file_note += "\n说明：该文件已随请求上传；如果需要把 PDF/DOCX 原文件传给 FastGPT，需要继续接入 FastGPT 文件上传接口。"
-
-    return f"{message}{file_note}"
-
-
-def extract_uploaded_file_text(filename, content_type, raw, max_inline_size):
-    lower_name = filename.lower()
-
-    if len(raw) > max_inline_size:
-        return ""
-
-    if content_type.startswith("text/") or lower_name.endswith((".txt", ".md", ".csv", ".json")):
-        try:
-            return raw.decode("utf-8").strip()
-        except UnicodeDecodeError:
-            return raw.decode("gb18030", errors="ignore").strip()
-
-    if lower_name.endswith(".docx"):
-        return extract_docx_text(raw)
-
-    return ""
-
-
-def extract_docx_text(raw):
-    try:
-        with zipfile.ZipFile(BytesIO(raw)) as docx:
-            xml_text = docx.read("word/document.xml")
-    except (KeyError, zipfile.BadZipFile):
-        return ""
-
-    try:
-        root = ElementTree.fromstring(xml_text)
-    except ElementTree.ParseError:
-        return ""
-
-    namespace = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
-    paragraphs = []
-
-    for paragraph in root.findall(".//w:p", namespace):
-        parts = [
-            text_node.text or ""
-            for text_node in paragraph.findall(".//w:t", namespace)
-        ]
-        text = "".join(parts).strip()
-        if text:
-            paragraphs.append(text)
-
-    return re.sub(r"\n{3,}", "\n\n", "\n".join(paragraphs)).strip()
 
 
 def get_selected_fastgpt_tool_id():
@@ -213,24 +134,19 @@ def get_selected_fastgpt_tool_id():
 
 
 def get_fastgpt_tool_profile(tool_id):
-    profiles = {
-        "translator": {
-            "chat_id": os.getenv("FASTGPT_TRANSLATOR_CHAT_ID", "translator"),
-            "api_key_env": "FASTGPT_TRANSLATOR_API_KEY"
-        },
-        "resume_preparation": {
-            "chat_id": os.getenv("FASTGPT_RESUME_CHAT_ID", "resume_preparation"),
-            "api_key_env": "FASTGPT_RESUME_API_KEY"
-        },
-        "receipt-ocr": {
-            "chat_id": os.getenv("FASTGPT_RECEIPT_CHAT_ID", "receipt-ocr"),
-            "api_key_env": "FASTGPT_RECEIPT_API_KEY"
-        }
-    }
-    return profiles.get(tool_id)
+    if not tool_id:
+        return None
+    return load_chat_profile_by_tool(tool_id)
 
 
-def chat_response(message, chat_id, api_key_env):
+def get_required_chat_profile(profile_key):
+    profile = load_chat_profile(profile_key)
+    if not profile:
+        raise RuntimeError(f"未配置 AI 会话配置: {profile_key}")
+    return profile
+
+
+def chat_response(message, chat_id, api_key_env=None, api_key=None):
     """
     Called by: tools_ai_chat().
     Purpose: Run a normal AI chat request, log the conversation, and convert errors into JSON responses.
@@ -238,7 +154,7 @@ def chat_response(message, chat_id, api_key_env):
     started_at = time.perf_counter()
 
     try:
-        result = run_ai_chat(message, chat_id, api_key_env)
+        result = run_ai_chat(message, chat_id, api_key_env, api_key=api_key)
         log_ai_chat_event(
             success=True,
             chat_id=chat_id,
@@ -294,7 +210,7 @@ def chat_response(message, chat_id, api_key_env):
 
 
 
-def recommend_response(tools, message, chat_id, api_key_env):
+def recommend_response(tools, message, chat_id, api_key_env=None, api_key=None):
     """
     Called by: fastgpt_ai_recommend().
     Purpose: Run AI tool recommendation, log the conversation, and convert errors into JSON responses.
@@ -302,7 +218,7 @@ def recommend_response(tools, message, chat_id, api_key_env):
     started_at = time.perf_counter()
 
     try:
-        result = run_ai_recommend(tools, message, chat_id, api_key_env)
+        result = run_ai_recommend(tools, message, chat_id, api_key_env, api_key=api_key)
         log_ai_chat_event(
             success=True,
             chat_id=chat_id,
@@ -390,10 +306,19 @@ def tools_ai_chat():
             "message": str(e)
         }), 400
 
+    try:
+        profile = get_required_chat_profile("tools_chat")
+    except RuntimeError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
     return chat_response(
         message,
-        chat_id="tools-chat",
-        api_key_env="FASTGPT_TOOLS_RECOMMEND_API_KEY"
+        chat_id=profile["chat_id"],
+        api_key_env=profile.get("api_key_env") or None,
+        api_key=profile.get("api_key") or None
     )
 
 
@@ -433,16 +358,26 @@ def fastgpt_ai_recommend():
         response = chat_response(
             message,
             chat_id=selected_tool_profile["chat_id"],
-            api_key_env=selected_tool_profile["api_key_env"]
+            api_key_env=selected_tool_profile.get("api_key_env") or None,
+            api_key=selected_tool_profile.get("api_key") or None
         )
         mark_fastgpt_response_finished()
         return response
 
+    try:
+        recommend_profile = get_required_chat_profile("fastgpt_recommend")
+    except RuntimeError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
     response = recommend_response(
         load_fastgpt_tools(),
         message,
-        chat_id=os.getenv("FASTGPT_RECOMMEND_CHAT_ID", "fastgpt-recommend"),
-        api_key_env="FASTGPT_RECOMMEND_API_KEY"
+        chat_id=recommend_profile["chat_id"],
+        api_key_env=recommend_profile.get("api_key_env") or None,
+        api_key=recommend_profile.get("api_key") or None
     )
     mark_fastgpt_response_finished()
     return response

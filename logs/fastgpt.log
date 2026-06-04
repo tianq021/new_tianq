@@ -240,3 +240,114 @@
 2026-06-01 16:48:46 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
 2026-06-01 16:48:46 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
 2026-06-01 16:48:46 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 08:27:48 | INFO | fastgpt | FastGPT 工具数据库读取成功 | enabled=3
+2026-06-04 08:27:48 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 08:27:48 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 08:27:48 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 08:28:22 | INFO | fastgpt | FastGPT 工具数据库读取成功 | enabled=3
+2026-06-04 08:28:22 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 08:28:22 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 08:28:22 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 08:35:14 | INFO | fastgpt | FastGPT 工具数据库读取成功 | enabled=3
+2026-06-04 08:35:14 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 08:35:14 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 08:35:14 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 08:49:26 | INFO | fastgpt | FastGPT 工具数据库读取成功 | enabled=3
+2026-06-04 08:49:26 | INFO | fastgpt | FastGPT 工具加载 | id=translator | title=FastGPT 翻译官 | category=文本工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 08:49:26 | INFO | fastgpt | FastGPT 工具加载 | id=resume_preparation | title=FastGPT 简历整理 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 08:49:26 | INFO | fastgpt | FastGPT 工具加载 | id=receipt-ocr | title=FastGPT 票据识别 | category=文档工具 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:08:46 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:08:46 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:08:46 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:08:46 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:08:46 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 09:17:09 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:17:09 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:17:09 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:17:09 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:17:09 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT ?????? | category=???? | url=
+2026-06-04 09:20:03 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:20:03 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:20:03 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:20:03 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:20:03 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=
+2026-06-04 09:39:11 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:39:11 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:39:11 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:39:11 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:39:11 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=
+2026-06-04 09:43:02 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:43:02 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:43:02 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:43:02 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:43:02 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=
+2026-06-04 09:44:45 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:44:45 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:44:45 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:44:45 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:44:45 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=
+2026-06-04 09:45:53 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:45:53 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:45:53 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:45:53 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:45:53 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 09:46:58 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:46:58 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:46:58 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:46:58 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:46:58 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 09:49:02 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:49:02 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:49:02 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:49:02 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:49:02 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 09:54:36 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 09:54:36 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 09:54:36 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 09:54:36 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 09:54:36 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:31:00 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:31:00 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:31:00 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:31:00 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:31:00 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:36:49 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:36:49 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:36:49 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:36:49 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:36:49 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:36:53 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:36:53 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:36:53 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:36:53 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:36:53 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:43:53 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:43:53 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:43:53 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:43:53 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:43:53 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:43:57 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:43:57 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:43:57 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:43:57 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:43:57 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:43:58 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:43:58 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:43:58 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:43:58 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:43:58 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:43:59 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i
+2026-06-04 13:44:27 | INFO | fastgpt | FastGPT tools loaded from database | enabled=4
+2026-06-04 13:44:27 | INFO | fastgpt | FastGPT tool loaded | id=translator | title=FastGPT 翻译官 | category=翻译处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=wyRT****rxG6
+2026-06-04 13:44:27 | INFO | fastgpt | FastGPT tool loaded | id=resume_preparation | title=FastGPT 简历整理 | category=简历处理 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=nSNL****h8fU
+2026-06-04 13:44:27 | INFO | fastgpt | FastGPT tool loaded | id=receipt-ocr | title=FastGPT 票据识别 | category=票据识别 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=h3eq****mACB
+2026-06-04 13:44:27 | INFO | fastgpt | FastGPT tool loaded | id=meeting-document | title=FastGPT 会议文档详解 | category=会议文档 | url=https://fastgpt.nsi-soft.com/chat/share?shareId=cQgl****d30i

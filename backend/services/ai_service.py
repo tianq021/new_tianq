@@ -59,18 +59,19 @@ def extract_text_from_fastgpt_response(data):
     return ""
 
 
-def call_fastgpt_api(system_prompt, user_prompt, chat_id, api_key_env):
+def call_fastgpt_api(system_prompt, user_prompt, chat_id, api_key_env=None, api_key=None):
     """
     Called by: run_ai_chat() and run_ai_recommend().
     Purpose: Send a non-streaming chat completion request to FastGPT and return the reply text.
     调用方：run_ai_chat() 和 run_ai_recommend() 调用。
     作用：向 FastGPT 发送非流式对话请求，带重试处理，并返回模型回复文本。
     """
-    api_key = os.getenv(api_key_env)
+    api_key = api_key or (os.getenv(api_key_env) if api_key_env else "")
+    api_key_label = api_key_env or "database"
     base_url = os.getenv("FASTGPT_BASE_URL", "").rstrip("/")
 
     if not api_key:
-        raise RuntimeError(f"未配置 {api_key_env}")
+        raise RuntimeError(f"未配置 FastGPT API Key: {api_key_label}")
 
     if not base_url:
         raise RuntimeError("未配置 FASTGPT_BASE_URL")
@@ -117,13 +118,13 @@ def call_fastgpt_api(system_prompt, user_prompt, chat_id, api_key_env):
             if attempt >= max_attempts:
                 error_logger.exception(
                     f"FastGPT 网络请求失败 | chat_id={chat_id} | "
-                    f"api_key_env={api_key_env} | attempts={attempt}"
+                    f"api_key_env={api_key_label} | attempts={attempt}"
                 )
                 raise
 
             error_logger.error(
                 f"FastGPT 网络请求重试 | chat_id={chat_id} | "
-                f"api_key_env={api_key_env} | attempt={attempt} | error={e}"
+                f"api_key_env={api_key_label} | attempt={attempt} | error={e}"
             )
             time.sleep(0.8 * attempt)
 
@@ -305,7 +306,7 @@ def normalize_ai_tools(ai_tools, tools, limit=3):
     return normalized
 
 
-def run_ai_chat(message, chat_id, api_key_env):
+def run_ai_chat(message, chat_id, api_key_env=None, api_key=None):
     """
     Called by: routes.ai_routes.chat_response().
     Purpose: Ask FastGPT for a normal conversational reply and return the frontend response payload.
@@ -322,7 +323,8 @@ def run_ai_chat(message, chat_id, api_key_env):
         system_prompt,
         message,
         chat_id=chat_id,
-        api_key_env=api_key_env
+        api_key_env=api_key_env,
+        api_key=api_key
     )
 
     return {
@@ -332,7 +334,7 @@ def run_ai_chat(message, chat_id, api_key_env):
     }
 
 
-def run_ai_recommend(tools, message, chat_id, api_key_env):
+def run_ai_recommend(tools, message, chat_id, api_key_env=None, api_key=None):
     """
     Called by: routes.ai_routes.recommend_response().
     Purpose: Ask FastGPT to recommend tools from the provided list and normalize the response payload.
@@ -360,7 +362,8 @@ def run_ai_recommend(tools, message, chat_id, api_key_env):
         system_prompt,
         user_prompt,
         chat_id=chat_id,
-        api_key_env=api_key_env
+        api_key_env=api_key_env,
+        api_key=api_key
     )
     result = parse_model_json_reply(reply)
     result["tools"] = normalize_ai_tools(result.get("tools", []), tools)

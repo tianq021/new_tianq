@@ -12,7 +12,7 @@
     "id": "resume_preparation",
     "group": "文档能力",
     "title": "FastGPT 简历整理",
-    "desc": "上传或输入简历内容，让 AI 自动识别并返回结构化结果。",
+    "desc": "输入或粘贴简历文本内容，让 AI 自动识别并返回结构化整理结果。",
     "url": "https://fastgpt.nsi-soft.com/chat/share?shareId=nSNLCLP2jWizS3u0XUiih8fU",
     "category": "简历处理",
     "enabled": true
@@ -21,9 +21,18 @@
     "id": "receipt-ocr",
     "group": "文档能力",
     "title": "FastGPT 票据识别",
-    "desc": "上传票据图片、PDF 或文档，自动识别金额、日期、项目名称等信息。",
+    "desc": "输入或粘贴票据文本内容，辅助整理金额、日期、项目名称等信息；原始文件请使用 FastGPT 原生页面。",
     "url": "https://fastgpt.nsi-soft.com/chat/share?shareId=h3eqmNPDUyIK0sD9Kj4dmACB",
     "category": "票据识别",
+    "enabled": true
+  },
+  {
+    "id": "meeting-document",
+    "group": "文档能力",
+    "title": "FastGPT 会议文档详解",
+    "desc": "输入或粘贴会议文档文本内容，返回会议纪要、议题结论、待办事项和数据详解。",
+    "url": "https://fastgpt.nsi-soft.com/chat/share?shareId=cQglwma2I3PHEkjJpb9dd30i",
+    "category": "会议文档",
     "enabled": true
   }
 ]

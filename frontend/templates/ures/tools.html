@@ -10,12 +10,14 @@
 <div class="page">
     <header class="top-header">
         <div class="header-left">
-            <a class="header-link" href="/">返回首页</a>
+            <a class="header-link" href="{{ url_for('page.user_home') }}">返回首页</a>
             <a class="logo" href="/tools">工具中心</a>
             <span class="header-desc">本地工具集合页面</span>
         </div>
 
-        <div class="header-right"></div>
+        <div class="header-right">
+            <a class="header-link" href="{{ url_for('page.logout') }}">退出登录</a>
+        </div>
     </header>
 
     <div class="layout">

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 import sys
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE_DIR))
@@ -11,44 +14,68 @@ from backend.services.db import get_db
 
 LOCAL_TOOLS_FILE = BASE_DIR / "data" / "tools" / "tool_data.json"
 FASTGPT_TOOLS_FILE = BASE_DIR / "data" / "fastgpt" / "fastgpt_tools.json"
+CUSTOM_TOOLS_FILE = BASE_DIR / "data" / "admin" / "custom_tools.json"
+API_META_FILE = BASE_DIR / "data" / "admin" / "api_endpoints.json"
+
+load_dotenv(BASE_DIR / ".env")
+
+TOOL_BASE_FIELDS = {
+    "id",
+    "title",
+    "desc",
+    "category",
+    "type",
+    "url",
+    "enabled",
+    "default"
+}
+
+FASTGPT_TOOL_PROFILES = {
+    "translator": ("FASTGPT_TRANSLATOR_API_KEY", "FASTGPT_TRANSLATOR_CHAT_ID", "translator", "FastGPT 翻译官"),
+    "resume_preparation": ("FASTGPT_RESUME_API_KEY", "FASTGPT_RESUME_CHAT_ID", "resume_preparation", "FastGPT 简历整理"),
+    "receipt-ocr": ("FASTGPT_RECEIPT_API_KEY", "FASTGPT_RECEIPT_CHAT_ID", "receipt-ocr", "FastGPT 票据识别"),
+    "meeting-document": ("FASTGPT_MEETING_API_KEY", "FASTGPT_MEETING_CHAT_ID", "meeting-document", "FastGPT 会议文档详解")
+}
 
 
-def load_json_list(path):
-    """
-    Called by: import_tools().
-    Purpose: Read a JSON file that is expected to contain a list of tool records.
-    调用方：import_tools() 调用。
-    作用：读取预期为工具列表的 JSON 文件并返回解析结果。
-    """
+def load_json(path, default):
+    if not path.exists():
+        return default
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def ensure_schema(cursor):
+    schema_sql = (BASE_DIR / "scripts" / "database" / "schema_ai_tools.sql").read_text(encoding="utf-8")
+    for statement in schema_sql.split(";"):
+        statement = statement.strip()
+        if statement:
+            cursor.execute(statement)
+
+    cursor.execute("SHOW COLUMNS FROM ai_chat_profiles LIKE 'tool_key'")
+    if not cursor.fetchone():
+        cursor.execute("ALTER TABLE ai_chat_profiles ADD COLUMN tool_key VARCHAR(100) DEFAULT NULL AFTER profile_key")
+        cursor.execute("CREATE INDEX idx_ai_chat_profiles_tool_key ON ai_chat_profiles (tool_key)")
+
+    cursor.execute("SHOW COLUMNS FROM ai_chat_profiles LIKE 'api_key'")
+    if not cursor.fetchone():
+        cursor.execute("ALTER TABLE ai_chat_profiles ADD COLUMN api_key TEXT NULL AFTER mode")
+
+    cursor.execute("SHOW COLUMNS FROM ai_chat_profiles LIKE 'api_key_env'")
+    api_key_env_column = cursor.fetchone()
+    if api_key_env_column and api_key_env_column.get("Null") == "NO":
+        cursor.execute("ALTER TABLE ai_chat_profiles MODIFY api_key_env VARCHAR(100) DEFAULT NULL")
+
+
 def upsert_tool(cursor, tool, source, sort_order):
-    """
-    Called by: import_tools().
-    Purpose: Insert or update one tool record in ai_tools and return its database id.
-    调用方：import_tools() 调用。
-    作用：向 ai_tools 表插入或更新一条工具记录，并返回该工具的数据库 id。
-    """
     tool_key = str(tool.get("id", "")).strip()
     title = str(tool.get("title", "")).strip()
-
     if not tool_key or not title:
         return None
 
     config = {
         key: value
         for key, value in tool.items()
-        if key not in {
-            "id",
-            "title",
-            "desc",
-            "category",
-            "type",
-            "url",
-            "enabled",
-            "default"
-        }
+        if key not in TOOL_BASE_FIELDS
     }
 
     cursor.execute(
@@ -94,26 +121,18 @@ def upsert_tool(cursor, tool, source, sort_order):
             json.dumps(config, ensure_ascii=False) if config else None
         )
     )
-
-    cursor.execute(
-        "SELECT id FROM ai_tools WHERE tool_key = %s",
-        (tool_key,)
-    )
-    row = cursor.fetchone()
-    return row["id"] if row else None
+    return tool_key
 
 
-def upsert_keyword(cursor, tool_id, keyword, weight):
-    """
-    Called by: import_tools().
-    Purpose: Insert or update one keyword weight for a tool in ai_tool_keywords.
-    调用方：import_tools() 调用。
-    作用：向 ai_tool_keywords 表插入或更新某个工具的关键词权重。
-    """
+def upsert_keyword(cursor, tool_key, keyword, weight):
     keyword = str(keyword or "").strip()
+    if not tool_key or not keyword:
+        return False
 
-    if not tool_id or not keyword:
-        return
+    cursor.execute("SELECT id FROM ai_tools WHERE tool_key = %s", (tool_key,))
+    row = cursor.fetchone()
+    if not row:
+        return False
 
     cursor.execute(
         """
@@ -122,33 +141,45 @@ def upsert_keyword(cursor, tool_id, keyword, weight):
         ON DUPLICATE KEY UPDATE
             weight = VALUES(weight)
         """,
-        (tool_id, keyword, weight)
+        (row["id"], keyword, weight)
     )
+    return True
 
 
-def seed_profile(cursor, profile_key, name, mode, api_key_env, chat_id, system_prompt, tool_source, require_json):
-    """
-    Called by: import_tools().
-    Purpose: Insert or update one AI chat profile used by chat/recommend flows.
-    调用方：import_tools() 调用。
-    作用：向 ai_chat_profiles 表插入或更新一个 AI 对话配置。
-    """
+def seed_profile(
+    cursor,
+    *,
+    profile_key,
+    name,
+    mode,
+    chat_id,
+    api_key="",
+    api_key_env=None,
+    tool_key=None,
+    system_prompt="",
+    tool_source=None,
+    require_json=False
+):
     cursor.execute(
         """
         INSERT INTO ai_chat_profiles (
             profile_key,
+            tool_key,
             name,
             mode,
+            api_key,
             api_key_env,
             chat_id,
             system_prompt,
             tool_source,
             require_json
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
+            tool_key = VALUES(tool_key),
             name = VALUES(name),
             mode = VALUES(mode),
+            api_key = VALUES(api_key),
             api_key_env = VALUES(api_key_env),
             chat_id = VALUES(chat_id),
             system_prompt = VALUES(system_prompt),
@@ -158,8 +189,10 @@ def seed_profile(cursor, profile_key, name, mode, api_key_env, chat_id, system_p
         """,
         (
             profile_key,
+            tool_key,
             name,
             mode,
+            api_key,
             api_key_env,
             chat_id,
             system_prompt,
@@ -169,71 +202,113 @@ def seed_profile(cursor, profile_key, name, mode, api_key_env, chat_id, system_p
     )
 
 
-def import_tools():
-    """
-    Called by: this script's __main__ block.
-    Purpose: Import local/FastGPT tool JSON files into MySQL and seed keywords plus AI profiles.
-    调用方：本脚本的 __main__ 入口调用。
-    作用：把本地工具和 FastGPT 工具 JSON 导入 MySQL，并初始化关键词和 AI 对话配置。
-    """
-    local_tools = load_json_list(LOCAL_TOOLS_FILE)
-    fastgpt_tools = load_json_list(FASTGPT_TOOLS_FILE)
+def import_endpoint_meta(cursor):
+    meta = load_json(API_META_FILE, {})
+    count = 0
+    for endpoint, item in meta.items():
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title", "")).strip()
+        if not endpoint or not title:
+            continue
+        cursor.execute(
+            """
+            INSERT INTO api_endpoint_meta (endpoint, title, description)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                title = VALUES(title),
+                description = VALUES(description),
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (endpoint, title, str(item.get("description", "") or ""))
+        )
+        count += 1
+    return count
 
+
+def import_tool_file(cursor, path, source):
+    tools = load_json(path, [])
+    count = 0
+    keyword_count = 0
+    for index, tool in enumerate(tools, start=1):
+        tool_key = upsert_tool(cursor, tool, source, index * 10)
+        if not tool_key:
+            continue
+        count += 1
+        keyword_count += 1 if upsert_keyword(cursor, tool_key, tool.get("title"), 10) else 0
+        keyword_count += 1 if upsert_keyword(cursor, tool_key, tool.get("category"), 3) else 0
+    return count, keyword_count
+
+
+def seed_profiles(cursor):
+    count = 0
+    seed_profile(
+        cursor,
+        profile_key="tools_chat",
+        name="工具页日常对话",
+        mode="chat",
+        api_key=os.getenv("FASTGPT_TOOLS_RECOMMEND_API_KEY", ""),
+        chat_id="tools-chat",
+        system_prompt="你是一个日常对话助手，请用自然、清晰、友好的中文回答用户。"
+    )
+    count += 1
+
+    seed_profile(
+        cursor,
+        profile_key="fastgpt_recommend",
+        name="FastGPT 工具推荐",
+        mode="recommend",
+        api_key=os.getenv("FASTGPT_RECOMMEND_API_KEY", ""),
+        chat_id=os.getenv("FASTGPT_RECOMMEND_CHAT_ID", "fastgpt-recommend"),
+        system_prompt="你是一个网站工具推荐助手，只能根据当前工具列表推荐工具。",
+        tool_source="fastgpt",
+        require_json=True
+    )
+    count += 1
+
+    for tool_key, (api_key_env, chat_id_env, default_chat_id, name) in FASTGPT_TOOL_PROFILES.items():
+        seed_profile(
+            cursor,
+            profile_key=tool_key,
+            tool_key=tool_key,
+            name=name,
+            mode="chat",
+            api_key=os.getenv(api_key_env, ""),
+            chat_id=os.getenv(chat_id_env, default_chat_id),
+            system_prompt="你是当前 FastGPT 工具的对话助手，请根据用户输入的文本内容返回清晰结果。",
+            tool_source="fastgpt",
+            require_json=False
+        )
+        count += 1
+
+    return count
+
+
+def import_tools():
     imported = {
         "local": 0,
         "fastgpt": 0,
+        "custom": 0,
         "keywords": 0,
-        "profiles": 0
+        "profiles": 0,
+        "endpoint_meta": 0
     }
 
     with get_db() as conn:
         with conn.cursor() as cursor:
-            for index, tool in enumerate(local_tools, start=1):
-                tool_id = upsert_tool(cursor, tool, "local", index * 10)
-                if tool_id:
-                    imported["local"] += 1
-                    upsert_keyword(cursor, tool_id, tool.get("title"), 10)
-                    upsert_keyword(cursor, tool_id, tool.get("category"), 3)
-                    imported["keywords"] += 2
+            ensure_schema(cursor)
+            imported["endpoint_meta"] = import_endpoint_meta(cursor)
 
-            for index, tool in enumerate(fastgpt_tools, start=1):
-                tool_id = upsert_tool(cursor, tool, "fastgpt", index * 10)
-                if tool_id:
-                    imported["fastgpt"] += 1
-                    upsert_keyword(cursor, tool_id, tool.get("title"), 10)
-                    upsert_keyword(cursor, tool_id, tool.get("category"), 3)
-                    imported["keywords"] += 2
+            imported["local"], keywords = import_tool_file(cursor, LOCAL_TOOLS_FILE, "local")
+            imported["keywords"] += keywords
 
-                    if tool.get("id") == "receipt-ocr":
-                        for keyword in ["票据", "发票", "报销", "OCR", "识别"]:
-                            upsert_keyword(cursor, tool_id, keyword, 20)
-                            imported["keywords"] += 1
+            imported["fastgpt"], keywords = import_tool_file(cursor, FASTGPT_TOOLS_FILE, "fastgpt")
+            imported["keywords"] += keywords
 
-            seed_profile(
-                cursor,
-                profile_key="tools_chat",
-                name="工具页日常对话",
-                mode="chat",
-                api_key_env="FASTGPT_TOOLS_RECOMMEND_API_KEY",
-                chat_id="tools-chat",
-                system_prompt="你是一个日常对话助手，请用自然、清晰、友好的中文回答用户。",
-                tool_source=None,
-                require_json=False
-            )
-            imported["profiles"] += 1
+            imported["custom"], keywords = import_tool_file(cursor, CUSTOM_TOOLS_FILE, "custom")
+            imported["keywords"] += keywords
 
-            seed_profile(
-                cursor,
-                profile_key="fastgpt_recommend",
-                name="FastGPT 工具推荐",
-                mode="recommend",
-                api_key_env="FASTGPT_RECOMMEND_API_KEY",
-                chat_id="fastgpt-recommend",
-                system_prompt="你是一个网站工具推荐助手，只能根据当前工具列表推荐工具。",
-                tool_source="fastgpt",
-                require_json=True
-            )
-            imported["profiles"] += 1
+            imported["profiles"] = seed_profiles(cursor)
 
     return imported
 

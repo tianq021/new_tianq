@@ -1,49 +1,78 @@
 # new_tianq
 
-一个基于 Flask 的本地工具中心项目，用于练习页面路由、API 接口、文件处理、哈希计算、评论区、AI/FastGPT 工具推荐、日志记录和后台管理能力。
+基于 Flask 的本地工具中心，包含登录入口、工具页、FastGPT 对话工作台、评论区、哈希/Base64 工具、日志记录和后台管理能力。
 
-项目采用 Flask Blueprint 组织页面和 API。当前已经加入登录入口，区分普通用户和管理员：普通用户进入工具使用页面，管理员进入后台查看接口、维护接口说明和管理工具数据。
+## 最近更新
 
-## 功能概览
+### 2026-06-04
 
-- 登录入口：访问 `/` 先进入登录页，按身份跳转。
-- 用户页面：普通用户进入 `/user`，继续使用原本的工具中心入口。
-- 管理后台：管理员进入 `/admin`。
-- 接口管理：自动读取 Flask 注册的 `/api` 路由，展示路径、方法、endpoint、名称和说明。
-- 接口说明维护：管理员可在页面上修改接口名称和说明，保存到 `data/admin/api_endpoints.json`。
-- 数据管理：管理员可读取、添加或修改工具 JSON 数据。
-- 自定义工具数据：支持保存到 `data/admin/custom_tools.json`，当前不会被 `/tools` 默认加载，方便先沉淀数据，后续再接自定义页面。
-- 工具中心：本地工具页面仍按现有逻辑加载默认工具数据。
-- 数据库同步：工具数据可选择同步写入 MySQL `ai_tools` 表。
-- 日志记录：保留请求日志、应用日志、错误日志和 AI 对话日志。
+- 将运行时配置统一迁移到数据库。
+- 工具列表改为读取 `ai_tools`，不再运行时读取 JSON。
+- FastGPT 的 `chat_id` 和 API Key 改为读取 `ai_chat_profiles`。
+- 接口说明改为保存到 `api_endpoint_meta`。
+- 后台数据管理支持工具启用、停用和排序维护。
+- 后台新增配置导出，可导出核心配置表。
+- 后台新增 FastGPT 请求日志页面，可查看请求结果、耗时和错误信息。
+- 新增 FastGPT 会议文档详解工具 `meeting-document`。
 
-## 登录说明
+## 配置来源
 
-默认入口：
+运行时配置以数据库为唯一来源：
+
+- 工具列表：`ai_tools`
+- 工具关键词：`ai_tool_keywords`
+- FastGPT 会话配置和 API Key：`ai_chat_profiles`
+- 后台接口说明：`api_endpoint_meta`
+
+以下 JSON 文件只作为历史种子数据或迁移参考，应用运行时不再依赖它们：
+
+- `data/tools/tool_data.json`
+- `data/fastgpt/fastgpt_tools.json`
+- `data/admin/*.json`
+
+`.env` 只保留基础设施配置：
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=new_tianq
+
+FASTGPT_BASE_URL=
+FASTGPT_API_PATH=/v1/chat/completions
+```
+
+## 初始化数据库
+
+执行导入脚本：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\database\import_ai_tools_to_db.py
+```
+
+脚本会完成：
+
+- 创建或升级 `ai_tools`、`ai_tool_keywords`、`ai_chat_profiles`、`api_endpoint_meta`
+- 把历史 JSON 工具数据导入数据库
+- 把旧 `.env` 中的 FastGPT key 迁入 `ai_chat_profiles`
+- 初始化 `tools_chat`、`fastgpt_recommend` 和各 FastGPT 工具 profile
+
+## 启动项目
+
+```powershell
+.\.venv\Scripts\python.exe app.py
+```
+
+访问地址：
 
 ```text
 http://127.0.0.1:5000/
 ```
 
-默认管理员密码：
+默认管理员密码为 `admin123`，可通过环境变量 `ADMIN_PASSWORD` 覆盖。
 
-```text
-admin123
-```
-
-可通过环境变量覆盖：
-
-```powershell
-$env:ADMIN_PASSWORD="your-password"
-```
-
-Flask session 使用 `FLASK_SECRET_KEY`，未配置时会使用开发默认值：
-
-```powershell
-$env:FLASK_SECRET_KEY="your-secret"
-```
-
-## 管理后台
+## 后台管理
 
 后台地址：
 
@@ -51,112 +80,100 @@ $env:FLASK_SECRET_KEY="your-secret"
 /admin
 ```
 
-后台包含两个区域：
+后台支持：
 
-- `接口管理`：查看所有 `/api` 接口，并维护接口名称和说明。
-- `数据管理`：维护工具 JSON 数据，可新增或更新工具。
+- 接口管理：查看 `/api` 路由，并把接口标题、说明保存到数据库。
+- 数据管理：按来源维护 `local`、`fastgpt`、`custom` 工具。
+- 工具运营：支持工具启用、停用和排序。
+- 配置导出：导出 `ai_tools`、`ai_tool_keywords`、`ai_chat_profiles`、`api_endpoint_meta`。
+- FastGPT 日志：查看最近的请求、耗时、成功状态和错误信息。
 
-接口说明默认由 `services/admin.py` 中的 `DEFAULT_API_META` 提供；管理员在页面保存后，会写入：
-
-```text
-data/admin/api_endpoints.json
-```
-
-手动保存的说明优先级高于默认说明。
-
-## 工具数据源
-
-数据管理支持三个数据源：
+常用后台 API：
 
 ```text
-data/tools/tool_data.json             # 本地工具 JSON，会被 /tools 页面读取
-data/fastgpt/fastgpt_tools.json       # FastGPT 工具 JSON
-data/admin/custom_tools.json          # 自定义工具 JSON，当前不会被 /tools 默认加载
+GET   /api/admin/endpoints
+PUT   /api/admin/endpoints/<endpoint>
+GET   /api/admin/tools?source=local
+POST  /api/admin/tools
+PATCH /api/admin/tools/<source>/<tool_id>
+GET   /api/admin/export
+GET   /api/admin/fastgpt/logs?limit=100
 ```
 
-当前约定：
+## FastGPT 工具维护
 
-- 本地工具页 `/tools` 保持默认加载逻辑，不自动加载自定义工具。
-- 新增的自定义工具建议先保存到 `自定义工具 JSON`。
-- 后续需要自定义页面时，再把 `custom` 数据源接入新的页面或渲染逻辑。
-- 勾选 `同步数据库` 时，会把工具写入 MySQL `ai_tools` 表；如果数据库连接失败，JSON 仍会保存成功，并在后台页面提示数据库错误。
+新增 FastGPT 工具时，建议在后台填写：
 
-## 常用 API
+- 工具 ID
+- 名称
+- 分类
+- 说明
+- 排序
+- `FastGPT Chat ID`
+- `FastGPT API Key`
 
-后台 API：
+保存后会同时写入：
+
+- `ai_tools`
+- `ai_chat_profiles`
+
+API Key 输入框留空时，后端会保留数据库中已有 key。
+
+当前本地 FastGPT API 对话入口只发送文本内容，不提供文件上传。需要上传原始 PDF、Word、图片等文件时，请通过工具 URL 打开 FastGPT 原生对话页面使用。
+
+## 备份说明
+
+后台的 `Export Config` 会导出核心配置表，适合迁移、备份和排查问题。
+
+注意：导出内容包含 `ai_chat_profiles.api_key`，属于敏感数据。导出的 JSON 文件不要提交到 Git，也不要公开分享。
+
+## 日志说明
+
+FastGPT 请求日志来自：
 
 ```text
-GET  /api/admin/endpoints              # 查看接口列表
-PUT  /api/admin/endpoints/<endpoint>   # 修改接口说明
-GET  /api/admin/tools?source=local     # 读取工具数据
-POST /api/admin/tools                  # 新增或更新工具数据
+logs/ai_chat.log
 ```
 
-已有业务 API 包括：
+后台日志页会展示：
 
-- 时间接口
-- 文本哈希
-- 文件哈希
-- Base64 编码/解码
-- 评论列表、评论发布、评论点赞
-- AI 对话和工具推荐
-- FastGPT 工具推荐
+- 请求时间
+- `chat_id`
+- 成功或失败
+- 耗时
+- 用户输入摘要
+- AI 回复摘要
+- 错误信息
+
+日志页不会展示 API Key。
 
 ## 项目结构
 
 ```text
 new_tianq/
-├── app.py                         # Flask 应用入口
-├── routes/
-│   ├── page_routes.py             # 页面路由：登录、用户页、后台页、工具页
-│   ├── api_routes.py              # API 蓝图注册
-│   ├── admin_routes.py            # 后台管理 API
-│   ├── ai_routes.py               # AI / FastGPT API
-│   ├── hash_routes.py             # 哈希接口
-│   ├── comment_routes.py          # 评论接口
-│   ├── common_routes.py           # 通用接口
-│   └── base.py                    # Base64 接口
-├── services/
-│   ├── admin.py                   # 后台接口说明和工具数据管理
-│   ├── tool_srore.py              # 本地工具读取
-│   ├── fastgpt_tool_srore.py      # FastGPT 工具读取
-│   ├── tool_store_db.py           # 数据库工具读取
-│   ├── comment_store_mysql.py     # 评论 MySQL 操作
-│   └── db.py                      # MySQL 连接
-├── templates/
-│   ├── ures/login.html            # 登录页
-│   ├── admin/admin.html           # 管理后台
-│   ├── ures/tools.html            # 本地工具中心
-│   └── ures/data_analysis.html    # 数据分析页面
-├── static/
-│   ├── css/                       # 页面样式
-│   └── js/                        # 前端交互脚本
+├── app.py
+├── backend/
+│   ├── routes/
+│   ├── services/
+│   └── utils/
+├── frontend/
+│   ├── static/
+│   └── templates/
+├── scripts/
+│   └── database/
 ├── data/
-│   ├── tools/tool_data.json       # 本地工具数据
-│   ├── fastgpt/fastgpt_tools.json # FastGPT 工具数据
-│   ├── admin/                     # 后台保存的说明和自定义工具数据
-│   └── schema_ai_tools.sql        # 工具相关数据库表
-└── logs/                          # 运行日志
+└── logs/
 ```
 
-## 启动方式
+## 运维备注
 
-```powershell
-.\.venv\Scripts\python.exe app.py
-```
+- 运行时不要再手动维护工具 JSON。
+- 新增或修改工具优先使用后台页面。
+- 新增 FastGPT 工具后，确认对应 profile 已配置 key。
+- 如果工具在页面不显示，先检查 `ai_tools.enabled` 和 `sort_order`。
+- 如果请求失败，先查看后台 FastGPT 日志页，再看 `logs/error.log`。
 
-启动后访问：
 
-```text
-http://127.0.0.1:5000/
-```
 
-## 本次后台能力更新总结
 
-- 修复 admin 页面模板路径和页面/API 错误返回混淆问题。
-- 新增登录入口，区分管理员和普通用户。
-- 新增管理员后台。
-- 新增接口管理，自动展示 `/api` 路由并支持维护说明。
-- 补齐接口默认说明。
-- 新增数据管理，支持维护本地、FastGPT、自定义工具 JSON。
-- 新增自定义工具数据源，但暂不接入 `/tools` 默认加载，避免影响现有工具页面。
+
