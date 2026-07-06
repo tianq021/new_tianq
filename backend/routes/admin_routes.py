@@ -12,6 +12,11 @@ from backend.services.admin import (
     update_tool_state,
     upsert_tool_data
 )
+from backend.services.feature_explanation_store import (
+    get_feature_explanation,
+    save_feature_explanation
+)
+from backend.services.feedback_store import list_feedback
 
 
 admin_api_bp = Blueprint("admin_api", __name__, url_prefix="/api/admin")
@@ -28,6 +33,37 @@ def admin_required(view_func):
         return view_func(*args, **kwargs)
 
     return wrapper
+
+
+@admin_api_bp.route("/feature-explanations/<page_key>", methods=["GET", "PUT"])
+@admin_required
+def feature_explanation_admin(page_key):
+    if request.method == "GET":
+        data = get_feature_explanation(page_key, include_disabled=True)
+        return jsonify({"success": True, "data": data})
+
+    payload = request.get_json(silent=True) or {}
+    try:
+        data = save_feature_explanation(
+            page_key,
+            payload.get("title", ""),
+            payload.get("content", ""),
+            payload.get("enabled", True)
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc)}), 400
+    return jsonify({"success": True, "data": data})
+
+
+@admin_api_bp.route("/feedback", methods=["GET"])
+@admin_required
+def feedback_list():
+    limit = request.args.get("limit", 200)
+    try:
+        feedback = list_feedback(limit)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "limit 参数无效"}), 400
+    return jsonify({"success": True, "feedback": feedback})
 
 
 @admin_api_bp.route("/endpoints", methods=["GET"])

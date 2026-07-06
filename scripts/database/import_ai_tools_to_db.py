@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE_DIR))
@@ -23,6 +24,7 @@ TOOL_BASE_FIELDS = {
     "id",
     "title",
     "desc",
+    "intro",
     "category",
     "type",
     "url",
@@ -56,6 +58,11 @@ def ensure_schema(cursor):
     database_dir = BASE_DIR / "scripts" / "database"
     execute_schema_file(cursor, database_dir / "schema_ai_tools.sql")
     execute_schema_file(cursor, database_dir / "schema_comments.sql")
+    execute_schema_file(cursor, database_dir / "schema_users.sql")
+
+    cursor.execute("SHOW COLUMNS FROM ai_tools LIKE 'page_intro'")
+    if not cursor.fetchone():
+        cursor.execute("ALTER TABLE ai_tools ADD COLUMN page_intro TEXT NULL AFTER description")
 
     cursor.execute("SHOW COLUMNS FROM ai_chat_profiles LIKE 'tool_key'")
     if not cursor.fetchone():
@@ -70,6 +77,60 @@ def ensure_schema(cursor):
     api_key_env_column = cursor.fetchone()
     if api_key_env_column and api_key_env_column.get("Null") == "NO":
         cursor.execute("ALTER TABLE ai_chat_profiles MODIFY api_key_env VARCHAR(100) DEFAULT NULL")
+
+
+def seed_users(cursor):
+    accounts = [
+        {
+            "username": os.getenv("ADMIN_USERNAME", "").strip(),
+            "password": os.getenv("ADMIN_PASSWORD", ""),
+            "role": "admin",
+            "display_name": "管理员"
+        },
+        {
+            "username": os.getenv("USER_USERNAME", "").strip(),
+            "password": os.getenv("USER_PASSWORD", ""),
+            "role": "user",
+            "display_name": "普通用户"
+        }
+    ]
+
+    for account in accounts:
+        if not account["username"] or not account["password"]:
+            prefix = account["role"].upper()
+            raise ValueError(
+                f"请先在 .env 配置 {prefix}_USERNAME 和 {prefix}_PASSWORD"
+            )
+        password_hash = generate_password_hash(
+            account["password"],
+            method="scrypt"
+        )
+        cursor.execute(
+            """
+            INSERT INTO app_users (
+                username,
+                password_hash,
+                role,
+                display_name,
+                enabled
+            )
+            VALUES (%s, %s, %s, %s, 1)
+            ON DUPLICATE KEY UPDATE
+                password_hash = VALUES(password_hash),
+                role = VALUES(role),
+                display_name = VALUES(display_name),
+                enabled = VALUES(enabled),
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (
+                account["username"],
+                password_hash,
+                account["role"],
+                account["display_name"]
+            )
+        )
+
+    return len(accounts)
 
 
 def upsert_tool(cursor, tool, source, sort_order):
@@ -90,6 +151,7 @@ def upsert_tool(cursor, tool, source, sort_order):
             tool_key,
             title,
             description,
+            page_intro,
             source,
             type,
             category,
@@ -99,10 +161,11 @@ def upsert_tool(cursor, tool, source, sort_order):
             sort_order,
             config_json
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             title = VALUES(title),
             description = VALUES(description),
+            page_intro = VALUES(page_intro),
             source = VALUES(source),
             type = VALUES(type),
             category = VALUES(category),
@@ -117,6 +180,7 @@ def upsert_tool(cursor, tool, source, sort_order):
             tool_key,
             title,
             tool.get("desc", ""),
+            tool.get("intro", ""),
             source,
             tool.get("type", "link"),
             tool.get("category", ""),
@@ -297,12 +361,14 @@ def import_tools():
         "custom": 0,
         "keywords": 0,
         "profiles": 0,
-        "endpoint_meta": 0
+        "endpoint_meta": 0,
+        "users": 0
     }
 
     with get_db() as conn:
         with conn.cursor() as cursor:
             ensure_schema(cursor)
+            imported["users"] = seed_users(cursor)
             imported["endpoint_meta"] = import_endpoint_meta(cursor)
 
             imported["local"], keywords = import_tool_file(cursor, LOCAL_TOOLS_FILE, "local")

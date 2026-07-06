@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
     const commentForm = document.getElementById("commentForm");
-    const commentNickname = document.getElementById("commentNickname");
     const commentContent = document.getElementById("commentContent");
     const commentMessage = document.getElementById("commentMessage");
     const commentList = document.getElementById("commentList");
@@ -21,6 +20,12 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentSort = "time";
     let totalPages = 1;
     let hasLoadedComments = false;
+    let realtimeReloadTimer = null;
+    const clientId = (
+        window.crypto && typeof window.crypto.randomUUID === "function"
+            ? window.crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
 
     async function loadComments() {
         commentList.innerHTML = `<p class="comment-empty">正在加载评论...</p>`;
@@ -135,7 +140,14 @@ document.addEventListener("DOMContentLoaded", function () {
         likeBtn.textContent = "处理中...";
 
         const response = await fetch(`/api/comments/${commentId}/like`, {
-            method: "POST"
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                page_key: PAGE_KEY,
+                client_id: clientId
+            })
         });
 
         const data = await response.json();
@@ -169,7 +181,6 @@ document.addEventListener("DOMContentLoaded", function () {
     commentForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        const nickname = commentNickname.value.trim();
         const content = commentContent.value.trim();
 
         if (!content) {
@@ -187,8 +198,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: JSON.stringify({
                     page_key: PAGE_KEY,
-                    nickname: nickname,
-                    content: content
+                    content: content,
+                    client_id: clientId
                 })
             });
 
@@ -240,5 +251,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (shouldAutoload) {
         loadComments();
+    }
+
+    if (typeof window.EventSource === "function") {
+        const eventsUrl = `/api/comments/events?page_key=${encodeURIComponent(PAGE_KEY)}`;
+        const eventSource = new EventSource(eventsUrl);
+
+        eventSource.addEventListener("comment-update", function (event) {
+            try {
+                const update = JSON.parse(event.data);
+                if (update.client_id === clientId || !hasLoadedComments) {
+                    return;
+                }
+
+                window.clearTimeout(realtimeReloadTimer);
+                realtimeReloadTimer = window.setTimeout(loadComments, 150);
+            } catch (error) {
+                console.error("评论实时消息解析失败", error);
+            }
+        });
+
+        eventSource.addEventListener("error", function () {
+            console.warn("评论实时连接暂时中断，浏览器将自动重连");
+        });
+
+        window.addEventListener("beforeunload", function () {
+            eventSource.close();
+        });
     }
 });

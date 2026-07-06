@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <div class="ambient-bg" aria-hidden="true">
+        <span class="shape shape-one"></span>
+        <span class="shape shape-two"></span>
+        <span class="shape shape-three"></span>
+    </div>
+
+    <main class="login-shell">
+        <section class="login-panel">
+            <aside class="quote-panel" aria-label="注册说明">
+                <p class="eyebrow">创建账号</p>
+                <blockquote>密码只保存安全哈希，不会以明文写入数据库。</blockquote>
+                <cite>普通用户注册</cite>
+            </aside>
+
+            <form class="login-form" action="{{ url_for('page.register') }}" method="post">
+                <fieldset class="role-group">
+                    <legend>注册普通用户</legend>
+                    <p>管理员账号不能通过公开页面注册。</p>
+                </fieldset>
+
+                <label class="password-field">
+                    <span>用户名</span>
+                    <input type="text" name="username" minlength="3" maxlength="30" autocomplete="username" required>
+                </label>
+
+                <label class="password-field">
+                    <span>显示名称（可选）</span>
+                    <input type="text" name="display_name" maxlength="100" autocomplete="name">
+                </label>
+
+                <label class="password-field">
+                    <span>密码</span>
+                    <input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+                </label>
+
+                <label class="password-field">
+                    <span>确认密码</span>
+                    <input type="password" name="password_confirm" minlength="8" maxlength="128" autocomplete="new-password" required>
+                </label>
+
+                {% if error %}
+                <p class="form-error">{{ error }}</p>
+                {% endif %}
+
+                <button type="submit">注册并登录</button>
+                <p class="auth-switch">已有账号？<a href="{{ url_for('page.login') }}">返回登录</a></p>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

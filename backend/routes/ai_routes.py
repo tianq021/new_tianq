@@ -3,8 +3,18 @@ import json
 import time
 from urllib.error import HTTPError, URLError
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 
+from backend.services.ai_favorite_store import (
+    add_ai_favorite,
+    list_ai_favorites,
+    remove_ai_favorite
+)
+from backend.services.ai_chat_history_store import (
+    delete_ai_chat_history,
+    get_ai_chat_history,
+    save_ai_chat_history
+)
 from backend.services.ai_service import (
     build_network_error_message,
     run_ai_chat,
@@ -19,6 +29,73 @@ ai_bp = Blueprint("ai_api", __name__, url_prefix="/api")
 
 FASTGPT_COOLDOWN_SECONDS = 5
 fastgpt_last_response_at = {}
+
+
+def get_logged_in_user_id():
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+    return int(user_id)
+
+
+@ai_bp.route("/ai/favorites", methods=["GET"])
+def ai_favorites_list():
+    user_id = get_logged_in_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "请先登录"}), 401
+
+    return jsonify({
+        "success": True,
+        "favorites": list_ai_favorites(user_id)
+    })
+
+
+@ai_bp.route("/ai/favorites/<tool_id>", methods=["POST", "DELETE"])
+def ai_favorite_update(tool_id):
+    user_id = get_logged_in_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "请先登录"}), 401
+
+    try:
+        if request.method == "POST":
+            add_ai_favorite(user_id, tool_id)
+            is_favorite = True
+        else:
+            remove_ai_favorite(user_id, tool_id)
+            is_favorite = False
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc)}), 404
+
+    return jsonify({
+        "success": True,
+        "tool_id": tool_id,
+        "favorite": is_favorite
+    })
+
+
+@ai_bp.route("/ai/history/<tool_id>", methods=["GET", "PUT", "DELETE"])
+def ai_chat_history(tool_id):
+    user_id = get_logged_in_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "请先登录"}), 401
+
+    try:
+        if request.method == "GET":
+            history = get_ai_chat_history(user_id, tool_id)
+        elif request.method == "PUT":
+            data = request.get_json(silent=True) or {}
+            history = save_ai_chat_history(
+                user_id,
+                tool_id,
+                data.get("history", [])
+            )
+        else:
+            delete_ai_chat_history(user_id, tool_id)
+            history = []
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc)}), 400
+
+    return jsonify({"success": True, "history": history})
 
 
 def get_client_key():
@@ -43,7 +120,7 @@ def check_fastgpt_cooldown():
     retry_after = max(1, int(wait_seconds + 0.999))
     response = jsonify({
         "success": False,
-        "message": f"FastGPT requests are limited. Please wait {retry_after} seconds before trying again.",
+        "message": f"请求过于频繁，请等待 {retry_after} 秒后再试。",
         "retry_after": retry_after
     })
     response.headers["Retry-After"] = str(retry_after)

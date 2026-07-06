@@ -214,14 +214,10 @@
                         </select>
                     </div>
 
+                    <p class="comment-identity">
+                        以“{{ session.get('display_name') or session.get('username') }}”身份评论
+                    </p>
                     <form id="commentForm" class="comment-form">
-                        <input
-                            id="commentNickname"
-                            type="text"
-                            maxlength="30"
-                            placeholder="昵称，可不填"
-                        >
-
                         <textarea
                             id="commentContent"
                             maxlength="500"

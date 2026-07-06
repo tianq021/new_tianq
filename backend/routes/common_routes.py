@@ -1,12 +1,42 @@
 # -*- coding: utf-8 -*-
 import time
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request, session
 
-from backend.services.quote_service import get_login_quote, get_login_quote_payload
+from backend.services.feedback_store import add_feedback
+from backend.services.feature_explanation_store import get_feature_explanation
+from backend.services.quote_service import get_login_quote_payload
 
 
 common_bp = Blueprint("common_api", __name__, url_prefix="/api")
+
+
+@common_bp.route("/feedback", methods=["POST"])
+def create_feedback():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"success": False, "message": "请先登录"}), 401
+    data = request.get_json(silent=True) or {}
+    try:
+        feedback_id = add_feedback(user_id, data.get("content", ""))
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc)}), 400
+    return jsonify({
+        "success": True,
+        "message": "反馈已提交",
+        "feedback_id": feedback_id
+    })
+
+
+@common_bp.route("/feature-explanations/<page_key>")
+def feature_explanation(page_key):
+    explanation = get_feature_explanation(page_key)
+    if not explanation:
+        return jsonify({
+            "success": False,
+            "message": "该页面暂未配置功能解释"
+        }), 404
+    return jsonify({"success": True, "data": explanation})
 
 
 @common_bp.route("/time")

@@ -12,6 +12,11 @@ const refreshLogsButton = document.querySelector("#refresh-fastgpt-logs");
 const logLimit = document.querySelector("#fastgpt-log-limit");
 const logStatus = document.querySelector("#fastgpt-log-status");
 const logList = document.querySelector("#fastgpt-log-list");
+const featureExplanationForm = document.querySelector("#feature-explanation-form");
+const featureExplanationStatus = document.querySelector("#feature-explanation-status");
+const refreshUserFeedbackButton = document.querySelector("#refresh-user-feedback");
+const userFeedbackStatus = document.querySelector("#user-feedback-status");
+const userFeedbackList = document.querySelector("#user-feedback-list");
 
 let currentTools = [];
 
@@ -43,6 +48,12 @@ document.querySelectorAll("[data-tab-target]").forEach((button) => {
         });
         if (button.dataset.tabTarget === "logs-panel" && !logList.dataset.loaded) {
             loadFastgptLogs();
+        }
+        if (button.dataset.tabTarget === "explanation-panel") {
+            loadFeatureExplanation();
+        }
+        if (button.dataset.tabTarget === "feedback-panel") {
+            loadUserFeedback();
         }
     });
 });
@@ -105,10 +116,13 @@ function renderToolList() {
         const summary = document.createElement("button");
         summary.type = "button";
         summary.className = "tool-row-main";
+        const categoryText = toolSource.value === "fastgpt"
+            ? ""
+            : `${escapeHtml(tool.category || "未分类")} · `;
         summary.innerHTML = `
             <strong>${escapeHtml(tool.title || tool.id)}</strong>
             <span>${escapeHtml(tool.id || "")}</span>
-            <small>${escapeHtml(tool.category || "未分类")} · 排序 ${Number(tool.sort_order || 100)} · ${tool.enabled === false ? "停用" : "启用"}${tool.has_api_key === false ? " · 未配置密钥" : ""}</small>
+            <small>${categoryText}排序 ${Number(tool.sort_order || 100)} · ${tool.enabled === false ? "停用" : "启用"}${tool.has_api_key === false ? " · 未配置密钥" : ""}</small>
         `;
         summary.addEventListener("click", () => fillToolForm(tool));
 
@@ -136,9 +150,22 @@ function createSmallButton(text, onClick, disabled = false) {
     return button;
 }
 
+function updateToolFormVisibility() {
+    const isFastgpt = toolSource.value === "fastgpt";
+    const categoryGroup = toolForm.querySelector('[data-field-group="category"]');
+
+    if (categoryGroup) {
+        categoryGroup.hidden = isFastgpt;
+    }
+    if (isFastgpt) {
+        toolForm.elements.category.value = "";
+    }
+}
+
 async function loadTools() {
     setTextStatus(toolStatus, "正在读取...");
     toolSourceNote.textContent = sourceNotes[toolSource.value] || "";
+    updateToolFormVisibility();
 
     try {
         const response = await fetch(`/api/admin/tools?source=${encodeURIComponent(toolSource.value)}`);
@@ -163,6 +190,7 @@ function toolExtraJson(tool) {
         "id",
         "title",
         "desc",
+        "intro",
         "category",
         "type",
         "url",
@@ -187,13 +215,14 @@ function toolExtraJson(tool) {
 function fillToolForm(tool) {
     toolForm.elements.id.value = tool.id || "";
     toolForm.elements.title.value = tool.title || "";
-    toolForm.elements.category.value = tool.category || "";
+    toolForm.elements.category.value = toolSource.value === "fastgpt" ? "" : (tool.category || "");
     toolForm.elements.type.value = tool.type || "link";
     toolForm.elements.sort_order.value = tool.sort_order || 100;
     toolForm.elements.url.value = tool.url || "";
     toolForm.elements.chat_id.value = tool.chat_id || tool.id || "";
     toolForm.elements.api_key.value = "";
     toolForm.elements.desc.value = tool.desc || "";
+    toolForm.elements.intro.value = tool.intro || "";
     toolForm.elements.extra_json.value = toolExtraJson(tool);
     toolForm.elements.enabled.checked = tool.enabled !== false;
     toolForm.elements.default.checked = Boolean(tool.default);
@@ -207,12 +236,14 @@ function resetToolForm() {
     toolForm.elements.sort_order.value = "100";
     toolForm.elements.chat_id.value = "";
     toolForm.elements.api_key.value = "";
+    toolForm.elements.intro.value = "";
     setTextStatus(toolStatus, "");
 }
 
 document.querySelector("#tool-reset").addEventListener("click", resetToolForm);
 toolSource.addEventListener("change", () => {
     resetToolForm();
+    updateToolFormVisibility();
     loadTools();
 });
 
@@ -223,13 +254,14 @@ toolForm.addEventListener("submit", async (event) => {
         source: toolSource.value,
         id: toolForm.elements.id.value.trim(),
         title: toolForm.elements.title.value.trim(),
-        category: toolForm.elements.category.value.trim(),
+        category: toolSource.value === "fastgpt" ? "" : toolForm.elements.category.value.trim(),
         type: toolForm.elements.type.value.trim() || "link",
         sort_order: Number(toolForm.elements.sort_order.value || 100),
         url: toolForm.elements.url.value.trim(),
         chat_id: toolForm.elements.chat_id.value.trim(),
         api_key: toolForm.elements.api_key.value.trim(),
         desc: toolForm.elements.desc.value.trim(),
+        intro: toolForm.elements.intro.value.trim(),
         extra_json: toolForm.elements.extra_json.value.trim(),
         enabled: toolForm.elements.enabled.checked,
         default: toolForm.elements.default.checked
@@ -377,6 +409,101 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll("\"", "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+async function loadFeatureExplanation() {
+    if (!featureExplanationForm) {
+        return;
+    }
+    const pageKey = featureExplanationForm.elements.page_key.value;
+    setTextStatus(featureExplanationStatus, "正在读取...");
+    try {
+        const response = await fetch(
+            `/api/admin/feature-explanations/${encodeURIComponent(pageKey)}`
+        );
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "读取失败");
+        }
+        const data = result.data || {};
+        featureExplanationForm.elements.title.value = data.title || "功能解释";
+        featureExplanationForm.elements.content.value = data.content || "";
+        featureExplanationForm.elements.enabled.checked = data.enabled !== false;
+        setTextStatus(featureExplanationStatus, data ? "读取完成" : "尚未配置");
+    } catch (error) {
+        setTextStatus(featureExplanationStatus, error.message, true);
+    }
+}
+
+if (featureExplanationForm) {
+    featureExplanationForm.elements.page_key.addEventListener("change", loadFeatureExplanation);
+    featureExplanationForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const pageKey = featureExplanationForm.elements.page_key.value;
+        setTextStatus(featureExplanationStatus, "正在保存...");
+        try {
+            const response = await fetch(
+                `/api/admin/feature-explanations/${encodeURIComponent(pageKey)}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: featureExplanationForm.elements.title.value.trim(),
+                        content: featureExplanationForm.elements.content.value.trim(),
+                        enabled: featureExplanationForm.elements.enabled.checked
+                    })
+                }
+            );
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || "保存失败");
+            }
+            setTextStatus(featureExplanationStatus, "功能解释已保存");
+        } catch (error) {
+            setTextStatus(featureExplanationStatus, error.message, true);
+        }
+    });
+}
+
+async function loadUserFeedback() {
+    if (!userFeedbackList) {
+        return;
+    }
+    setTextStatus(userFeedbackStatus, "正在读取...");
+    try {
+        const response = await fetch("/api/admin/feedback?limit=500");
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "反馈读取失败");
+        }
+        userFeedbackList.innerHTML = "";
+        const feedback = result.feedback || [];
+        if (!feedback.length) {
+            userFeedbackList.innerHTML = '<p class="empty-state">暂无用户反馈</p>';
+        } else {
+            feedback.forEach(function (item) {
+                const row = document.createElement("article");
+                row.className = "log-row";
+                row.innerHTML = `
+                    <div class="log-row-head">
+                        <strong>${escapeHtml(item.display_name || item.username || "用户")}</strong>
+                        <span>#${Number(item.id || 0)}</span>
+                        <small>${escapeHtml(item.created_at || "")} · ${escapeHtml(item.username || "")}</small>
+                    </div>
+                    <p>${escapeHtml(item.content || "")}</p>
+                `;
+                userFeedbackList.appendChild(row);
+            });
+        }
+        userFeedbackList.dataset.loaded = "1";
+        setTextStatus(userFeedbackStatus, `共 ${feedback.length} 条反馈`);
+    } catch (error) {
+        setTextStatus(userFeedbackStatus, error.message, true);
+    }
+}
+
+if (refreshUserFeedbackButton) {
+    refreshUserFeedbackButton.addEventListener("click", loadUserFeedback);
 }
 
 loadTools();

@@ -26,6 +26,7 @@ def normalize_tool_row(row):
         "id": row.get("tool_key", ""),
         "title": row.get("title", ""),
         "desc": row.get("description", "") or "",
+        "intro": row.get("page_intro", "") or "",
         "category": row.get("category", "") or "",
         "type": row.get("type", "") or "link",
         "url": row.get("url", "") or "",
@@ -53,6 +54,7 @@ def load_tools_by_source(source):
                     tool_key,
                     title,
                     description,
+                    page_intro,
                     category,
                     type,
                     url,
@@ -79,6 +81,7 @@ def list_tools_by_source(source):
                     tool_key,
                     title,
                     description,
+                    page_intro,
                     category,
                     type,
                     url,
@@ -105,6 +108,7 @@ def upsert_tool_by_source(source, tool):
             "id",
             "title",
             "desc",
+            "intro",
             "category",
             "type",
             "url",
@@ -148,6 +152,7 @@ def upsert_tool_by_source(source, tool):
                     tool_key,
                     title,
                     description,
+                    page_intro,
                     source,
                     type,
                     category,
@@ -157,10 +162,11 @@ def upsert_tool_by_source(source, tool):
                     sort_order,
                     config_json
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     title = VALUES(title),
                     description = VALUES(description),
+                    page_intro = VALUES(page_intro),
                     source = VALUES(source),
                     type = VALUES(type),
                     category = VALUES(category),
@@ -175,6 +181,7 @@ def upsert_tool_by_source(source, tool):
                     tool["id"],
                     tool["title"],
                     tool.get("desc", ""),
+                    tool.get("intro", ""),
                     source,
                     tool.get("type", "link"),
                     tool.get("category", ""),

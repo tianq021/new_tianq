@@ -22,6 +22,8 @@
         <section class="admin-tabs" aria-label="后台功能">
             <button class="tab-button active" type="button" data-tab-target="api-panel">接口管理</button>
             <button class="tab-button" type="button" data-tab-target="data-panel">数据管理</button>
+            <button class="tab-button" type="button" data-tab-target="explanation-panel">功能解释</button>
+            <button class="tab-button" type="button" data-tab-target="feedback-panel">用户反馈</button>
             <button class="tab-button" type="button" data-tab-target="logs-panel">FastGPT 日志</button>
         </section>
 
@@ -94,7 +96,7 @@
                                 <span>名称</span>
                                 <input name="title" type="text" placeholder="工具名称" required>
                             </label>
-                            <label>
+                            <label data-field-group="category">
                                 <span>分类</span>
                                 <input name="category" type="text" placeholder="文本工具">
                             </label>
@@ -131,6 +133,10 @@
                                 <textarea name="desc" rows="3" placeholder="工具说明"></textarea>
                             </label>
                             <label class="wide">
+                                <span>AI 页面介绍</span>
+                                <textarea name="intro" rows="5" placeholder="选择该 AI 后展示的详细介绍，每个 AI 可单独填写"></textarea>
+                            </label>
+                            <label class="wide">
                                 <span>扩展配置</span>
                                 <textarea name="extra_json" rows="4" placeholder='例如：{"图标":"星标"}'></textarea>
                             </label>
@@ -154,6 +160,51 @@
                     </form>
                 </section>
             </div>
+        </section>
+        <section id="explanation-panel" class="tab-panel">
+            <form id="feature-explanation-form" class="tool-form">
+                <div class="panel-head">
+                    <div>
+                        <h2>页面功能解释</h2>
+                        <p>配置顶部“功能解释”按钮点击后显示的内容。</p>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <label>
+                        <span>页面</span>
+                        <select name="page_key">
+                            <option value="fastgpt">FastGPT 页面</option>
+                            <option value="user">用户工作台（更新消息）</option>
+                            <option value="tools">工具页面</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>标题</span>
+                        <input name="title" type="text" maxlength="200" required>
+                    </label>
+                    <label class="wide">
+                        <span>解释内容</span>
+                        <textarea name="content" rows="10" required></textarea>
+                    </label>
+                </div>
+                <div class="check-row">
+                    <label>
+                        <input name="enabled" type="checkbox" checked>
+                        <span>启用</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">保存功能解释</button>
+                    <span id="feature-explanation-status" aria-live="polite"></span>
+                </div>
+            </form>
+        </section>
+        <section id="feedback-panel" class="tab-panel">
+            <div class="toolbar">
+                <button id="refresh-user-feedback" class="secondary-button" type="button">刷新反馈</button>
+                <span id="user-feedback-status" aria-live="polite"></span>
+            </div>
+            <div id="user-feedback-list" class="log-list"></div>
         </section>
         <section id="logs-panel" class="tab-panel">
             <div class="toolbar">

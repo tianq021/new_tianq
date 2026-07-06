@@ -259,6 +259,23 @@ body {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13);
 }
 
+.auth-switch {
+    margin: 14px 0 0;
+    color: #64748b;
+    text-align: center;
+    font-size: 14px;
+}
+
+.auth-switch a {
+    color: #2563eb;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
 .login-form button {
     border: 0;
     background: linear-gradient(135deg, var(--blue), var(--cyan));

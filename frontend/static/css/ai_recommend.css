@@ -195,7 +195,7 @@
 }
 
 .embedded-ai .ai-recommend-btn {
-    display: none;
+    display: none !important;
 }
 
 .embedded-ai .ai-recommend-panel {

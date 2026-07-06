@@ -1,6 +1,7 @@
 const roleInputs = document.querySelectorAll('input[name="role"]');
 const roleHint = document.getElementById("roleHint");
-const passwordInput = document.getElementById("adminPassword");
+const usernameInput = document.getElementById("loginUsername");
+const passwordInput = document.getElementById("loginPassword");
 const quotePanel = document.querySelector(".quote-panel");
 const loginQuote = document.getElementById("loginQuote");
 const loginQuoteAuthor = document.getElementById("loginQuoteAuthor");
@@ -11,13 +12,17 @@ function updateLoginMode() {
 
     if (roleHint) {
         roleHint.textContent = isAdmin
-            ? "管理员模式：需要输入管理员密码"
-            : "用户模式：直接进入工具工作台";
+            ? "管理员模式：使用管理员账号登录"
+            : "用户模式：使用普通用户账号登录";
+    }
+
+    if (usernameInput && !usernameInput.value) {
+        usernameInput.placeholder = isAdmin ? "管理员用户名" : "普通用户名";
     }
 
     if (passwordInput) {
-        passwordInput.placeholder = isAdmin ? "请输入管理员密码" : "普通用户可留空";
-        passwordInput.toggleAttribute("required", isAdmin);
+        passwordInput.placeholder = "请输入密码";
+        passwordInput.required = true;
     }
 }
 

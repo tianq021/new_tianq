@@ -381,6 +381,12 @@ body {
     margin-bottom: 12px;
 }
 
+.comment-identity {
+    margin: 0 0 10px;
+    color: #64748b;
+    font-size: 14px;
+}
+
 .comment-form input,
 .comment-form textarea {
     width: 100%;

@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
-import os
 import socket
 
 from flask import Blueprint, redirect, render_template, request, session, url_for
 
 from backend.services.admin import list_api_endpoints
+from backend.services.auth import authenticate_account, create_user_account
 from backend.services.fastgpt_tool_srore import load_tools
 from backend.services.quote_service import get_login_quote
 from backend.services.tool_srore import load_tools_data
+from backend.services.workspace_store import (
+    count_articles_by_workspace,
+    get_workspace_by_slug,
+    list_article_categories,
+    list_articles_by_workspace,
+)
 
 
 page_bp = Blueprint("page", __name__)
@@ -19,6 +25,9 @@ def render_login(error=""):
         error=error,
         login_quote=get_login_quote()
     )
+
+def render_register(error=""):
+    return render_template("ures/register.html", error=error)
 
 
 @page_bp.route("/")
@@ -38,19 +47,55 @@ def login():
         return render_login()
 
     role = request.form.get("role", "user")
+    username = request.form.get("username", "")
     password = request.form.get("password", "")
 
     if role not in {"admin", "user"}:
         return render_login("请选择正确的身份"), 400
 
-    if role == "admin":
-        admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
-        if password != admin_password:
-            return render_login("管理员密码错误"), 401
+    try:
+        account = authenticate_account(username, password, role)
+    except Exception:
+        return render_login("账号数据库不可用，请先执行数据库初始化脚本"), 503
 
-    session["role"] = role
+    if not account:
+        return render_login("用户名、密码或身份不正确"), 401
+
+    session.clear()
+    session["user_id"] = account["id"]
+    session["username"] = account["username"]
+    session["display_name"] = account["display_name"]
+    session["role"] = account["role"]
     if role == "admin":
         return redirect(url_for("page.admin"))
+    return redirect(url_for("page.user_home"))
+
+
+@page_bp.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "GET":
+        return render_register()
+
+    username = request.form.get("username", "")
+    display_name = request.form.get("display_name", "")
+    password = request.form.get("password", "")
+    password_confirm = request.form.get("password_confirm", "")
+
+    if password != password_confirm:
+        return render_register("两次输入的密码不一致"), 400
+
+    try:
+        account = create_user_account(username, password, display_name)
+    except ValueError as exc:
+        return render_register(str(exc)), 400
+    except Exception:
+        return render_register("账号数据库不可用，请先执行数据库初始化脚本"), 503
+
+    session.clear()
+    session["user_id"] = account["id"]
+    session["username"] = account["username"]
+    session["display_name"] = account["display_name"]
+    session["role"] = account["role"]
     return redirect(url_for("page.user_home"))
 
 
@@ -71,7 +116,8 @@ def user_home():
     return render_template(
         "index.html",
         user_ip=user_ip,
-        server_ip=server_ip
+        server_ip=server_ip,
+        login_quote=get_login_quote()
     )
 
 
@@ -92,19 +138,6 @@ def fastgpt():
         return redirect(url_for("page.login"))
 
     tools = load_tools()
-    for tool in tools:
-        if tool.get("group"):
-            continue
-
-        category = tool.get("category", "")
-        title = tool.get("title", "")
-        if "票据" in category or "简历" in category or "文档" in category:
-            tool["group"] = "文档能力"
-        elif "翻译" in category or "文本" in category or "翻译" in title:
-            tool["group"] = "文本能力"
-        else:
-            tool["group"] = "通用能力"
-
     return render_template("ures/fastgpt.html", tools=tools)
 
 
@@ -123,3 +156,41 @@ def admin():
         return redirect(url_for("page.login"))
 
     return render_template("admin/admin.html", endpoints=list_api_endpoints())
+
+
+@page_bp.route("/p/<slug>")
+def workspace_page(slug):
+    q = request.args.get("q", "").strip()
+    current_category = request.args.get("category", "").strip()
+
+    workspace = get_workspace_by_slug(slug)
+
+    if not workspace:
+        return "工作页不存在", 404
+
+    categories = list_article_categories(workspace["id"])
+
+    articles = list_articles_by_workspace(
+        workspace_id=workspace["id"],
+        category=current_category,
+        keyword=q,
+    )
+
+    total_articles = count_articles_by_workspace(workspace["id"])
+
+    return render_template(
+        "ures/workspace.html",
+        workspace=workspace,
+        categories=categories,
+        current_category=current_category,
+        q=q,
+        articles=articles,
+        total_articles=total_articles,
+        tools=[
+            {"name": "通用工具", "url": "/tools"},
+            {"name": "FastGPT 调用", "url": "/fastgpt"},
+        ],
+        links=[
+            {"name": "GitHub 仓库", "url": "https://github.com/tianq021/new_tianq"}
+        ]
+    )

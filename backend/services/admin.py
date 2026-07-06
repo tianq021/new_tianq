@@ -207,6 +207,7 @@ def build_tool_from_payload(data):
         "id": tool_id,
         "title": title,
         "desc": str(data.get("desc", "")).strip(),
+        "intro": str(data.get("intro", "")).strip(),
         "category": str(data.get("category", "")).strip(),
         "type": str(data.get("type", "link") or "link").strip(),
         "url": str(data.get("url", "")).strip(),
@@ -236,6 +237,8 @@ def upsert_tool_data(source, payload):
         raise ValueError("未知工具来源")
 
     tool = build_tool_from_payload(payload)
+    if source == "fastgpt":
+        tool["category"] = ""
     created = upsert_tool_by_source(source, tool)
 
     if source == "fastgpt":

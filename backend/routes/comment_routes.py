@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-from flask import Blueprint, jsonify, request
+import queue
 
+from flask import Blueprint, Response, jsonify, request, session, stream_with_context
+
+from backend.services.comment_realtime import comment_event_broker, encode_sse
 from backend.services.comment_store_mysql import (
     add_comment,
     build_visitor_key,
@@ -11,6 +14,27 @@ from backend.utils.logger_config import comments_logger, error_logger
 
 
 comment_bp = Blueprint("comment_api", __name__, url_prefix="/api")
+
+
+@comment_bp.route("/comments/events", methods=["GET"])
+def comment_events():
+    """Stream comment and like changes to browsers viewing the same page key."""
+    page_key = (request.args.get("page_key", "tools") or "tools").strip()[:100]
+
+    @stream_with_context
+    def generate():
+        yield "retry: 3000\n\n"
+        with comment_event_broker.subscribe(page_key) as event_queue:
+            while True:
+                try:
+                    yield encode_sse(event_queue.get(timeout=20))
+                except queue.Empty:
+                    yield ": heartbeat\n\n"
+
+    response = Response(generate(), mimetype="text/event-stream")
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["X-Accel-Buffering"] = "no"
+    return response
 
 
 @comment_bp.route("/comments/<int:comment_id>/like", methods=["POST"])
@@ -25,9 +49,21 @@ def like_comment_api(comment_id):
         request.remote_addr,
         request.headers.get("User-Agent", "")
     )
+    data = request.get_json(silent=True) or {}
+    page_key = (data.get("page_key", "tools") or "tools").strip()[:100]
+    client_id = (data.get("client_id", "") or "").strip()[:100]
 
     try:
         result = toggle_like_comment(comment_id, visitor_key)
+        comment_event_broker.publish(
+            page_key,
+            "like",
+            {
+                "comment_id": comment_id,
+                "like_count": result["like_count"],
+                "client_id": client_id
+            }
+        )
 
         comments_logger.info(
             f"评论点赞切换 | comment_id={comment_id} | "
@@ -71,14 +107,28 @@ def create_comment():
     data = request.get_json(silent=True) or {}
 
     page_key = data.get("page_key", "tools")
-    nickname = data.get("nickname", "")
     content = data.get("content", "")
+    nickname = session.get("display_name") or session.get("username")
+
+    if not session.get("user_id") or not nickname:
+        return jsonify({
+            "success": False,
+            "message": "请先登录后再发表评论"
+        }), 401
 
     try:
         comment = add_comment(
             page_key=page_key,
             nickname=nickname,
             content=content
+        )
+        comment_event_broker.publish(
+            page_key,
+            "created",
+            {
+                "comment_id": comment["id"],
+                "client_id": (data.get("client_id", "") or "").strip()[:100]
+            }
         )
 
         comments_logger.info(

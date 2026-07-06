@@ -13,12 +13,50 @@
             <aside class="left-panel">
                 <header class="workspace-header">
                     <div>
-                        <p class="eyebrow">本地工作台</p>
-                        <h1>本地工具工作台</h1>
-                        <p class="desc">选择一个功能开始使用。</p>
+                        <p class="eyebrow">用户基础信息</p>
+                        <h1>{{ session.get('display_name') or session.get('username') }}</h1>
+                        <div class="user-basic-info">
+                            <span>用户名：<strong>{{ session.get('username') }}</strong></span>
+                            <span>身份：<strong>{{ '管理员' if session.get('role') == 'admin' else '普通用户' }}</strong></span>
+                        </div>
                     </div>
-                    <a class="logout-link" href="{{ url_for('page.logout') }}">退出登录</a>
+                    <div class="workspace-header-actions">
+                        <div class="workspace-primary-actions">
+                            <button id="userUpdateButton" class="update-message-button" type="button">更新消息</button>
+                            <button id="userFeedbackButton" class="feedback-button" type="button">反馈</button>
+                        </div>
+                        <a class="logout-link" href="{{ url_for('page.logout') }}">退出登录</a>
+                    </div>
                 </header>
+
+                <section id="userUpdatePanel" class="user-update-panel" aria-hidden="true">
+                    <div class="user-update-content">
+                        <div>
+                            <p class="eyebrow">工作台动态</p>
+                            <h2 id="userUpdateTitle">更新消息</h2>
+                        </div>
+                        <button id="userUpdateClose" type="button" aria-label="关闭更新消息">×</button>
+                        <p id="userUpdateText">正在读取...</p>
+                    </div>
+                </section>
+
+                <section id="userFeedbackPanel" class="user-update-panel" aria-hidden="true">
+                    <form id="userFeedbackForm" class="user-update-content">
+                        <div>
+                            <p class="eyebrow">功能建议</p>
+                            <h2>提交反馈</h2>
+                        </div>
+                        <button id="userFeedbackClose" type="button" aria-label="关闭反馈">×</button>
+                        <label class="feedback-field">
+                            <span>请说明希望新增或改进的功能</span>
+                            <textarea id="userFeedbackContent" maxlength="2000" rows="6" required></textarea>
+                        </label>
+                        <div class="feedback-submit-row">
+                            <span id="userFeedbackStatus" aria-live="polite"></span>
+                            <button type="submit">提交反馈</button>
+                        </div>
+                    </form>
+                </section>
 
                 <section class="tool-section" aria-labelledby="toolSectionTitle">
                     <div class="section-heading">
@@ -68,6 +106,9 @@
                             <span class="info-label">服务器地址</span>
                             <strong>{{ server_ip }}</strong>
                         </div>
+                        <div class="info-item">
+                            <strong>{{ login_quote }}</strong>
+                        </div>
                     </div>
                 </section>
             </aside>
@@ -86,6 +127,9 @@
                         </select>
                     </div>
 
+                    <p class="comment-identity">
+                        以“{{ session.get('display_name') or session.get('username') }}”身份评论
+                    </p>
                     <form
                         id="commentForm"
                         class="comment-form"
@@ -93,13 +137,6 @@
                         data-page-size="5"
                         data-autoload="true"
                     >
-                        <input
-                            id="commentNickname"
-                            type="text"
-                            maxlength="30"
-                            placeholder="昵称，可不填"
-                        >
-
                         <textarea
                             id="commentContent"
                             maxlength="500"
@@ -132,8 +169,6 @@
                         data-mode="chat"
                         data-embedded="true"
                     >
-                        <button id="aiRecommendBtn" class="ai-recommend-btn" type="button" title="智能对话">智能</button>
-
                         <div id="aiRecommendPanel" class="ai-recommend-panel">
                             <div class="ai-recommend-header">
                                 <span>智能对话</span>
