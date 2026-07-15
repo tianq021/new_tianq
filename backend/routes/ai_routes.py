@@ -22,6 +22,16 @@ from backend.services.ai_service import (
 )
 from backend.services.fastgpt_tool_srore import load_tools as load_fastgpt_tools
 from backend.services.tool_store_db import load_chat_profile, load_chat_profile_by_tool
+from backend.services.user_ai_remote_chat_store import (
+    append_remote_chat_messages,
+    create_remote_chat_conversation,
+    delete_remote_chat_conversation,
+    get_or_create_current_conversation,
+    get_remote_chat_conversation,
+    list_remote_chat_conversations,
+    save_remote_chat_messages,
+    set_current_remote_chat_conversation
+)
 from backend.utils.logger_config import ai_chat_logger
 
 
@@ -195,6 +205,13 @@ def get_ai_message():
     return message
 
 
+def get_ai_request_page():
+    if request.form:
+        return str(request.form.get("page", "")).strip()
+    data = request.get_json(silent=True) or {}
+    return str(data.get("page", "")).strip()
+
+
 def get_selected_fastgpt_tool_id():
     if request.form:
         raw_selected_tool = request.form.get("selected_tool", "")
@@ -216,6 +233,16 @@ def get_fastgpt_tool_profile(tool_id):
     return load_chat_profile_by_tool(tool_id)
 
 
+def build_profile_capability(profile_key):
+    profile = load_chat_profile(profile_key)
+    return {
+        "profile_key": profile_key,
+        "enabled": bool(profile),
+        "has_key": bool(profile and (profile.get("api_key") or profile.get("api_key_env"))),
+        "chat_id": profile.get("chat_id", "") if profile else ""
+    }
+
+
 def get_required_chat_profile(profile_key):
     profile = load_chat_profile(profile_key)
     if not profile:
@@ -223,7 +250,134 @@ def get_required_chat_profile(profile_key):
     return profile
 
 
-def chat_response(message, chat_id, api_key_env=None, api_key=None):
+def get_tools_chat_profile_or_response():
+    try:
+        return get_required_chat_profile("tools_chat"), None
+    except RuntimeError:
+        return None, (
+            jsonify({
+                "success": False,
+                "code": "ai_profile_unavailable",
+                "message": "工具页 AI 对话未配置或已停用"
+            }),
+            503
+        )
+
+
+def get_request_conversation_id():
+    if request.form:
+        value = request.form.get("conversation_id", "")
+    else:
+        data = request.get_json(silent=True) or {}
+        value = data.get("conversation_id", "")
+    try:
+        return int(value) if value else None
+    except (TypeError, ValueError):
+        return None
+
+
+def build_user_chat_state(user_id, profile_key):
+    current = get_or_create_current_conversation(user_id, profile_key)
+    conversations = list_remote_chat_conversations(user_id, profile_key)
+    return {
+        "success": True,
+        "conversations": conversations,
+        "current": current
+    }
+
+
+@ai_bp.route("/ai/capabilities", methods=["GET"])
+def ai_capabilities():
+    return jsonify({
+        "success": True,
+        "data": {
+            "tools_chat": build_profile_capability("tools_chat"),
+            "fastgpt_recommend": build_profile_capability("fastgpt_recommend")
+        }
+    })
+
+
+@ai_bp.route("/ai/tools/conversations", methods=["GET", "POST"])
+def tools_ai_conversations():
+    user_id = get_logged_in_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "请先登录"}), 401
+
+    profile, error_response = get_tools_chat_profile_or_response()
+    if error_response:
+        return error_response
+
+    profile_key = profile["profile_key"]
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        title = str(data.get("title", "")).strip()
+        create_remote_chat_conversation(user_id, profile_key, title)
+
+    return jsonify(build_user_chat_state(user_id, profile_key))
+
+
+@ai_bp.route("/ai/tools/conversations/<int:conversation_id>", methods=["GET", "PUT", "DELETE"])
+def tools_ai_conversation_detail(conversation_id):
+    user_id = get_logged_in_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "请先登录"}), 401
+
+    profile, error_response = get_tools_chat_profile_or_response()
+    if error_response:
+        return error_response
+
+    profile_key = profile["profile_key"]
+
+    if request.method == "DELETE":
+        if not delete_remote_chat_conversation(user_id, profile_key, conversation_id):
+            return jsonify({"success": False, "message": "会话不存在"}), 404
+        return jsonify(build_user_chat_state(user_id, profile_key))
+
+    if request.method == "PUT":
+        data = request.get_json(silent=True) or {}
+        conversation = save_remote_chat_messages(
+            user_id,
+            profile_key,
+            conversation_id,
+            data.get("messages", [])
+        )
+        if not conversation:
+            return jsonify({"success": False, "message": "会话不存在"}), 404
+        return jsonify({
+            "success": True,
+            "conversation": conversation,
+            "conversations": list_remote_chat_conversations(user_id, profile_key)
+        })
+
+    conversation = get_remote_chat_conversation(user_id, profile_key, conversation_id)
+    if not conversation:
+        return jsonify({"success": False, "message": "会话不存在"}), 404
+    return jsonify({"success": True, "conversation": conversation})
+
+
+@ai_bp.route("/ai/tools/conversations/<int:conversation_id>/select", methods=["POST"])
+def tools_ai_conversation_select(conversation_id):
+    user_id = get_logged_in_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "请先登录"}), 401
+
+    profile, error_response = get_tools_chat_profile_or_response()
+    if error_response:
+        return error_response
+
+    profile_key = profile["profile_key"]
+    conversation = set_current_remote_chat_conversation(user_id, profile_key, conversation_id)
+    if not conversation:
+        return jsonify({"success": False, "message": "会话不存在"}), 404
+
+    return jsonify({
+        "success": True,
+        "current": conversation,
+        "conversations": list_remote_chat_conversations(user_id, profile_key)
+    })
+
+
+def chat_response(message, chat_id, api_key_env=None, api_key=None, on_success=None):
     """
     Called by: tools_ai_chat().
     Purpose: Run a normal AI chat request, log the conversation, and convert errors into JSON responses.
@@ -232,6 +386,8 @@ def chat_response(message, chat_id, api_key_env=None, api_key=None):
 
     try:
         result = run_ai_chat(message, chat_id, api_key_env, api_key=api_key)
+        if on_success:
+            on_success(result)
         log_ai_chat_event(
             success=True,
             chat_id=chat_id,
@@ -383,20 +539,72 @@ def tools_ai_chat():
             "message": str(e)
         }), 400
 
-    try:
-        profile = get_required_chat_profile("tools_chat")
-    except RuntimeError as e:
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
+    profile, error_response = get_tools_chat_profile_or_response()
+    if error_response:
+        return error_response
+
+    chat_id = profile["chat_id"]
+    user_id = get_logged_in_user_id()
+    on_success = None
+    if user_id and get_ai_request_page() == "user":
+        profile_key = profile["profile_key"]
+        conversation_id = get_request_conversation_id()
+        if conversation_id:
+            conversation = set_current_remote_chat_conversation(
+                user_id,
+                profile_key,
+                conversation_id
+            )
+            if not conversation:
+                return jsonify({"success": False, "message": "会话不存在"}), 404
+        else:
+            conversation = get_or_create_current_conversation(user_id, profile_key)
+
+        chat_id = conversation["remote_chat_id"]
+
+        def persist_user_chat(result):
+            updated = append_remote_chat_messages(
+                user_id,
+                profile_key,
+                conversation["id"],
+                [
+                    {"role": "user", "text": message},
+                    {"role": "assistant", "text": result.get("reply", "")}
+                ]
+            )
+            if updated:
+                result["conversation_id"] = updated["id"]
+                result["conversation"] = updated
+
+        on_success = persist_user_chat
 
     return chat_response(
         message,
-        chat_id=profile["chat_id"],
+        chat_id=chat_id,
         api_key_env=profile.get("api_key_env") or None,
-        api_key=profile.get("api_key") or None
+        api_key=profile.get("api_key") or None,
+        on_success=on_success
     )
+
+
+@ai_bp.route("/ai/tools/session", methods=["POST"])
+def tools_ai_session_reset():
+    user_id = get_logged_in_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "请先登录"}), 401
+
+    profile, error_response = get_tools_chat_profile_or_response()
+    if error_response:
+        return error_response
+
+    conversation = create_remote_chat_conversation(user_id, profile["profile_key"])
+    return jsonify({
+        "success": True,
+        "message": "已开启新的远程会话",
+        "remote_chat_id": conversation["remote_chat_id"],
+        "current": conversation,
+        "conversations": list_remote_chat_conversations(user_id, profile["profile_key"])
+    })
 
 
 @ai_bp.route("/ai/tools/recommend", methods=["POST"])
@@ -446,8 +654,9 @@ def fastgpt_ai_recommend():
     except RuntimeError as e:
         return jsonify({
             "success": False,
-            "message": str(e)
-        }), 500
+            "code": "ai_profile_unavailable",
+            "message": "FastGPT 智能推荐未配置或已停用，请先选择一个可用工具"
+        }), 503
 
     response = recommend_response(
         load_fastgpt_tools(),

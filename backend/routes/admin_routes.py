@@ -1,16 +1,28 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, current_app, jsonify, request, session
 
 from backend.services.admin import (
     export_database_config,
     list_fastgpt_request_logs,
     list_api_endpoints,
     list_tool_data,
+    soft_delete_tool,
+    test_all_fastgpt_profiles,
+    test_fastgpt_profile,
     update_api_endpoint,
     update_tool_state,
     upsert_tool_data
+)
+from backend.services.auth import (
+    list_accounts_for_admin,
+    reset_account_password
+)
+from backend.services.comment_store_mysql import (
+    delete_comment,
+    delete_comments,
+    list_comments_for_admin
 )
 from backend.services.feature_explanation_store import (
     get_feature_explanation,
@@ -66,12 +78,140 @@ def feedback_list():
     return jsonify({"success": True, "feedback": feedback})
 
 
+@admin_api_bp.route("/users", methods=["GET"])
+@admin_required
+def admin_users():
+    try:
+        users = list_accounts_for_admin()
+    except Exception:
+        return jsonify({
+            "success": False,
+            "message": "用户读取失败"
+        }), 500
+
+    return jsonify({
+        "success": True,
+        "users": users
+    })
+
+
+@admin_api_bp.route("/users/<int:user_id>/password", methods=["POST"])
+@admin_required
+def admin_user_password_reset(user_id):
+    data = request.get_json(silent=True) or {}
+
+    try:
+        user = reset_account_password(user_id, data.get("password", ""))
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc)
+        }), 400
+    except Exception:
+        return jsonify({
+            "success": False,
+            "message": "密码重置失败"
+        }), 500
+
+    return jsonify({
+        "success": True,
+        "message": "密码已重置",
+        "user": user
+    })
+
+
+@admin_api_bp.route("/comments", methods=["GET"])
+@admin_required
+def admin_comments():
+    page_key = request.args.get("page_key", "tools")
+    page = request.args.get("page", 1)
+    page_size = request.args.get("page_size", 50)
+    sort = request.args.get("sort", "time")
+
+    if sort not in {"time", "hot"}:
+        sort = "time"
+
+    try:
+        result = list_comments_for_admin(
+            page_key=page_key,
+            page=page,
+            page_size=page_size,
+            sort=sort
+        )
+    except Exception:
+        return jsonify({
+            "success": False,
+            "message": "评论读取失败"
+        }), 500
+
+    return jsonify({
+        "success": True,
+        **result
+    })
+
+
+@admin_api_bp.route("/comments/<int:comment_id>", methods=["DELETE"])
+@admin_required
+def admin_comment_delete(comment_id):
+    try:
+        result = delete_comment(comment_id)
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc)
+        }), 404
+    except Exception:
+        return jsonify({
+            "success": False,
+            "message": "评论删除失败"
+        }), 500
+
+    return jsonify({
+        "success": True,
+        "data": result
+    })
+
+
+@admin_api_bp.route("/comments/bulk", methods=["POST"])
+@admin_api_bp.route("/comments/bulk-delete", methods=["POST"])
+@admin_required
+def admin_comment_bulk_delete():
+    data = request.get_json(silent=True) or {}
+
+    try:
+        result = delete_comments(data.get("comment_ids", []))
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc)
+        }), 400
+    except Exception:
+        return jsonify({
+            "success": False,
+            "message": "评论批量删除失败"
+        }), 500
+
+    return jsonify({
+        "success": True,
+        "data": result
+    })
+
+
 @admin_api_bp.route("/endpoints", methods=["GET"])
 @admin_required
 def api_endpoints():
     return jsonify({
         "success": True,
         "data": list_api_endpoints()
+    })
+
+
+@admin_api_bp.route("/config/status", methods=["GET"])
+@admin_required
+def config_status():
+    return jsonify({
+        "success": True,
+        "data": current_app.config.get("STARTUP_CONFIG_STATUS", {})
     })
 
 
@@ -156,6 +296,58 @@ def tool_data_update(source, tool_id):
     return jsonify({
         "success": True,
         "data": result
+    })
+
+
+@admin_api_bp.route("/tools/<source>/<tool_id>", methods=["DELETE"])
+@admin_required
+def tool_data_delete(source, tool_id):
+    try:
+        result = soft_delete_tool(source, tool_id)
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+
+    return jsonify({
+        "success": True,
+        "data": result
+    })
+
+
+@admin_api_bp.route("/fastgpt/health/<tool_id>", methods=["POST"])
+@admin_required
+def fastgpt_health(tool_id):
+    data = request.get_json(silent=True) or {}
+    try:
+        result = test_fastgpt_profile(
+            tool_id,
+            system_prompt=data.get("system_prompt", ""),
+            user_prompt=data.get("user_prompt", "")
+        )
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+
+    return jsonify({
+        "success": True,
+        "data": result
+    })
+
+
+@admin_api_bp.route("/fastgpt/health", methods=["POST"])
+@admin_required
+def fastgpt_health_all():
+    data = request.get_json(silent=True) or {}
+    return jsonify({
+        "success": True,
+        "data": test_all_fastgpt_profiles(
+            system_prompt=data.get("system_prompt", ""),
+            user_prompt=data.get("user_prompt", "")
+        )
     })
 
 

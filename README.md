@@ -10,10 +10,11 @@
 - 工具关键词：`ai_tool_keywords`
 - FastGPT 会话配置和 API Key：`ai_chat_profiles`
 - 后台接口说明：`api_endpoint_meta`
-- 评论区：`comments`、`comment_likes`
+- 评论区：`comments`、`comment_likes`、`comment_replies`
 - 登录账号：`app_users`
 - 用户常用 AI：`user_ai_favorites`
 - 用户 AI 对话历史：`user_ai_chat_histories`
+- 用户页面远程 AI 会话：`user_ai_remote_chats`
 - 页面功能解释：`feature_explanations`
 
 评论发布者名称由登录会话中的显示名称或用户名确定，前端不能自定义昵称。
@@ -107,7 +108,7 @@ python scripts/database/import_ai_tools_to_db.py
 初始化脚本会重复安全地执行：
 
 - 创建或升级 `ai_tools`、`ai_tool_keywords`、`ai_chat_profiles`、`api_endpoint_meta`
-- 创建评论区表 `comments`、`comment_likes`
+- 创建评论区表 `comments`、`comment_likes`、`comment_replies`
 - 创建账号表 `app_users`，并以 `scrypt` 密码哈希初始化管理员和普通用户
 - 创建账号级 AI 收藏表 `user_ai_favorites`
 - 创建账号级 AI 对话历史表 `user_ai_chat_histories`
@@ -148,6 +149,13 @@ PUT   /api/admin/endpoints/<endpoint>
 GET   /api/admin/tools?source=local
 POST  /api/admin/tools
 PATCH /api/admin/tools/<source>/<tool_id>
+GET   /api/admin/users
+POST  /api/admin/users/<user_id>/password
+GET   /api/admin/comments?page_key=all
+DELETE /api/admin/comments/<comment_id>
+POST  /api/admin/comments/bulk
+POST  /api/admin/fastgpt/health
+POST  /api/admin/fastgpt/health/<tool_id>
 GET   /api/admin/export
 GET   /api/admin/fastgpt/logs?limit=100
 ```
@@ -167,6 +175,8 @@ GET       /api/comments
 POST      /api/comments
 GET       /api/comments/events
 POST      /api/comments/<comment_id>/like
+GET       /api/comments/<comment_id>/replies
+POST      /api/comments/<comment_id>/replies
 ```
 
 ## FastGPT 工具维护
@@ -201,6 +211,11 @@ FastGPT 左侧工具可以加入“常用”，收藏记录按登录账号保存
 仅作为当前页面缓存；支持导出 Markdown，并可在重新登录或更换浏览器后恢复。
 单个 AI 最多保留最近 200 条记录；“清空对话”只删除当前账号当前 AI 的历史，并要求二次确认。
 
+`/user` 页面内嵌的“智能对话”按登录账号在 `user_ai_remote_chats` 中保存独立 FastGPT
+远程 `chatId`，避免不同本地用户共用同一个远程上下文。“清空本页”和单条消息删除只影响当前浏览器页面显示，不会删除 FastGPT 远程历史；“新会话”会为当前登录账号生成新的远程 `chatId`，之后的问题不再继续使用上一段远程上下文。
+
+后台提供独立的“AI 测试”页，可配置统一测试系统提示词和用户提示词。一键测试会逐个访问所有 FastGPT 工具 profile，等待全部返回后以列表展示 `OK`、`MISSING_KEY`、`HTTP_401`、`ERROR` 等状态代码、HTTP 状态、耗时和返回摘要。绿色表示该 profile 可继续使用，红色表示需要检查 API Key、profile 状态或 FastGPT 服务。
+
 ## 日志说明
 
 日志默认写入 `logs/`，该目录已被 `.gitignore` 忽略，不应提交到 Git。
@@ -225,6 +240,10 @@ FastGPT 顶部提供四字入口“功能解释”。点击后通过
 评论区通过 SSE（Server-Sent Events）接收新评论和点赞通知。浏览器会自动维护
 `GET /api/comments/events?page_key=...` 连接，并在其他用户发布评论或点赞后刷新当前列表。
 该实现不需要额外前端依赖；使用多进程部署时，需要把进程内事件代理替换为 Redis 等跨进程消息服务。
+
+评论列表显示评论 ID，鼠标悬停整条评论后可点击进入 `/comments/<comment_id>` 详情页。详情页展示完整评论、点赞按钮和回复区；回复保存在 `comment_replies`，按楼层顺序展示，并同时显示楼层号和回复 ID。后台“评论管理”支持按来源查看、打开详情、单条删除和批量删除；删除顶层评论时，关联点赞和回复会随外键级联删除。
+
+后台“用户管理”可查看账号 ID、用户名、角色、启用状态和最近登录时间，并可为任意账号重置密码。重置密码只写入 `scrypt` 哈希，不回显、不记录明文密码。
 
 ## 项目结构
 
@@ -253,8 +272,10 @@ Windows PowerShell：
 .\.venv\Scripts\python.exe -m compileall -q backend scripts app.py
 node --check frontend/static/js/admin.js
 node --check frontend/static/js/comments.js
+node --check frontend/static/js/comment_detail.js
 node --check frontend/static/js/fastgpt.js
 node --check frontend/static/js/login.js
+node --check frontend/static/js/tools.js
 git diff --check
 ```
 

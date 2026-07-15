@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import json
+import time
 from datetime import datetime
 from pathlib import Path
+from urllib.error import HTTPError
 
 from flask import current_app
 
@@ -13,6 +15,7 @@ from backend.services.tool_store_db import (
     upsert_chat_profile,
     upsert_tool_by_source
 )
+from backend.services.ai_service import call_fastgpt_api
 
 
 VALID_TOOL_SOURCES = {"local", "fastgpt", "custom"}
@@ -333,6 +336,156 @@ def update_tool_state(source, tool_id, enabled=None, sort_order=None):
     }
 
 
+def soft_delete_tool(source, tool_id):
+    return update_tool_state(source, tool_id, enabled=False)
+
+
+DEFAULT_FASTGPT_HEALTH_SYSTEM_PROMPT = "You are a health-check assistant. Reply with OK only."
+DEFAULT_FASTGPT_HEALTH_USER_PROMPT = "Reply OK"
+
+
+def normalize_health_prompt(value, default):
+    text = str(value or "").strip()
+    return text if text else default
+
+
+def test_fastgpt_profile(tool_id, system_prompt=None, user_prompt=None):
+    tool_id = str(tool_id or "").strip()
+    if not tool_id:
+        raise ValueError("tool_id is required")
+
+    with get_db() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    profile_key,
+                    tool_key,
+                    name,
+                    api_key,
+                    api_key_env,
+                    chat_id,
+                    enabled
+                FROM ai_chat_profiles
+                WHERE tool_key = %s OR profile_key = %s
+                ORDER BY CASE WHEN tool_key = %s THEN 0 ELSE 1 END, id ASC
+                LIMIT 1
+                """,
+                (tool_id, tool_id, tool_id)
+            )
+            profile = cursor.fetchone()
+
+    if not profile:
+        return {
+            "ok": False,
+            "status": "missing_profile",
+            "status_code": "MISSING_PROFILE",
+            "http_status": None,
+            "elapsed_ms": None,
+            "message": "No FastGPT profile found",
+            "tool_id": tool_id
+        }
+
+    if not profile.get("enabled"):
+        return {
+            "ok": False,
+            "status": "disabled",
+            "status_code": "DISABLED",
+            "http_status": None,
+            "elapsed_ms": None,
+            "message": "Profile is disabled",
+            "tool_id": tool_id,
+            "profile_key": profile.get("profile_key", ""),
+            "chat_id": profile.get("chat_id", "")
+        }
+
+    if not profile.get("api_key") and not profile.get("api_key_env"):
+        return {
+            "ok": False,
+            "status": "missing_key",
+            "status_code": "MISSING_KEY",
+            "http_status": None,
+            "elapsed_ms": None,
+            "message": "FastGPT API key is missing",
+            "tool_id": tool_id,
+            "profile_key": profile.get("profile_key", ""),
+            "chat_id": profile.get("chat_id", "")
+        }
+
+    try:
+        started_at = time.perf_counter()
+        reply = call_fastgpt_api(
+            normalize_health_prompt(system_prompt, DEFAULT_FASTGPT_HEALTH_SYSTEM_PROMPT),
+            normalize_health_prompt(user_prompt, DEFAULT_FASTGPT_HEALTH_USER_PROMPT),
+            chat_id=profile.get("chat_id", ""),
+            api_key_env=profile.get("api_key_env") or None,
+            api_key=profile.get("api_key") or None
+        )
+        elapsed_ms = int((time.perf_counter() - started_at) * 1000)
+    except HTTPError as exc:
+        elapsed_ms = int((time.perf_counter() - started_at) * 1000) if "started_at" in locals() else None
+        return {
+            "ok": False,
+            "status": f"http_{exc.code}",
+            "status_code": f"HTTP_{exc.code}",
+            "http_status": exc.code,
+            "elapsed_ms": elapsed_ms,
+            "message": f"HTTPError: {str(exc)[:180]}",
+            "tool_id": tool_id,
+            "profile_key": profile.get("profile_key", ""),
+            "chat_id": profile.get("chat_id", "")
+        }
+    except Exception as exc:
+        elapsed_ms = int((time.perf_counter() - started_at) * 1000) if "started_at" in locals() else None
+        return {
+            "ok": False,
+            "status": "error",
+            "status_code": "ERROR",
+            "http_status": None,
+            "elapsed_ms": elapsed_ms,
+            "message": f"{exc.__class__.__name__}: {str(exc)[:180]}",
+            "tool_id": tool_id,
+            "profile_key": profile.get("profile_key", ""),
+            "chat_id": profile.get("chat_id", "")
+        }
+
+    reply_text = str(reply or "").strip()
+    return {
+        "ok": bool(reply_text),
+        "status": "ok" if reply_text else "empty_reply",
+        "status_code": "OK" if reply_text else "EMPTY_REPLY",
+        "http_status": 200,
+        "elapsed_ms": elapsed_ms,
+        "message": reply_text[:120] if reply_text else "FastGPT returned an empty reply",
+        "tool_id": tool_id,
+        "profile_key": profile.get("profile_key", ""),
+        "chat_id": profile.get("chat_id", "")
+    }
+
+
+def test_all_fastgpt_profiles(system_prompt=None, user_prompt=None):
+    tools = list_tools_by_source("fastgpt")
+    results = []
+
+    for tool in tools:
+        result = test_fastgpt_profile(
+            tool.get("id", ""),
+            system_prompt=system_prompt,
+            user_prompt=user_prompt
+        )
+        result["title"] = tool.get("title", "")
+        result["enabled"] = tool.get("enabled", True)
+        results.append(result)
+
+    failed = [item for item in results if not item.get("ok")]
+    return {
+        "total": len(results),
+        "ok_count": len(results) - len(failed),
+        "failed_count": len(failed),
+        "results": results
+    }
+
+
 def export_database_config():
     tables = {
         "ai_tools": "SELECT * FROM ai_tools ORDER BY source, sort_order, id",
@@ -347,7 +500,7 @@ def export_database_config():
             for table, sql in tables.items():
                 cursor.execute(sql)
                 rows = cursor.fetchall()
-                data[table] = [serialize_db_row(row) for row in rows]
+                data[table] = [serialize_db_row(row, table) for row in rows]
 
     return {
         "exported_at": datetime.now().isoformat(timespec="seconds"),
@@ -356,11 +509,13 @@ def export_database_config():
     }
 
 
-def serialize_db_row(row):
+def serialize_db_row(row, table=""):
     serialized = {}
     for key, value in row.items():
         if isinstance(value, datetime):
             serialized[key] = value.isoformat(timespec="seconds")
+        elif table == "ai_chat_profiles" and key == "api_key":
+            serialized[key] = "***configured***" if value else ""
         else:
             serialized[key] = value
     return serialized

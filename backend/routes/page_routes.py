@@ -5,6 +5,7 @@ from flask import Blueprint, redirect, render_template, request, session, url_fo
 
 from backend.services.admin import list_api_endpoints
 from backend.services.auth import authenticate_account, create_user_account
+from backend.services.comment_store_mysql import get_comment
 from backend.services.fastgpt_tool_srore import load_tools
 from backend.services.quote_service import get_login_quote
 from backend.services.tool_srore import load_tools_data
@@ -148,6 +149,34 @@ def tools():
 
     tool_list = load_tools_data()
     return render_template("ures/tools.html", tools=tool_list)
+
+
+@page_bp.route("/comments/<int:comment_id>")
+def comment_detail(comment_id):
+    if not session.get("role"):
+        return redirect(url_for("page.login"))
+
+    page_key = request.args.get("page_key", "tools")
+    comment = get_comment(comment_id, page_key=page_key)
+
+    if not comment:
+        return render_template(
+            "ures/comment_detail.html",
+            comment=None,
+            page_key=page_key,
+            back_url=url_for("page.user_home"),
+        ), 404
+
+    back_url = url_for("page.user_home")
+    if request.args.get("from") == "tools":
+        back_url = url_for("page.tools")
+
+    return render_template(
+        "ures/comment_detail.html",
+        comment=comment,
+        page_key=page_key,
+        back_url=back_url,
+    )
 
 
 @page_bp.route("/admin")

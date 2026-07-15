@@ -6,7 +6,9 @@ from flask import Blueprint, Response, jsonify, request, session, stream_with_co
 from backend.services.comment_realtime import comment_event_broker, encode_sse
 from backend.services.comment_store_mysql import (
     add_comment,
+    add_comment_reply,
     build_visitor_key,
+    list_comment_replies,
     list_comments,
     toggle_like_comment
 )
@@ -14,6 +16,90 @@ from backend.utils.logger_config import comments_logger, error_logger
 
 
 comment_bp = Blueprint("comment_api", __name__, url_prefix="/api")
+
+
+@comment_bp.route("/comments/<int:comment_id>/replies", methods=["GET"])
+def get_comment_replies(comment_id):
+    """
+    Called by: comment detail page.
+    Purpose: Return all replies under one comment.
+    调用方：评论详情页。
+    作用：读取某条评论下面的盖楼回复。
+    """
+    try:
+        replies = list_comment_replies(comment_id)
+        return jsonify({
+            "success": True,
+            "replies": replies,
+            "total": len(replies)
+        })
+
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 404
+
+    except Exception as e:
+        error_logger.exception(
+            f"读取评论回复失败 | comment_id={comment_id} | error={str(e)}"
+        )
+        return jsonify({
+            "success": False,
+            "message": "回复读取失败"
+        }), 500
+
+
+@comment_bp.route("/comments/<int:comment_id>/replies", methods=["POST"])
+def create_comment_reply(comment_id):
+    """
+    Called by: comment detail page.
+    Purpose: Add one reply under a top-level comment.
+    调用方：评论详情页。
+    作用：在某条评论下面新增盖楼回复。
+    """
+    data = request.get_json(silent=True) or {}
+    content = data.get("content", "")
+    nickname = session.get("display_name") or session.get("username")
+
+    if not session.get("user_id") or not nickname:
+        return jsonify({
+            "success": False,
+            "message": "请先登录后再回复"
+        }), 401
+
+    try:
+        reply = add_comment_reply(
+            comment_id=comment_id,
+            nickname=nickname,
+            content=content
+        )
+
+        comments_logger.info(
+            f"新增评论回复成功 | comment_id={comment_id} | "
+            f"reply_id={reply['id']} | nickname={reply['nickname']}"
+        )
+
+        return jsonify({
+            "success": True,
+            "message": "回复成功",
+            "reply": reply
+        })
+
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+
+    except Exception as e:
+        error_logger.exception(
+            f"新增评论回复异常 | comment_id={comment_id} | error={str(e)}"
+        )
+        return jsonify({
+            "success": False,
+            "message": "回复保存失败"
+        }), 500
 
 
 @comment_bp.route("/comments/events", methods=["GET"])

@@ -72,8 +72,20 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     comments.forEach(function (comment) {
+        const detailUrl = buildCommentDetailUrl(comment.id);
         const item = document.createElement("div");
-        item.className = "comment-item";
+        item.className = "comment-item comment-item-clickable";
+        item.tabIndex = 0;
+        item.setAttribute("role", "link");
+        item.setAttribute("aria-label", "进入评论");
+        item.addEventListener("click", function () {
+            window.location.href = detailUrl;
+        });
+        item.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                window.location.href = detailUrl;
+            }
+        });
 
         const header = document.createElement("div");
         header.className = "comment-item-header";
@@ -93,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const time = document.createElement("div");
         time.className = "comment-time";
-        time.textContent = comment.created_at || "";
+        time.textContent = `${comment.created_at || ""} · ID ${comment.id || ""}`;
 
         nameTimeBox.appendChild(name);
         nameTimeBox.appendChild(time);
@@ -107,7 +119,8 @@ document.addEventListener("DOMContentLoaded", function () {
         likeBtn.textContent = `👍 ${comment.like_count || 0}`;
         likeBtn.dataset.oldText = likeBtn.textContent;
 
-        likeBtn.addEventListener("click", function () {
+        likeBtn.addEventListener("click", function (event) {
+            event.stopPropagation();
             likeComment(comment.id, likeBtn);
         });
 
@@ -115,7 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
         header.appendChild(likeBtn);
 
         const content = document.createElement("div");
-        content.className = "comment-content";
+        content.className = "comment-content comment-content-preview";
         content.textContent = comment.content || "";
 
         item.appendChild(header);
@@ -124,6 +137,12 @@ document.addEventListener("DOMContentLoaded", function () {
         commentList.appendChild(item);
     });
 }
+
+    function buildCommentDetailUrl(commentId) {
+        const from = window.location.pathname === "/tools" ? "tools" : "user";
+        return `/comments/${commentId}?page_key=${encodeURIComponent(PAGE_KEY)}&from=${from}`;
+    }
+
     function renderPagination(page, pages, total) {
         currentPage = page;
         totalPages = Math.max(pages, 1);

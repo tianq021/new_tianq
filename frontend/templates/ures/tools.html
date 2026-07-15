@@ -88,7 +88,11 @@
                             <input id="{{ tool.id }}-max" type="number" value="100">
                         </label>
 
-                        <button type="button" onclick="generateRandomNumber('{{ tool.id }}')">
+                        <button
+                            type="button"
+                            class="random-generate-btn"
+                            data-tool-id="{{ tool.id }}"
+                        >
                             生成随机数
                         </button>
 

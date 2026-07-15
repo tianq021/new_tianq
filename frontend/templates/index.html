@@ -8,6 +8,8 @@
 </head>
 
 <body>
+    <div class="user-ambient-bg" aria-hidden="true"></div>
+
     <main class="page">
         <section class="workspace-layout">
             <aside class="left-panel">
@@ -168,6 +170,9 @@
                         data-api-url="/api/ai/tools/chat"
                         data-mode="chat"
                         data-embedded="true"
+                        data-user-id="{{ session.get('user_id') }}"
+                        data-session-url="/api/ai/tools/session"
+                        data-conversations-url="/api/ai/tools/conversations"
                     >
                         <div id="aiRecommendPanel" class="ai-recommend-panel">
                             <div class="ai-recommend-header">

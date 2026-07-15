@@ -7,6 +7,13 @@ const toolFilePath = document.querySelector("#tool-file-path");
 const toolSourceNote = document.querySelector("#tool-source-note");
 const toolForm = document.querySelector("#tool-form");
 const toolStatus = document.querySelector("#tool-status");
+const configStatusButton = document.querySelector("#config-status-check");
+const configStatus = document.querySelector("#config-status");
+const fastgptHealthCheckAllButton = document.querySelector("#fastgpt-health-check-all");
+const fastgptHealthSystemPrompt = document.querySelector("#fastgpt-health-system-prompt");
+const fastgptHealthUserPrompt = document.querySelector("#fastgpt-health-user-prompt");
+const fastgptHealthSummary = document.querySelector("#fastgpt-health-summary");
+const fastgptHealthResultList = document.querySelector("#fastgpt-health-result-list");
 const exportButton = document.querySelector("#config-export");
 const refreshLogsButton = document.querySelector("#refresh-fastgpt-logs");
 const logLimit = document.querySelector("#fastgpt-log-limit");
@@ -17,6 +24,15 @@ const featureExplanationStatus = document.querySelector("#feature-explanation-st
 const refreshUserFeedbackButton = document.querySelector("#refresh-user-feedback");
 const userFeedbackStatus = document.querySelector("#user-feedback-status");
 const userFeedbackList = document.querySelector("#user-feedback-list");
+const refreshAdminUsersButton = document.querySelector("#refresh-admin-users");
+const adminUserStatus = document.querySelector("#admin-user-status");
+const adminUserList = document.querySelector("#admin-user-list");
+const adminCommentPageKey = document.querySelector("#admin-comment-page-key");
+const adminCommentSort = document.querySelector("#admin-comment-sort");
+const refreshAdminCommentsButton = document.querySelector("#refresh-admin-comments");
+const deleteSelectedCommentsButton = document.querySelector("#delete-selected-comments");
+const adminCommentStatus = document.querySelector("#admin-comment-status");
+const adminCommentList = document.querySelector("#admin-comment-list");
 
 let currentTools = [];
 
@@ -54,6 +70,12 @@ document.querySelectorAll("[data-tab-target]").forEach((button) => {
         }
         if (button.dataset.tabTarget === "feedback-panel") {
             loadUserFeedback();
+        }
+        if (button.dataset.tabTarget === "users-panel") {
+            loadAdminUsers();
+        }
+        if (button.dataset.tabTarget === "comments-panel") {
+            loadAdminComments();
         }
     });
 });
@@ -128,9 +150,13 @@ function renderToolList() {
 
         const actions = document.createElement("div");
         actions.className = "tool-row-actions";
+        if (toolSource.value === "fastgpt") {
+            actions.appendChild(createSmallButton("测试", () => testFastgptTool(tool.id)));
+        }
         actions.appendChild(createSmallButton(tool.enabled === false ? "启用" : "停用", () => {
             updateToolState(tool.id, { enabled: tool.enabled === false });
         }));
+        actions.appendChild(createSmallButton("移除", () => softDeleteTool(tool.id), tool.enabled === false));
         actions.appendChild(createSmallButton("上移", () => moveTool(index, -1), index === 0));
         actions.appendChild(createSmallButton("下移", () => moveTool(index, 1), index === currentTools.length - 1));
 
@@ -306,6 +332,141 @@ async function updateToolState(toolId, changes) {
     }
 }
 
+async function softDeleteTool(toolId) {
+    if (!window.confirm("确认移除这个工具？它会被停用，不会从数据库硬删除。")) {
+        return;
+    }
+
+    setTextStatus(toolStatus, "正在移除工具...");
+    try {
+        const response = await fetch(`/api/admin/tools/${encodeURIComponent(toolSource.value)}/${encodeURIComponent(toolId)}`, {
+            method: "DELETE"
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "移除失败");
+        }
+        await loadTools();
+        setTextStatus(toolStatus, "工具已停用保留");
+    } catch (error) {
+        setTextStatus(toolStatus, error.message, true);
+    }
+}
+
+async function testFastgptTool(toolId) {
+    setTextStatus(toolStatus, `正在测试 ${toolId}...`);
+    try {
+        const response = await fetch(`/api/admin/fastgpt/health/${encodeURIComponent(toolId)}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(getFastgptHealthPayload())
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "测试失败");
+        }
+        const data = result.data || {};
+        setTextStatus(
+            toolStatus,
+            `${toolId}: ${data.ok ? "可用" : "不可用"} - ${data.message || data.status || ""}`,
+            !data.ok
+        );
+    } catch (error) {
+        setTextStatus(toolStatus, error.message, true);
+    }
+}
+
+async function testAllFastgptTools() {
+    setTextStatus(fastgptHealthSummary || toolStatus, "正在测试全部 AI，请等待所有工具返回...");
+    if (fastgptHealthResultList) {
+        fastgptHealthResultList.innerHTML = '<p class="empty-state">正在测试，请稍候...</p>';
+    }
+    if (fastgptHealthCheckAllButton) {
+        fastgptHealthCheckAllButton.disabled = true;
+    }
+
+    try {
+        const response = await fetch("/api/admin/fastgpt/health", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(getFastgptHealthPayload())
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "批量检查失败");
+        }
+        const data = result.data || {};
+        renderFastgptHealthResults(data.results || []);
+        setTextStatus(
+            fastgptHealthSummary || toolStatus,
+            `测试完成：${Number(data.ok_count || 0)}/${Number(data.total || 0)} 可用，${Number(data.failed_count || 0)} 个异常`,
+            Number(data.failed_count || 0) > 0
+        );
+    } catch (error) {
+        if (fastgptHealthResultList) {
+            fastgptHealthResultList.innerHTML = "";
+        }
+        setTextStatus(fastgptHealthSummary || toolStatus, error.message, true);
+    } finally {
+        if (fastgptHealthCheckAllButton) {
+            fastgptHealthCheckAllButton.disabled = false;
+        }
+    }
+}
+
+function renderFastgptHealthResults(results) {
+    if (!fastgptHealthResultList) {
+        return;
+    }
+
+    fastgptHealthResultList.innerHTML = "";
+
+    if (!results.length) {
+        fastgptHealthResultList.innerHTML = '<p class="empty-state">暂无可测试的 FastGPT 工具</p>';
+        return;
+    }
+
+    results.forEach((item) => {
+        const row = document.createElement("article");
+        row.className = `ai-health-result ${item.ok ? "success" : "error"}`;
+
+        const elapsedText = item.elapsed_ms === null || item.elapsed_ms === undefined
+            ? "-"
+            : `${Number(item.elapsed_ms || 0)} ms`;
+        const httpText = item.http_status ? `HTTP ${item.http_status}` : "本地检查";
+
+        row.innerHTML = `
+            <div class="ai-health-result-head">
+                <strong>${escapeHtml(item.title || item.tool_id || "FastGPT 工具")}</strong>
+                <span>${escapeHtml(item.status_code || item.status || "")}</span>
+                <small>${escapeHtml(item.tool_id || "")} · ${escapeHtml(item.chat_id || "")}</small>
+            </div>
+            <div class="ai-health-result-meta">
+                <code>${escapeHtml(httpText)}</code>
+                <code>${escapeHtml(elapsedText)}</code>
+                <code>${escapeHtml(item.profile_key || "")}</code>
+            </div>
+            <p>${escapeHtml(item.message || "")}</p>
+        `;
+        fastgptHealthResultList.appendChild(row);
+    });
+}
+
+function getFastgptHealthPayload() {
+    return {
+        system_prompt: fastgptHealthSystemPrompt ? fastgptHealthSystemPrompt.value.trim() : "",
+        user_prompt: fastgptHealthUserPrompt ? fastgptHealthUserPrompt.value.trim() : ""
+    };
+}
+
+if (fastgptHealthCheckAllButton) {
+    fastgptHealthCheckAllButton.addEventListener("click", testAllFastgptTools);
+}
+
 async function moveTool(index, direction) {
     const current = currentTools[index];
     const target = currentTools[index + direction];
@@ -319,6 +480,37 @@ async function moveTool(index, direction) {
         updateToolState(current.id, { sort_order: targetOrder }),
         updateToolState(target.id, { sort_order: currentOrder })
     ]);
+}
+
+async function loadConfigStatus() {
+    if (!configStatus) {
+        return;
+    }
+    setTextStatus(configStatus, "正在检查配置...");
+    try {
+        const response = await fetch("/api/admin/config/status");
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "配置检查失败");
+        }
+        const data = result.data || {};
+        const failed = data.failed || [];
+        if (!failed.length) {
+            setTextStatus(configStatus, "配置检查通过");
+            return;
+        }
+        setTextStatus(
+            configStatus,
+            `配置提醒：${failed.map((item) => `${item.key} ${item.message}`).join("；")}`,
+            true
+        );
+    } catch (error) {
+        setTextStatus(configStatus, error.message, true);
+    }
+}
+
+if (configStatusButton) {
+    configStatusButton.addEventListener("click", loadConfigStatus);
 }
 
 if (exportButton) {
@@ -504,6 +696,339 @@ async function loadUserFeedback() {
 
 if (refreshUserFeedbackButton) {
     refreshUserFeedbackButton.addEventListener("click", loadUserFeedback);
+}
+
+async function loadAdminUsers() {
+    if (!adminUserList) {
+        return;
+    }
+
+    setTextStatus(adminUserStatus, "正在读取...");
+    adminUserList.innerHTML = "";
+
+    try {
+        const response = await fetch("/api/admin/users");
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "用户读取失败");
+        }
+
+        renderAdminUsers(result.users || []);
+        adminUserList.dataset.loaded = "1";
+        setTextStatus(adminUserStatus, `共 ${Number((result.users || []).length)} 个账号`);
+    } catch (error) {
+        setTextStatus(adminUserStatus, error.message, true);
+    }
+}
+
+function renderAdminUsers(users) {
+    adminUserList.innerHTML = "";
+
+    if (!users.length) {
+        adminUserList.innerHTML = '<p class="empty-state">暂无用户</p>';
+        return;
+    }
+
+    users.forEach(function (user) {
+        const row = document.createElement("article");
+        row.className = "log-row admin-user-row";
+
+        const head = document.createElement("div");
+        head.className = "log-row-head";
+        head.innerHTML = `
+            <strong>${escapeHtml(user.display_name || user.username || "用户")}</strong>
+            <span>用户 ID ${Number(user.id || 0)}</span>
+            <span>${escapeHtml(user.role === "admin" ? "管理员" : "普通用户")}</span>
+            <small>${escapeHtml(user.username || "")} · ${user.enabled ? "启用" : "停用"} · 最近登录 ${escapeHtml(user.last_login_at || "无")}</small>
+        `;
+
+        const form = document.createElement("form");
+        form.className = "admin-password-reset";
+        form.innerHTML = `
+            <input type="password" name="password" minlength="8" maxlength="128" placeholder="输入新密码，至少 8 位" autocomplete="new-password" required>
+            <button class="small-button" type="submit">重置密码</button>
+            <span aria-live="polite"></span>
+        `;
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            resetAdminUserPassword(user, form);
+        });
+
+        row.appendChild(head);
+        row.appendChild(form);
+        adminUserList.appendChild(row);
+    });
+}
+
+async function resetAdminUserPassword(user, form) {
+    const passwordInput = form.elements.password;
+    const status = form.querySelector("span");
+    const button = form.querySelector("button");
+    const password = passwordInput.value;
+
+    if (password.length < 8) {
+        status.textContent = "密码至少需要 8 个字符";
+        status.classList.add("error-text");
+        return;
+    }
+
+    if (!window.confirm(`确认重置 ${user.username} 的密码？`)) {
+        return;
+    }
+
+    button.disabled = true;
+    status.textContent = "正在重置...";
+    status.classList.remove("error-text");
+
+    try {
+        const response = await fetch(`/api/admin/users/${encodeURIComponent(user.id)}/password`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                password: password
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "密码重置失败");
+        }
+
+        passwordInput.value = "";
+        status.textContent = "密码已重置";
+    } catch (error) {
+        status.textContent = error.message;
+        status.classList.add("error-text");
+    } finally {
+        button.disabled = false;
+    }
+}
+
+if (refreshAdminUsersButton) {
+    refreshAdminUsersButton.addEventListener("click", loadAdminUsers);
+}
+
+async function loadAdminComments() {
+    if (!adminCommentList) {
+        return;
+    }
+
+    setTextStatus(adminCommentStatus, "正在读取...");
+    adminCommentList.innerHTML = "";
+
+    try {
+        const params = new URLSearchParams({
+            page_key: adminCommentPageKey.value,
+            sort: adminCommentSort.value,
+            page_size: "100"
+        });
+        const response = await fetch(`/api/admin/comments?${params.toString()}`);
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "评论读取失败");
+        }
+
+        renderAdminComments(result.comments || []);
+        adminCommentList.dataset.loaded = "1";
+        setTextStatus(adminCommentStatus, `共 ${Number(result.total || 0)} 条评论`);
+    } catch (error) {
+        adminCommentList.innerHTML = "";
+        setTextStatus(adminCommentStatus, error.message, true);
+    }
+}
+
+function renderAdminComments(comments) {
+    adminCommentList.innerHTML = "";
+
+    if (!comments.length) {
+        adminCommentList.innerHTML = '<p class="empty-state">暂无评论</p>';
+        updateSelectedCommentState();
+        return;
+    }
+
+    comments.forEach(function (comment) {
+        const row = document.createElement("article");
+        row.className = "log-row admin-comment-row";
+        row.dataset.commentId = String(comment.id || "");
+
+        const head = document.createElement("div");
+        head.className = "log-row-head";
+        const sourceLabel = comment.page_key || "unknown";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "admin-comment-check";
+        checkbox.value = String(comment.id || "");
+        checkbox.setAttribute("aria-label", `选择评论 ${comment.id}`);
+        checkbox.addEventListener("change", updateSelectedCommentState);
+
+        head.innerHTML = `
+            <strong>${escapeHtml(comment.nickname || "匿名用户")}</strong>
+            <span>评论 ID ${Number(comment.id || 0)}</span>
+            <span>来源 ${escapeHtml(sourceLabel)}</span>
+            <small>${escapeHtml(comment.created_at || "")} · 点赞 ${Number(comment.like_count || 0)} · 回复 ${Number(comment.reply_count || 0)}</small>
+        `;
+        head.prepend(checkbox);
+
+        const content = document.createElement("p");
+        content.textContent = comment.content || "";
+
+        const actions = document.createElement("div");
+        actions.className = "admin-comment-actions";
+        const openLink = document.createElement("a");
+        openLink.className = "small-button admin-comment-open";
+        openLink.href = `/comments/${comment.id}?page_key=${encodeURIComponent(comment.page_key || "tools")}&from=admin`;
+        openLink.target = "_blank";
+        openLink.rel = "noopener";
+        openLink.textContent = "打开";
+
+        const deleteButton = createSmallButton("删除", function () {
+            deleteAdminComment(comment);
+        });
+        deleteButton.classList.add("danger-button");
+
+        actions.appendChild(openLink);
+        actions.appendChild(deleteButton);
+
+        row.appendChild(head);
+        row.appendChild(content);
+        row.appendChild(actions);
+        adminCommentList.appendChild(row);
+    });
+
+    updateSelectedCommentState();
+}
+
+async function deleteAdminComment(comment) {
+    if (!window.confirm(`确认删除 #${comment.id} 这条评论？删除后会同时删除点赞和回复。`)) {
+        return;
+    }
+
+    setTextStatus(adminCommentStatus, "正在删除...");
+
+    try {
+        const response = await fetch(`/api/admin/comments/${encodeURIComponent(comment.id)}`, {
+            method: "DELETE"
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "删除失败");
+        }
+        removeAdminCommentRows([comment.id]);
+        setTextStatus(adminCommentStatus, "评论已删除");
+    } catch (error) {
+        setTextStatus(adminCommentStatus, error.message, true);
+    }
+}
+
+function getSelectedAdminCommentIds() {
+    return Array.from(adminCommentList.querySelectorAll(".admin-comment-check:checked"))
+        .map((checkbox) => Number(checkbox.value))
+        .filter((commentId) => commentId > 0);
+}
+
+function updateSelectedCommentState() {
+    if (!deleteSelectedCommentsButton || !adminCommentList) {
+        return;
+    }
+    const selectedCount = getSelectedAdminCommentIds().length;
+    deleteSelectedCommentsButton.disabled = selectedCount === 0;
+    deleteSelectedCommentsButton.textContent = selectedCount > 0
+        ? `删除选中 ${selectedCount}`
+        : "删除选中";
+}
+
+function removeAdminCommentRows(commentIds) {
+    const idSet = new Set((commentIds || []).map((commentId) => String(commentId)));
+    adminCommentList.querySelectorAll(".admin-comment-row").forEach((row) => {
+        if (idSet.has(row.dataset.commentId)) {
+            row.remove();
+        }
+    });
+
+    if (!adminCommentList.querySelector(".admin-comment-row")) {
+        adminCommentList.innerHTML = '<p class="empty-state">暂无评论</p>';
+    }
+
+    updateSelectedCommentState();
+}
+
+async function deleteSelectedAdminComments() {
+    const commentIds = getSelectedAdminCommentIds();
+
+    if (!commentIds.length) {
+        setTextStatus(adminCommentStatus, "请选择要删除的评论", true);
+        return;
+    }
+
+    if (!window.confirm(`确认删除选中的 ${commentIds.length} 条评论？删除后会同时删除点赞和回复。`)) {
+        return;
+    }
+
+    setTextStatus(adminCommentStatus, "正在批量删除...");
+    deleteSelectedCommentsButton.disabled = true;
+
+    try {
+        const response = await fetch("/api/admin/comments/bulk", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                comment_ids: commentIds
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "批量删除失败");
+        }
+        const deletedIds = result.data && result.data.ids ? result.data.ids : commentIds;
+        removeAdminCommentRows(deletedIds);
+        setTextStatus(adminCommentStatus, `已删除 ${Number((result.data && result.data.deleted_count) || deletedIds.length)} 条评论`);
+    } catch (error) {
+        try {
+            const deletedIds = await deleteAdminCommentsOneByOne(commentIds);
+            removeAdminCommentRows(deletedIds);
+            setTextStatus(adminCommentStatus, `已删除 ${deletedIds.length} 条评论`);
+        } catch (fallbackError) {
+            setTextStatus(adminCommentStatus, fallbackError.message || error.message, true);
+            updateSelectedCommentState();
+        }
+    }
+}
+
+async function deleteAdminCommentsOneByOne(commentIds) {
+    const deletedIds = [];
+
+    for (const commentId of commentIds) {
+        const response = await fetch(`/api/admin/comments/${encodeURIComponent(commentId)}`, {
+            method: "DELETE"
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || `评论 ${commentId} 删除失败`);
+        }
+        deletedIds.push(commentId);
+    }
+
+    return deletedIds;
+}
+
+if (refreshAdminCommentsButton) {
+    refreshAdminCommentsButton.addEventListener("click", loadAdminComments);
+}
+
+if (deleteSelectedCommentsButton) {
+    deleteSelectedCommentsButton.disabled = true;
+    deleteSelectedCommentsButton.addEventListener("click", deleteSelectedAdminComments);
+}
+
+if (adminCommentPageKey) {
+    adminCommentPageKey.addEventListener("change", loadAdminComments);
+}
+
+if (adminCommentSort) {
+    adminCommentSort.addEventListener("change", loadAdminComments);
 }
 
 loadTools();

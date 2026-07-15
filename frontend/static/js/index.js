@@ -2,6 +2,44 @@ if ("scrollRestoration" in window.history) {
     window.history.scrollRestoration = "manual";
 }
 
+function randomBetween(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+function renderUserBackgroundShapes() {
+    const ambientBg = document.querySelector(".user-ambient-bg");
+    if (!ambientBg) {
+        return;
+    }
+
+    const types = ["circle", "square", "ring", "line", "diamond"];
+    const shapeCount = window.matchMedia("(max-width: 860px)").matches ? 10 : 16;
+    const fragment = document.createDocumentFragment();
+
+    ambientBg.querySelectorAll(".user-bg-shape").forEach(function (shape) {
+        shape.remove();
+    });
+
+    for (let index = 0; index < shapeCount; index += 1) {
+        const type = types[Math.floor(Math.random() * types.length)];
+        const shape = document.createElement("span");
+        const size = randomBetween(34, type === "line" ? 190 : 150);
+
+        shape.className = `user-bg-shape user-bg-${type}`;
+        shape.style.left = `${randomBetween(-5, 96)}%`;
+        shape.style.top = `${randomBetween(-6, 94)}%`;
+        shape.style.width = `${size}px`;
+        shape.style.height = `${type === "line" ? 2 : size}px`;
+        shape.style.opacity = String(randomBetween(0.22, 0.62));
+        shape.style.setProperty("--rotate", `${randomBetween(0, 180)}deg`);
+        fragment.appendChild(shape);
+    }
+
+    ambientBg.appendChild(fragment);
+}
+
+renderUserBackgroundShapes();
+
 window.addEventListener("load", function () {
     window.scrollTo(0, 0);
 });

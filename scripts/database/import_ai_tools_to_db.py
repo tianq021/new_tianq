@@ -11,6 +11,7 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE_DIR))
 
 from backend.services.db import get_db
+from scripts.database.init_user_schema import migrate_user_ai_remote_chats
 
 
 LOCAL_TOOLS_FILE = BASE_DIR / "data" / "tools" / "tool_data.json"
@@ -59,6 +60,7 @@ def ensure_schema(cursor):
     execute_schema_file(cursor, database_dir / "schema_ai_tools.sql")
     execute_schema_file(cursor, database_dir / "schema_comments.sql")
     execute_schema_file(cursor, database_dir / "schema_users.sql")
+    migrate_user_ai_remote_chats(cursor)
 
     cursor.execute("SHOW COLUMNS FROM ai_tools LIKE 'page_intro'")
     if not cursor.fetchone():

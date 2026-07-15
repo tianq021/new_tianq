@@ -48,6 +48,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     font-weight: 700;
     color: #111827;
 }
@@ -60,11 +61,77 @@
     color: #6b7280;
 }
 
+.ai-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    min-width: 0;
+}
+
+.ai-conversation-select {
+    width: 150px;
+    min-width: 120px;
+    height: 30px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 12px;
+    outline: none;
+}
+
+.ai-conversation-select:focus {
+    border-color: #2563eb;
+}
+
+.ai-recommend-header .ai-header-action {
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ai-recommend-header .ai-header-action:hover {
+    border-color: #2563eb;
+    color: #1d4ed8;
+}
+
+.ai-recommend-header .ai-header-danger:hover {
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+.ai-recommend-header .ai-header-action:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .ai-recommend-messages {
     flex: 1;
     padding: 14px;
     overflow-y: auto;
     background: #f9fafb;
+}
+
+.ai-history-notice {
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 8px 10px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.ai-msg-hidden {
+    display: none !important;
 }
 
 .ai-msg {
@@ -79,14 +146,10 @@
     white-space: pre-wrap;
 }
 
-.ai-deletable {
-    padding-right: 34px;
-}
-
 .ai-msg-delete {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: -9px;
+    right: -9px;
     width: 20px;
     height: 20px;
     display: inline-flex;
@@ -99,6 +162,14 @@
     font-size: 16px;
     line-height: 1;
     cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+    z-index: 2;
+}
+
+.ai-deletable:hover .ai-msg-delete,
+.ai-deletable:focus-within .ai-msg-delete {
+    opacity: 1;
 }
 
 .ai-msg-delete:hover {
@@ -116,6 +187,11 @@
     margin-left: auto;
     background: #dbeafe;
     color: #1e3a8a;
+}
+
+.ai-msg-user .ai-msg-delete {
+    right: auto;
+    left: -9px;
 }
 
 .ai-tool-card {
@@ -214,12 +290,16 @@
     display: flex;
 }
 
-.embedded-ai .ai-recommend-header button {
+.embedded-ai .ai-recommend-header > button {
     display: none;
 }
 
 .embedded-ai .ai-recommend-header {
     height: 48px;
+    flex: 0 0 auto;
+}
+
+.embedded-ai .ai-recommend-header > span {
     flex: 0 0 auto;
 }
 
@@ -254,5 +334,24 @@
     .ai-recommend-panel {
         width: calc(100vw - 32px);
         height: 70vh;
+    }
+
+    .embedded-ai .ai-recommend-header {
+        height: auto;
+        min-height: 48px;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 10px 12px;
+    }
+
+    .embedded-ai .ai-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        margin-left: 0;
+    }
+
+    .embedded-ai .ai-conversation-select {
+        flex: 1 1 150px;
+        width: auto;
     }
 }

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评论详情</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+</head>
+
+<body>
+<div class="page comment-detail-page">
+    <header class="top-header">
+        <div class="header-left">
+            <a class="header-link" href="{{ back_url }}">返回评论区</a>
+        </div>
+
+        <div class="header-right">
+            <a class="header-link" href="{{ url_for('page.logout') }}">退出登录</a>
+        </div>
+    </header>
+
+    <main class="comment-detail-layout">
+        {% if comment %}
+        <article
+            class="card comment-detail-card"
+            data-comment-id="{{ comment.id }}"
+            data-page-key="{{ page_key }}"
+        >
+            <div class="comment-detail-meta">
+                <div class="comment-user-box">
+                    <div class="comment-avatar">{{ (comment.nickname or '匿')[:1] }}</div>
+                    <div>
+                        <div class="comment-name">{{ comment.nickname or '匿名用户' }}</div>
+                        <div class="comment-time">{{ comment.created_at }} · ID {{ comment.id }}</div>
+                    </div>
+                </div>
+
+                <button
+                    id="commentDetailLike"
+                    class="comment-like-btn"
+                    type="button"
+                    data-old-text="👍 {{ comment.like_count or 0 }}"
+                >👍 {{ comment.like_count or 0 }}</button>
+            </div>
+
+            <div class="comment-detail-content">{{ comment.content }}</div>
+            <p id="commentDetailMessage" class="comment-message"></p>
+        </article>
+
+        <section class="card comment-thread-shell">
+            <div class="comment-thread-heading">
+                <div>
+                    <h2>回复区</h2>
+                    <p id="commentReplySummary">正在加载回复...</p>
+                </div>
+                <span id="commentReplyCount" class="comment-thread-badge">0 条</span>
+            </div>
+
+            <form id="commentReplyForm" class="comment-reply-form">
+                <p class="comment-identity">
+                    以“{{ session.get('display_name') or session.get('username') }}”身份回复
+                </p>
+                <textarea
+                    id="commentReplyContent"
+                    maxlength="500"
+                    placeholder="回复这条评论..."
+                    required
+                ></textarea>
+                <div class="comment-reply-actions">
+                    <span id="commentReplyMessage" aria-live="polite"></span>
+                    <button type="submit">发布回复</button>
+                </div>
+            </form>
+
+            <div id="commentReplyList" class="comment-reply-list">
+                <div class="comment-thread-empty">正在加载回复...</div>
+            </div>
+        </section>
+        {% else %}
+        <section class="card comment-detail-card">
+            <h1>评论不存在</h1>
+            <p>这条评论可能已被删除，或当前页面范围内没有这条评论。</p>
+        </section>
+        {% endif %}
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/comment_detail.js') }}"></script>
+</body>
+</html>

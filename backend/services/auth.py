@@ -98,3 +98,76 @@ def authenticate_account(username, password, role):
         "role": account["role"],
         "display_name": account.get("display_name", "")
     }
+
+
+def list_accounts_for_admin():
+    """Return account metadata for admin user management without password hashes."""
+    with get_db() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    username,
+                    role,
+                    display_name,
+                    enabled,
+                    DATE_FORMAT(last_login_at, '%Y-%m-%d %H:%i:%s') AS last_login_at,
+                    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+                FROM app_users
+                ORDER BY role ASC, id ASC
+                """
+            )
+            return cursor.fetchall()
+
+
+def reset_account_password(account_id, password):
+    """Reset one account password with a salted scrypt password hash."""
+    try:
+        account_id = int(account_id)
+    except (TypeError, ValueError):
+        account_id = 0
+
+    password = str(password or "")
+
+    if account_id <= 0:
+        raise ValueError("用户不存在")
+    if len(password) < 8:
+        raise ValueError("密码至少需要 8 个字符")
+    if len(password) > 128:
+        raise ValueError("密码不能超过 128 个字符")
+
+    password_hash = generate_password_hash(password, method="scrypt")
+
+    with get_db() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, username, role, display_name
+                FROM app_users
+                WHERE id = %s
+                LIMIT 1
+                """,
+                (account_id,)
+            )
+            account = cursor.fetchone()
+
+            if not account:
+                raise ValueError("用户不存在")
+
+            cursor.execute(
+                """
+                UPDATE app_users
+                SET password_hash = %s,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+                """,
+                (password_hash, account_id)
+            )
+
+    return {
+        "id": account["id"],
+        "username": account["username"],
+        "role": account["role"],
+        "display_name": account.get("display_name", "")
+    }

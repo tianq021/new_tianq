@@ -47,6 +47,25 @@ CREATE TABLE IF NOT EXISTS user_ai_chat_histories (
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS user_ai_remote_chats (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    profile_key VARCHAR(100) NOT NULL,
+    remote_chat_id VARCHAR(250) NOT NULL,
+    title VARCHAR(100) NOT NULL DEFAULT '新对话',
+    messages_json JSON NULL,
+    is_current TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_user_ai_remote_chats_user_profile_remote (user_id, profile_key, remote_chat_id),
+    INDEX idx_user_ai_remote_chats_user_updated (user_id, updated_at),
+    INDEX idx_user_ai_remote_chats_current (user_id, profile_key, is_current, updated_at),
+    CONSTRAINT fk_user_ai_remote_chats_user
+        FOREIGN KEY (user_id) REFERENCES app_users(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS user_feedback (
     id BIGINT NOT NULL AUTO_INCREMENT,
     user_id BIGINT NOT NULL,

@@ -6,6 +6,7 @@ from flask import Flask, request
 from werkzeug.exceptions import HTTPException
 from backend.routes.page_routes import page_bp
 from backend.routes.api_routes import api_blueprints
+from backend.services.startup_checks import check_startup_config, summarize_startup_config
 from backend.utils.logger_config import app_logger, access_logger, error_logger
 
 
@@ -26,6 +27,17 @@ def create_app():
     )
     app.secret_key = os.getenv("FLASK_SECRET_KEY", "new-tianq-dev-secret")
     app.json.ensure_ascii = False
+
+    config_status = summarize_startup_config(check_startup_config())
+    app.config["STARTUP_CONFIG_STATUS"] = config_status
+    if config_status["failed_count"]:
+        app_logger.warning(
+            "Startup config check has warnings | failed=%s | keys=%s",
+            config_status["failed_count"],
+            ",".join(item["key"] for item in config_status["failed"])
+        )
+    else:
+        app_logger.info("Startup config check passed")
 
     app_logger.info("Flask 应用开始创建")
 

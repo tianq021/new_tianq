@@ -181,36 +181,50 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // 随机数
-function generateRandomNumber(toolId) {
-    const minInput = document.getElementById(`${toolId}-min`);
-    const maxInput = document.getElementById(`${toolId}-max`);
-    const resultInput = document.getElementById(`${toolId}-result`);
+document.addEventListener("DOMContentLoaded", function () {
+    const randomButtons = document.querySelectorAll(".random-generate-btn");
 
-    let min = parseInt(minInput.value, 10);
-    let max = parseInt(maxInput.value, 10);
+    function generateRandomNumber(toolId) {
+        const minInput = document.getElementById(`${toolId}-min`);
+        const maxInput = document.getElementById(`${toolId}-max`);
+        const resultInput = document.getElementById(`${toolId}-result`);
 
-    if (Number.isNaN(min)) {
-        min = 1;
-        minInput.value = 1;
+        if (!minInput || !maxInput || !resultInput) {
+            return;
+        }
+
+        let min = parseInt(minInput.value, 10);
+        let max = parseInt(maxInput.value, 10);
+
+        if (Number.isNaN(min)) {
+            min = 1;
+            minInput.value = 1;
+        }
+
+        if (Number.isNaN(max)) {
+            max = 100;
+            maxInput.value = 100;
+        }
+
+        if (min > max) {
+            const temp = min;
+            min = max;
+            max = temp;
+
+            minInput.value = min;
+            maxInput.value = max;
+        }
+
+        const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+        resultInput.value = randomNumber;
     }
 
-    if (Number.isNaN(max)) {
-        max = 100;
-        maxInput.value = 100;
-    }
-
-    if (min > max) {
-        const temp = min;
-        min = max;
-        max = temp;
-
-        minInput.value = min;
-        maxInput.value = max;
-    }
-
-    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-    resultInput.value = randomNumber;
-}
+    randomButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            generateRandomNumber(button.dataset.toolId);
+        });
+    });
+});
 
 // 接受后端的哈希值，在通过js放在页面
 document.addEventListener("DOMContentLoaded", function () {

@@ -42,7 +42,7 @@ body {
 }
 
 .admin-main {
-    width: min(1180px, calc(100% - 32px));
+    width: min(1320px, calc(100% - 32px));
     margin: 24px auto;
 }
 
@@ -177,7 +177,14 @@ small {
 
 .data-layout {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: minmax(420px, 0.85fr) minmax(0, 1.15fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.ai-health-layout {
+    display: grid;
+    grid-template-columns: minmax(360px, 0.75fr) minmax(0, 1.25fr);
     gap: 18px;
     align-items: start;
 }
@@ -192,10 +199,19 @@ small {
 
 .panel-head {
     display: flex;
-    justify-content: space-between;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
     align-items: start;
     margin-bottom: 16px;
+}
+
+.panel-head > div {
+    min-width: min(260px, 100%);
+    flex: 1 1 100%;
+}
+
+.tool-list-panel .panel-head {
+    align-items: stretch;
 }
 
 .panel-head h2,
@@ -224,11 +240,104 @@ small {
     background: #ffffff;
 }
 
+#tool-source {
+    width: min(220px, 100%);
+}
+
 .source-note {
     margin: -4px 0 14px;
     color: #526174;
     line-height: 1.6;
     font-size: 14px;
+}
+
+.fastgpt-health-prompts {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.fastgpt-health-prompts label {
+    display: grid;
+    gap: 6px;
+    color: #526174;
+    font-size: 14px;
+}
+
+.fastgpt-health-prompts textarea {
+    width: 100%;
+    resize: vertical;
+    border: 1px solid #cdd7e4;
+    border-radius: 8px;
+    padding: 9px 10px;
+    color: #172033;
+    font: inherit;
+    line-height: 1.5;
+}
+
+.ai-health-result-list {
+    display: grid;
+    gap: 10px;
+}
+
+.ai-health-result {
+    padding: 14px;
+    border: 1px solid #dce3ee;
+    border-left: 4px solid #b42318;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.ai-health-result.success {
+    border-left-color: #376345;
+}
+
+.ai-health-result.error {
+    border-left-color: #b42318;
+}
+
+.ai-health-result-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.ai-health-result-head span {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #fdecec;
+    color: #b42318;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.ai-health-result.success .ai-health-result-head span {
+    background: #e8f2ec;
+    color: #376345;
+}
+
+.ai-health-result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ai-health-result-meta code {
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: #f3f4f6;
+    color: #182c45;
+    font-size: 12px;
+}
+
+.ai-health-result p {
+    margin: 0;
+    color: #526174;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
 }
 
 .tool-list {
@@ -271,6 +380,9 @@ small {
 }
 
 .small-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 30px;
     padding: 0 8px;
     border: 1px solid #cdd7e4;
@@ -278,11 +390,62 @@ small {
     background: #ffffff;
     color: #255f85;
     cursor: pointer;
+    text-decoration: none;
 }
 
 .small-button:disabled {
     color: #9aa5b1;
     cursor: not-allowed;
+}
+
+.danger-button {
+    border-color: #f2b8b5;
+    color: #b42318;
+}
+
+.danger-button:disabled {
+    border-color: #e5e7eb;
+    color: #9aa5b1;
+}
+
+.admin-comment-check {
+    width: 16px;
+    height: 16px;
+    margin: 0 2px 0 0;
+    accent-color: #255f85;
+}
+
+.admin-comment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.admin-password-reset {
+    display: grid;
+    grid-template-columns: minmax(220px, 360px) auto minmax(120px, 1fr);
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.admin-password-reset input {
+    width: 100%;
+    min-height: 36px;
+    border: 1px solid #cdd7e4;
+    border-radius: 8px;
+    padding: 0 10px;
+    font: inherit;
+}
+
+.admin-password-reset span {
+    color: #376345;
+    font-size: 14px;
+}
+
+.error-text {
+    color: #b42318 !important;
 }
 
 .tool-row strong,
@@ -415,6 +578,7 @@ small {
     .endpoint-item,
     .endpoint-editor,
     .data-layout,
+    .ai-health-layout,
     .form-grid {
         grid-template-columns: 1fr;
     }

@@ -32,6 +32,7 @@ body {
     inset: 0;
     overflow: hidden;
     pointer-events: none;
+    z-index: 0;
 }
 
 .ambient-bg::before {
@@ -45,10 +46,22 @@ body {
     opacity: 0.55;
 }
 
+.ambient-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 18% 22%, rgba(37, 99, 235, 0.11), transparent 26%),
+        radial-gradient(circle at 82% 74%, rgba(8, 145, 178, 0.1), transparent 28%);
+}
+
 .shape {
     position: absolute;
     border: 1px solid rgba(37, 99, 235, 0.12);
     background: rgba(255, 255, 255, 0.28);
+    opacity: 0.86;
+    transform: rotate(var(--rotate, 0deg));
+    backdrop-filter: blur(1px);
 }
 
 .shape-one {
@@ -73,6 +86,40 @@ body {
     right: 18%;
     bottom: 12%;
     border-radius: 8px;
+}
+
+.shape-circle {
+    border-radius: 50%;
+}
+
+.shape-square {
+    border-radius: 8px;
+}
+
+.shape-diamond {
+    border-radius: 8px;
+}
+
+.shape-line {
+    height: 2px !important;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.28), transparent);
+}
+
+.shape-ring {
+    border-radius: 50%;
+    border-width: 2px;
+    background: transparent;
+}
+
+.shape-triangle {
+    width: 0 !important;
+    height: 0 !important;
+    border-left: var(--tri-size, 54px) solid transparent;
+    border-right: var(--tri-size, 54px) solid transparent;
+    border-bottom: calc(var(--tri-size, 54px) * 1.55) solid rgba(37, 99, 235, 0.12);
+    background: transparent;
 }
 
 .login-shell {

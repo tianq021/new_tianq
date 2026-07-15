@@ -21,3 +21,16 @@ CREATE TABLE IF NOT EXISTS comment_likes (
         FOREIGN KEY (comment_id) REFERENCES comments(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS comment_replies (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    comment_id BIGINT NOT NULL,
+    nickname VARCHAR(30) NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_comment_replies_comment_created (comment_id, created_at, id),
+    CONSTRAINT fk_comment_replies_comment
+        FOREIGN KEY (comment_id) REFERENCES comments(id)
+        ON DELETE CASCADE
+);

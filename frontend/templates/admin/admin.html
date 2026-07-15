@@ -22,6 +22,9 @@
         <section class="admin-tabs" aria-label="后台功能">
             <button class="tab-button active" type="button" data-tab-target="api-panel">接口管理</button>
             <button class="tab-button" type="button" data-tab-target="data-panel">数据管理</button>
+            <button class="tab-button" type="button" data-tab-target="users-panel">用户管理</button>
+            <button class="tab-button" type="button" data-tab-target="comments-panel">评论管理</button>
+            <button class="tab-button" type="button" data-tab-target="ai-health-panel">AI 测试</button>
             <button class="tab-button" type="button" data-tab-target="explanation-panel">功能解释</button>
             <button class="tab-button" type="button" data-tab-target="feedback-panel">用户反馈</button>
             <button class="tab-button" type="button" data-tab-target="logs-panel">FastGPT 日志</button>
@@ -71,8 +74,10 @@
                             <option value="fastgpt">FastGPT 工具</option>
                             <option value="custom">自定义工具</option>
                         </select>
+                        <button id="config-status-check" class="secondary-button" type="button">配置检查</button>
                         <button id="config-export" class="secondary-button" type="button">导出配置</button>
                     </div>
+                    <p id="config-status" class="source-note" aria-live="polite"></p>
                     <p id="tool-source-note" class="source-note"></p>
                     <div id="tool-list" class="tool-list"></div>
                 </section>
@@ -158,6 +163,66 @@
                             <span id="tool-status" aria-live="polite"></span>
                         </div>
                     </form>
+                </section>
+            </div>
+        </section>
+        <section id="users-panel" class="tab-panel">
+            <div class="toolbar">
+                <button id="refresh-admin-users" class="secondary-button" type="button">刷新用户</button>
+                <span id="admin-user-status" aria-live="polite"></span>
+            </div>
+            <div id="admin-user-list" class="log-list"></div>
+        </section>
+        <section id="comments-panel" class="tab-panel">
+            <div class="toolbar">
+                <select id="admin-comment-page-key">
+                    <option value="all">全部来源</option>
+                    <option value="tools">工具评论区</option>
+                </select>
+                <select id="admin-comment-sort">
+                    <option value="time">按时间排序</option>
+                    <option value="hot">按热度排序</option>
+                </select>
+                <button id="refresh-admin-comments" class="secondary-button" type="button">刷新评论</button>
+                <button id="delete-selected-comments" class="secondary-button danger-button" type="button">删除选中</button>
+                <span id="admin-comment-status" aria-live="polite"></span>
+            </div>
+            <div id="admin-comment-list" class="log-list"></div>
+        </section>
+        <section id="ai-health-panel" class="tab-panel">
+            <div class="ai-health-layout">
+                <section class="tool-list-panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>统一测试</h2>
+                            <p>逐个访问所有 FastGPT 工具 profile，等待全部返回后展示结果。</p>
+                        </div>
+                    </div>
+                    <div class="fastgpt-health-prompts" aria-label="FastGPT 统一测试提示词">
+                        <label>
+                            <span>测试系统提示词</span>
+                            <textarea id="fastgpt-health-system-prompt" rows="4">You are a health-check assistant. Reply with OK only.</textarea>
+                        </label>
+                        <label>
+                            <span>测试用户提示词</span>
+                            <textarea id="fastgpt-health-user-prompt" rows="3">Reply OK</textarea>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="fastgpt-health-check-all" type="button">开始一键测试</button>
+                        <span id="fastgpt-health-summary" aria-live="polite"></span>
+                    </div>
+                </section>
+                <section class="tool-editor-panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>测试结果</h2>
+                            <p>绿色表示接口可继续使用；红色表示需要检查 key、profile 或 FastGPT 服务。</p>
+                        </div>
+                    </div>
+                    <div id="fastgpt-health-result-list" class="ai-health-result-list">
+                        <p class="empty-state">点击“开始一键测试”后显示结果。</p>
+                    </div>
                 </section>
             </div>
         </section>
